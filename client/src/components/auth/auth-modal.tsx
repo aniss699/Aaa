@@ -30,7 +30,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
     name: '',
     email: '',
     password: '',
-    type: '',
+    type: 'client',
   });
 
   const loginMutation = useMutation({
@@ -95,16 +95,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         password: formData.password,
       });
     } else {
-      // Validation stricte pour l'inscription
-      if (!formData.name.trim()) {
-        toast({
-          title: 'Nom requis',
-          description: 'Veuillez saisir votre nom complet',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
+      // Validation simple pour l'inscription
       if (!formData.email.trim()) {
         toast({
           title: 'Email requis',
@@ -123,17 +114,8 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         return;
       }
       
-      if (!formData.type) {
-        toast({
-          title: 'Type de compte requis',
-          description: 'Veuillez sélectionner si vous êtes client ou prestataire',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
       registerMutation.mutate({
-        name: formData.name.trim(),
+        name: formData.name.trim() || 'Utilisateur',
         email: formData.email.trim(),
         password: formData.password,
         type: formData.type,
@@ -146,7 +128,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
   };
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', password: '', type: '' });
+    setFormData({ name: '', email: '', password: '', type: 'client' });
   };
 
   const handleClose = () => {
@@ -169,22 +151,6 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {mode === 'register' && (
-            <div>
-              <Label htmlFor="name" className="text-sm font-medium text-blue-800">
-                Nom complet
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="mt-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                required
-              />
-            </div>
-          )}
-
           <div>
             <Label htmlFor="email" className="text-sm font-medium text-blue-800">
               Email
@@ -212,71 +178,6 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
               required
             />
           </div>
-
-          {mode === 'register' && (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium text-blue-800">
-                Type de compte
-              </Label>
-              <div className="grid grid-cols-1 gap-3">
-                <Card 
-                  className={`cursor-pointer transition-all border-2 ${
-                    formData.type === 'client' 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-blue-200 hover:border-blue-300'
-                  }`}
-                  onClick={() => handleInputChange('type', 'client')}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        formData.type === 'client' ? 'bg-blue-500' : 'bg-blue-100'
-                      }`}>
-                        <Briefcase className={`w-5 h-5 ${
-                          formData.type === 'client' ? 'text-white' : 'text-blue-600'
-                        }`} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-blue-900">Client</h3>
-                        <p className="text-sm text-blue-600">Je poste des missions et reçois des devis</p>
-                      </div>
-                      {formData.type === 'client' && (
-                        <CheckCircle className="w-5 h-5 text-blue-500" />
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card 
-                  className={`cursor-pointer transition-all border-2 ${
-                    formData.type === 'provider' 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-blue-200 hover:border-blue-300'
-                  }`}
-                  onClick={() => handleInputChange('type', 'provider')}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        formData.type === 'provider' ? 'bg-blue-500' : 'bg-blue-100'
-                      }`}>
-                        <Users className={`w-5 h-5 ${
-                          formData.type === 'provider' ? 'text-white' : 'text-blue-600'
-                        }`} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-blue-900">Prestataire</h3>
-                        <p className="text-sm text-blue-600">Je réponds aux missions et propose mes services</p>
-                      </div>
-                      {formData.type === 'provider' && (
-                        <CheckCircle className="w-5 h-5 text-blue-500" />
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
 
           <Button
             type="submit"
