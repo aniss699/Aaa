@@ -10,6 +10,8 @@ import Marketplace from "@/pages/marketplace";
 import Missions from "@/pages/missions";
 import Legal from '@/pages/legal';
 import Features from '@/pages/features';
+import Profile from '@/pages/profile';
+import Messages from '@/pages/messages';
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +24,8 @@ function Router() {
       <Route path="/cgv" component={Legal} />
       <Route path="/mentions-legales" component={Legal} />
       <Route path="/features" component={Features} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/messages" component={Messages} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -17,6 +17,8 @@ export function Navbar() {
     { href: '/marketplace', label: 'Marketplace' },
     { href: '/dashboard', label: 'Tableau de bord' },
     { href: '/missions', label: 'Mes Missions' },
+    { href: '/messages', label: 'Messages' },
+    { href: '/profile', label: 'Mon Profil' },
     { href: '/features', label: 'Fonctionnalités' },
   ];
 

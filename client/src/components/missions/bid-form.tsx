@@ -23,9 +23,9 @@ export function BidForm({ missionId, onSuccess }: BidFormProps) {
     proposal: '',
   });
 
-  const bidMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/bids', data);
+  const submitBid = useMutation({
+    mutationFn: async (bidData: any) => {
+      const response = await apiRequest('POST', '/api/bids', bidData);
       return response.json();
     },
     onSuccess: () => {
@@ -49,15 +49,6 @@ export function BidForm({ missionId, onSuccess }: BidFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user || user.type !== 'provider') {
-      toast({
-        title: 'Accès refusé',
-        description: 'Seuls les prestataires peuvent faire des offres',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     if (!formData.price || !formData.timeline || !formData.proposal) {
       toast({
@@ -68,11 +59,20 @@ export function BidForm({ missionId, onSuccess }: BidFormProps) {
       return;
     }
 
-    bidMutation.mutate({
+    if (!user) {
+      toast({
+        title: 'Connexion requise',
+        description: 'Vous devez être connecté pour postuler',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    submitBid.mutate({
       missionId,
       providerId: user.id,
       providerName: user.name,
-      price: formData.price,
+      price: parseFloat(formData.price),
       timeline: formData.timeline,
       proposal: formData.proposal,
       rating: user.rating || '5.0',
@@ -90,7 +90,7 @@ export function BidForm({ missionId, onSuccess }: BidFormProps) {
   return (
     <div className="bg-blue-50 rounded-xl p-4 sm:p-6">
       <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Faire une offre</h4>
-      
+
       {/* Guidelines for standardized proposals */}
       <div className="bg-white/60 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 border border-blue-200">
         <h5 className="font-medium text-gray-900 mb-2 flex items-center text-sm sm:text-base">
@@ -153,9 +153,9 @@ export function BidForm({ missionId, onSuccess }: BidFormProps) {
         <Button
           type="submit"
           className="w-full bg-primary hover:bg-primary-dark text-white font-semibold"
-          disabled={bidMutation.isPending}
+          disabled={submitBid.isPending}
         >
-          {bidMutation.isPending ? 'Envoi en cours...' : 'Envoyer mon offre'}
+          {submitBid.isPending ? 'Envoi en cours...' : 'Envoyer mon offre'}
         </Button>
       </form>
     </div>
