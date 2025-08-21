@@ -130,6 +130,18 @@ export default function Home() {
                 98% de satisfaction client
               </div>
             </div>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/marketplace">
+                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    Voir les projets
+                  </Button>
+                </Link>
+                <Link href="/available-providers">
+                  <Button size="lg" variant="outline" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    Prestataires disponibles
+                  </Button>
+                </Link>
+              </div>
           </div>
         </div>
 
@@ -317,7 +329,7 @@ export default function Home() {
         )}
       </div>
 
-      
+
 
       {/* Demo Missions */}
       <div className="mb-12 px-2 sm:px-0">

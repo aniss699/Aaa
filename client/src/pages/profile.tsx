@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -25,13 +24,14 @@ import {
   Edit
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
 
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [activeProfile, setActiveProfile] = useState<'client' | 'provider'>('client');
-  
+
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -44,11 +44,13 @@ export default function Profile() {
     availability: true,
     hourlyRate: '',
     company: '',
-    industry: ''
+    industry: '',
+    calendarAvailability: [] as Array<{ start: Date, end: Date }> // Added for calendar
   });
 
   const [newSkill, setNewSkill] = useState('');
   const [newPortfolioItem, setNewPortfolioItem] = useState({title: '', description: ''});
+  const [newAvailabilitySlot, setNewAvailabilitySlot] = useState<{ start: Date, end: Date } | undefined>(undefined); // State for new availability
 
   const handleSave = () => {
     toast({
@@ -83,6 +85,23 @@ export default function Profile() {
       }));
       setNewPortfolioItem({title: '', description: ''});
     }
+  };
+
+  const addCalendarAvailability = () => {
+    if (newAvailabilitySlot && newAvailabilitySlot.start && newAvailabilitySlot.end && newAvailabilitySlot.start < newAvailabilitySlot.end) {
+      setProfileData(prev => ({
+        ...prev,
+        calendarAvailability: [...prev.calendarAvailability, newAvailabilitySlot]
+      }));
+      setNewAvailabilitySlot(undefined); // Clear the input
+    }
+  };
+
+  const removeCalendarAvailability = (indexToRemove: number) => {
+    setProfileData(prev => ({
+      ...prev,
+      calendarAvailability: prev.calendarAvailability.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   if (!user) {
@@ -194,12 +213,13 @@ export default function Profile() {
 
         {/* Profile Content */}
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="bg-white">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="general">Informations générales</TabsTrigger>
             {activeProfile === 'provider' && (
               <>
                 <TabsTrigger value="skills">Compétences</TabsTrigger>
                 <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+                <TabsTrigger value="availability">Disponibilités</TabsTrigger>
               </>
             )}
             <TabsTrigger value="preferences">Préférences</TabsTrigger>
@@ -275,7 +295,7 @@ export default function Profile() {
                       rows={4}
                     />
                   </div>
-                  
+
                   {activeProfile === 'client' ? (
                     <>
                       <div>
@@ -354,7 +374,7 @@ export default function Profile() {
                           </Badge>
                         ))}
                       </div>
-                      
+
                       {isEditing && (
                         <div className="flex space-x-2">
                           <Input
@@ -390,7 +410,7 @@ export default function Profile() {
                           </Card>
                         ))}
                       </div>
-                      
+
                       {isEditing && (
                         <div className="border rounded-lg p-4 bg-gray-50">
                           <h4 className="font-medium mb-3">Ajouter un projet</h4>
@@ -412,6 +432,77 @@ export default function Profile() {
                             </Button>
                           </div>
                         </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Availability Tab */}
+              <TabsContent value="availability">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Mes disponibilités</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {isEditing ? (
+                        <>
+                          <div className="border rounded-lg p-4 bg-gray-50">
+                            <h4 className="font-medium mb-3">Ajouter une plage horaire</h4>
+                            <div className="space-y-3">
+                              <div className="flex space-x-3">
+                                <div className="flex-1">
+                                  <Label htmlFor="availabilityStart">Début</Label>
+                                  <Input
+                                    id="availabilityStart"
+                                    type="datetime-local"
+                                    value={newAvailabilitySlot?.start.toISOString().slice(0, 16) || ''}
+                                    onChange={(e) => {
+                                      const date = new Date(e.target.value);
+                                      setNewAvailabilitySlot(prev => ({ ...(prev || { start: new Date(), end: new Date() }), start: date }));
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <Label htmlFor="availabilityEnd">Fin</Label>
+                                  <Input
+                                    id="availabilityEnd"
+                                    type="datetime-local"
+                                    value={newAvailabilitySlot?.end.toISOString().slice(0, 16) || ''}
+                                    onChange={(e) => {
+                                      const date = new Date(e.target.value);
+                                      setNewAvailabilitySlot(prev => ({ ...(prev || { start: new Date(), end: new Date() }), end: date }));
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <Button onClick={addCalendarAvailability} disabled={!newAvailabilitySlot || !newAvailabilitySlot.start || !newAvailabilitySlot.end || newAvailabilitySlot.start >= newAvailabilitySlot.end}>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Ajouter plage
+                              </Button>
+                            </div>
+                          </div>
+                          {profileData.calendarAvailability.length > 0 && (
+                            <div>
+                              <h4 className="font-medium mb-3">Plages planifiées</h4>
+                              <div className="space-y-2">
+                                {profileData.calendarAvailability.map((slot, index) => (
+                                  <div key={index} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+                                    <span>
+                                      {slot.start.toLocaleString()} - {slot.end.toLocaleString()}
+                                    </span>
+                                    <Button variant="ghost" size="sm" onClick={() => removeCalendarAvailability(index)}>
+                                      <X className="w-4 h-4 text-red-500" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <AvailabilityCalendar availability={profileData.calendarAvailability} />
                       )}
                     </div>
                   </CardContent>
@@ -445,7 +536,7 @@ export default function Profile() {
         </Tabs>
 
         {isEditing && (
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-8">
             <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
               <Save className="w-4 h-4 mr-2" />
               Sauvegarder les modifications
