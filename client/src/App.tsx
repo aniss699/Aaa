@@ -9,6 +9,7 @@ import Home from "@/pages/home";
 import Marketplace from "@/pages/marketplace";
 import Missions from "@/pages/missions";
 import Legal from '@/pages/legal';
+import Features from '@/pages/features';
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/legal" component={Legal} />
       <Route path="/cgv" component={Legal} />
       <Route path="/mentions-legales" component={Legal} />
+      <Route path="/features" component={Features} />
       <Route component={NotFound} />
     </Switch>
   );

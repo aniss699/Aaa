@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLocation } from 'wouter';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import { Card } from '@/components/ui/card';
+import { Megaphone, Zap, Clock, Users, Search, Star } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
@@ -27,6 +29,8 @@ export default function Home() {
     budget: '',
   });
   const [selectedService, setSelectedService] = useState<'reverse-bidding' | 'direct-connection' | null>('reverse-bidding');
+  const [showMissionForm, setShowMissionForm] = useState(false);
+
 
   const { data: missions = [] } = useQuery<MissionWithBids[]>({
     queryKey: ['/api/missions'],
@@ -45,6 +49,7 @@ export default function Home() {
       });
       setFormData({ description: '', location: '', budget: '' });
       setSelectedCategory('');
+      setShowMissionForm(false);
     },
     onError: (error: any) => {
       toast({
@@ -96,110 +101,166 @@ export default function Home() {
   const recentMissions = missions.slice(0, 6);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Hero Section */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-          Trouvez le{' '}
-          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            meilleur prix
-          </span>
-          <br />
-          pour vos projets
-        </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Décrivez votre besoin, recevez des offres de professionnels qualifiés,
-          choisissez la meilleure proposition. Simple, rapide, efficace.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section avec animations */}
+        <div className="text-center mb-16 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-3xl blur-3xl"></div>
+          <div className="relative">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
+              <span className="text-gray-900">Trouvez le </span>
+              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                prestataire idéal
+              </span>
+              <br />
+              <span className="text-gray-900">pour vos projets</span>
+            </h1>
+            <p className="text-xl text-gray-700 mb-10 max-w-4xl mx-auto leading-relaxed animate-fade-in-delay">
+              🚀 AppelsPro révolutionne la mise en relation entre clients et prestataires. 
+              <br />Publiez votre projet et recevez des devis personnalisés en quelques heures.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-delay-2">
+              <div className="flex items-center text-green-600 font-semibold">
+                <div className="w-3 h-3 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                1,247+ projets réalisés
+              </div>
+              <div className="flex items-center text-blue-600 font-semibold">
+                <div className="w-3 h-3 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
+                98% de satisfaction client
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* Two Main Services */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mt-12">
-          <div 
-            className={`rounded-2xl p-8 border ${selectedService === 'reverse-bidding' ? 'border-blue-500 shadow-lg' : 'border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100'} cursor-pointer`}
-            onClick={() => {
-              setSelectedService('reverse-bidding');
-              setSelectedCategory('');
-            }}
-          >
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${selectedService === 'reverse-bidding' ? 'bg-blue-500' : 'bg-blue-500'}`}>
-              <span className="text-white text-2xl">💰</span>
+        {/* Service Types avec design amélioré */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <Card className="p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 bg-gradient-to-br from-blue-50 to-blue-100 border-0 shadow-xl">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                <Megaphone className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">Appels d'offres</h3>
+              <p className="text-gray-700 mb-8 text-lg leading-relaxed">
+                🎯 Décrivez votre projet et laissez les prestataires vous proposer leurs services. 
+                Comparez les offres et choisissez la meilleure.
+              </p>
+              <div className="mb-6 p-4 bg-white rounded-xl shadow-inner">
+                <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1 text-blue-500" />
+                    Réponse sous 2h
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 mr-1 text-green-500" />
+                    +50 prestataires
+                  </div>
+                </div>
+              </div>
+              <Button 
+                onClick={() => setShowMissionForm(true)}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transform transition hover:scale-105"
+              >
+                <Megaphone className="w-5 h-5 mr-2" />
+                Lancer un appel d'offres
+              </Button>
             </div>
-            <h3 className={`text-2xl font-bold mb-4 ${selectedService === 'reverse-bidding' ? 'text-blue-700' : 'text-gray-900'}`}>Appels d'offres inverses</h3>
-            <p className="text-gray-700 leading-relaxed">
-              Publiez votre projet et laissez les professionnels venir à vous avec leurs meilleures offres. 
-              Comparez les prix, les délais et choisissez en toute transparence.
-            </p>
-          </div>
-          <div 
-            className={`rounded-2xl p-8 border ${selectedService === 'direct-connection' ? 'border-green-500 shadow-lg' : 'border-green-200 bg-gradient-to-br from-green-50 to-green-100'} cursor-pointer`}
-            onClick={() => {
-              setSelectedService('direct-connection');
-              setSelectedCategory('');
-            }}
-          >
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${selectedService === 'direct-connection' ? 'bg-green-500' : 'bg-green-500'}`}>
-              <span className="text-white text-2xl">🤝</span>
+          </Card>
+
+          <Card className="p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 bg-gradient-to-br from-green-50 to-emerald-100 border-0 shadow-xl">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                <Zap className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-3xl font-bold mb-4 text-gray-900">Connexion directe</h3>
+              <p className="text-gray-700 mb-8 text-lg leading-relaxed">
+                ⚡ Contactez instantanément des professionnels qualifiés dans votre domaine. 
+                Idéal pour les projets urgents.
+              </p>
+              <div className="mb-6 p-4 bg-white rounded-xl shadow-inner">
+                <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <Zap className="w-4 h-4 mr-1 text-green-500" />
+                    Contact immédiat
+                  </div>
+                  <div className="flex items-center">
+                    <Star className="w-4 h-4 mr-1 text-yellow-500" />
+                    Pros vérifiés
+                  </div>
+                </div>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={() => setLocation('/marketplace')}
+                className="w-full border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white font-semibold py-4 px-6 rounded-xl shadow-lg transform transition hover:scale-105"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Explorer les profils
+              </Button>
             </div>
-            <h3 className={`text-2xl font-bold mb-4 ${selectedService === 'direct-connection' ? 'text-green-700' : 'text-gray-900'}`}>Mise en relation directe</h3>
-            <p className="text-gray-700 leading-relaxed">
-              Trouvez rapidement le bon professionnel pour votre besoin spécifique. 
-              Contact direct, échange personnalisé et collaboration simplifiée.
-            </p>
-          </div>
+          </Card>
         </div>
       </div>
 
       {/* Need Input Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Quel est votre besoin ?
-        </h2>
+      {showMissionForm && (
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12 max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Quel est votre besoin ?
+          </h2>
 
-        {/* Categories */}
-        <div className="mb-8">
-          <CategorySelector
-            selectedCategory={selectedCategory}
-            onCategorySelect={setSelectedCategory}
-            serviceType={selectedService}
-          />
-        </div>
-
-        {/* Need Description */}
-        <div className="space-y-4">
-          <Textarea
-            placeholder="Décrivez votre besoin en détail... (ex: Je recherche un développeur pour créer une application mobile de e-commerce)"
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            className="h-32 resize-none"
-          />
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              type="text"
-              placeholder="Localisation (optionnel)"
-              value={formData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              className="flex-1"
-            />
-            <Input
-              type="number"
-              placeholder="Budget estimé (€)"
-              value={formData.budget}
-              onChange={(e) => handleInputChange('budget', e.target.value)}
-              className="flex-1"
+          {/* Categories */}
+          <div className="mb-8">
+            <CategorySelector
+              selectedCategory={selectedCategory}
+              onCategorySelect={setSelectedCategory}
+              serviceType={selectedService}
             />
           </div>
 
-          <Button
-            onClick={handleCreateMission}
-            disabled={createMissionMutation.isPending}
-            className="w-full bg-gradient-to-r from-primary to-primary-dark text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-          >
-            {createMissionMutation.isPending ? 'Publication...' : 
-             selectedService === 'direct-connection' ? 'Demander une mise en relation' : 'Publier mon appel d\'offres'}
-          </Button>
+          {/* Need Description */}
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Décrivez votre besoin en détail... (ex: Je recherche un développeur pour créer une application mobile de e-commerce)"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              className="h-32 resize-none"
+            />
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Input
+                type="text"
+                placeholder="Localisation (optionnel)"
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                placeholder="Budget estimé (€)"
+                value={formData.budget}
+                onChange={(e) => handleInputChange('budget', e.target.value)}
+                className="flex-1"
+              />
+            </div>
+
+            <Button
+              onClick={handleCreateMission}
+              disabled={createMissionMutation.isPending}
+              className="w-full bg-gradient-to-r from-primary to-primary-dark text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+            >
+              {createMissionMutation.isPending ? 'Publication...' : 
+              selectedService === 'direct-connection' ? 'Demander une mise en relation' : 'Publier mon appel d\'offres'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowMissionForm(false)}
+              className="w-full mt-2"
+            >
+              Annuler
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Demo Missions */}
       <div className="mb-12">

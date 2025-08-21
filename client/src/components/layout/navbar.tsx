@@ -17,6 +17,7 @@ export function Navbar() {
     { href: '/marketplace', label: 'Marketplace' },
     { href: '/dashboard', label: 'Tableau de bord' },
     { href: '/missions', label: 'Mes Missions' },
+    { href: '/features', label: 'Fonctionnalités' },
   ];
 
   const getUserTypeInfo = () => {
@@ -31,69 +32,73 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 backdrop-blur-sm bg-white/95">
+      <nav className="bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link href="/">
-              <div className="flex items-center space-x-3 cursor-pointer group">
-                <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-white font-bold text-sm">AP</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors">AppelsPro</span>
-              </div>
-            </Link>
+          <div className="flex justify-between items-center h-18 py-2">
+            <div className="flex items-center space-x-8">
+              <Link href="/">
+                <a className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center hover:scale-105 transition-transform duration-200">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
+                    <Briefcase className="w-5 h-5 text-white" />
+                  </div>
+                  AppelsPro
+                </a>
+              </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              {navigationItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <span
-                    className={`text-sm font-medium transition-colors cursor-pointer hover:scale-105 transform ${
-                      location === item.href
-                        ? 'text-primary border-b-2 border-primary pb-1'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {item.label}
-                  </span>
+              <div className="hidden md:flex space-x-8">
+                <Link href="/marketplace">
+                  <a className="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-blue-50">
+                    Marketplace
+                  </a>
                 </Link>
-              ))}
+                <Link href="/missions">
+                  <a className="text-gray-700 hover:text-purple-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-purple-50">
+                    Missions
+                  </a>
+                </Link>
+                <Link href="/features">
+                  <a className="text-gray-700 hover:text-green-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-green-50">
+                    Fonctionnalités
+                  </a>
+                </Link>
+              </div>
             </div>
 
             {/* User Actions */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-3">
               {user ? (
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-3 bg-gray-50 rounded-full px-3 py-2">
-                    {userTypeInfo && (
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-6 h-6 ${userTypeInfo.color} rounded-full flex items-center justify-center`}>
-                          <userTypeInfo.icon className="w-3 h-3 text-white" />
-                        </div>
-                        <Badge variant="outline" className="text-xs">
-                          {userTypeInfo.label}
-                        </Badge>
-                      </div>
-                    )}
+                <div className="flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2 shadow-inner">
+                  {userTypeInfo && (
                     <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                      <div className={`w-7 h-7 ${userTypeInfo.color} rounded-full flex items-center justify-center animate-pulse`}>
+                        <userTypeInfo.icon className="w-4 h-4 text-white" />
+                      </div>
+                      <Badge variant="premium" className="text-xs font-bold">
+                        {userTypeInfo.label}
+                      </Badge>
                     </div>
+                  )}
+                  <div className="flex items-center space-x-2">
+                    <User className="w-5 h-5 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-900">{user.name}</span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={logout}
-                    className="text-gray-600 hover:text-red-600 hover:border-red-300"
-                  >
-                    <LogOut className="w-4 h-4 mr-1" />
-                    Déconnexion
-                  </Button>
                 </div>
               ) : (
-                <Button onClick={() => setShowAuthModal(true)} className="hover:scale-105 transform transition-all">
+                <Button
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+                >
                   Se connecter
+                </Button>
+              )}
+              {user && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  className="text-gray-500 hover:text-red-600 focus:text-red-600 rounded-full hover:bg-red-100 transition-colors duration-200"
+                >
+                  <LogOut className="w-6 h-6" />
                 </Button>
               )}
             </div>
@@ -102,10 +107,11 @@ export function Navbar() {
             <div className="md:hidden">
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="text-gray-700 focus:text-gray-900"
               >
-                {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </Button>
             </div>
           </div>
@@ -113,15 +119,15 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 bg-white shadow-lg">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+          <div className="md:hidden border-t border-gray-200 bg-white/90 shadow-lg backdrop-blur-sm">
+            <div className="px-3 pt-4 pb-3 space-y-4">
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <span
-                    className={`block px-3 py-2 text-base font-medium cursor-pointer rounded-lg transition-all ${
+                    className={`flex items-center px-4 py-3 text-base font-medium cursor-pointer rounded-xl transition-all duration-200 ${
                       location === item.href
-                        ? 'text-primary bg-primary/10'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                     onClick={() => setShowMobileMenu(false)}
                   >
@@ -130,35 +136,33 @@ export function Navbar() {
                 </Link>
               ))}
 
-              <div className="px-3 py-2 border-t border-gray-200 mt-2">
+              <div className="border-t border-gray-200 mt-4 pt-4">
                 {user ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-2">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3 bg-gray-50 rounded-full p-3 shadow-inner">
                       {userTypeInfo && (
-                        <div className={`w-6 h-6 ${userTypeInfo.color} rounded-full flex items-center justify-center`}>
-                          <userTypeInfo.icon className="w-3 h-3 text-white" />
+                        <div className={`w-8 h-8 ${userTypeInfo.color} rounded-full flex items-center justify-center animate-bounce`}>
+                          <userTypeInfo.icon className="w-4 h-4 text-white" />
                         </div>
                       )}
-                      <div className="flex items-center space-x-2">
-                        <User className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900 leading-tight">{user.name}</span>
+                        {userTypeInfo && (
+                          <Badge variant="premium" className="text-xs font-bold mt-1">
+                            {userTypeInfo.label}
+                          </Badge>
+                        )}
                       </div>
-                      {userTypeInfo && (
-                        <Badge variant="outline" className="text-xs">
-                          {userTypeInfo.label}
-                        </Badge>
-                      )}
                     </div>
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => {
                         logout();
                         setShowMobileMenu(false);
                       }}
-                      className="w-full justify-start text-gray-600 hover:text-red-600"
+                      className="w-full justify-center text-red-500 hover:text-red-700 font-semibold py-2 px-4 rounded-full border-red-300 hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut className="w-5 h-5 mr-2" />
                       Déconnexion
                     </Button>
                   </div>
@@ -168,7 +172,7 @@ export function Navbar() {
                       setShowAuthModal(true);
                       setShowMobileMenu(false);
                     }}
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-2 px-5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
                   >
                     Se connecter
                   </Button>
