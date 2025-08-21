@@ -104,10 +104,10 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section avec animations */}
-        <div className="text-center mb-16 relative">
+        <div className="text-center mb-12 sm:mb-16 relative px-2 sm:px-0">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-3xl blur-3xl"></div>
           <div className="relative">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 animate-fade-in leading-tight">
               <span className="text-gray-900">Trouvez le </span>
               <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 prestataire idéal
@@ -115,11 +115,12 @@ export default function Home() {
               <br />
               <span className="text-gray-900">pour vos projets</span>
             </h1>
-            <p className="text-xl text-gray-700 mb-10 max-w-4xl mx-auto leading-relaxed animate-fade-in-delay">
+            <p className="text-base sm:text-xl text-gray-700 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed animate-fade-in-delay px-4 sm:px-0">
               🚀 AppelsPro révolutionne la mise en relation entre clients et prestataires. 
-              <br />Publiez votre projet et recevez des devis personnalisés en quelques heures.
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>Publiez votre projet et recevez des devis personnalisés en quelques heures.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-delay-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center animate-fade-in-delay-2 text-sm sm:text-base">
               <div className="flex items-center text-green-600 font-semibold">
                 <div className="w-3 h-3 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                 1,247+ projets réalisés
@@ -133,9 +134,9 @@ export default function Home() {
         </div>
 
         {/* Service Types avec design amélioré */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 mb-12 sm:mb-16 px-2 sm:px-0">
           <Card 
-            className={`p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl cursor-pointer ${
+            className={`p-4 sm:p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl cursor-pointer ${
               selectedService === 'reverse-bidding' 
                 ? 'bg-gradient-to-br from-blue-50 to-blue-100 ring-2 ring-blue-400' 
                 : 'bg-gradient-to-br from-gray-50 to-gray-100 hover:from-blue-50 hover:to-blue-100'
@@ -143,27 +144,29 @@ export default function Home() {
             onClick={() => setSelectedService('reverse-bidding')}
           >
             <div className="text-center">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform transition-all duration-300 ${
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg transform transition-all duration-300 ${
                 selectedService === 'reverse-bidding' 
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 rotate-0' 
                   : 'bg-gradient-to-r from-gray-400 to-gray-500 rotate-3 hover:rotate-0'
               }`}>
-                <Megaphone className="w-10 h-10 text-white" />
+                <Megaphone className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-3xl font-bold mb-4 text-gray-900">Appels d'offres</h3>
-              <p className="text-gray-700 mb-8 text-lg leading-relaxed">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-gray-900">Appels d'offres</h3>
+              <p className="text-gray-700 mb-6 sm:mb-8 text-base sm:text-lg leading-relaxed">
                 🎯 Décrivez votre projet et laissez les prestataires vous proposer leurs services. 
                 Comparez les offres et choisissez la meilleure.
               </p>
-              <div className="mb-6 p-4 bg-white rounded-xl shadow-inner">
-                <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-xl shadow-inner">
+                <div className="flex items-center justify-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-600">
                   <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1 text-blue-500" />
-                    Réponse sous 2h
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-blue-500" />
+                    <span className="hidden sm:inline">Réponse sous 2h</span>
+                    <span className="sm:hidden">2h</span>
                   </div>
                   <div className="flex items-center">
-                    <Users className="w-4 h-4 mr-1 text-green-500" />
-                    +50 prestataires
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
+                    <span className="hidden sm:inline">+50 prestataires</span>
+                    <span className="sm:hidden">+50 pros</span>
                   </div>
                 </div>
               </div>
@@ -171,7 +174,7 @@ export default function Home() {
           </Card>
 
           <Card 
-            className={`p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl cursor-pointer ${
+            className={`p-4 sm:p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border-0 shadow-xl cursor-pointer ${
               selectedService === 'direct-connection' 
                 ? 'bg-gradient-to-br from-green-50 to-emerald-100 ring-2 ring-green-400' 
                 : 'bg-gradient-to-br from-gray-50 to-gray-100 hover:from-green-50 hover:to-emerald-100'
@@ -179,27 +182,29 @@ export default function Home() {
             onClick={() => setSelectedService('direct-connection')}
           >
             <div className="text-center">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform transition-all duration-300 ${
+              <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg transform transition-all duration-300 ${
                 selectedService === 'direct-connection' 
                   ? 'bg-gradient-to-r from-green-500 to-emerald-600 rotate-0' 
                   : 'bg-gradient-to-r from-gray-400 to-gray-500 -rotate-3 hover:rotate-0'
               }`}>
-                <Zap className="w-10 h-10 text-white" />
+                <Zap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-3xl font-bold mb-4 text-gray-900">Mise en relation</h3>
-              <p className="text-gray-700 mb-8 text-lg leading-relaxed">
+              <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-gray-900">Mise en relation</h3>
+              <p className="text-gray-700 mb-6 sm:mb-8 text-base sm:text-lg leading-relaxed">
                 ⚡ Contactez instantanément des professionnels qualifiés dans votre domaine. 
                 Idéal pour les projets urgents.
               </p>
-              <div className="mb-6 p-4 bg-white rounded-xl shadow-inner">
-                <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-xl shadow-inner">
+                <div className="flex items-center justify-center space-x-2 sm:space-x-4 text-xs sm:text-sm text-gray-600">
                   <div className="flex items-center">
-                    <Zap className="w-4 h-4 mr-1 text-green-500" />
-                    Contact immédiat
+                    <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
+                    <span className="hidden sm:inline">Contact immédiat</span>
+                    <span className="sm:hidden">Immédiat</span>
                   </div>
                   <div className="flex items-center">
-                    <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                    Pros vérifiés
+                    <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-yellow-500" />
+                    <span className="hidden sm:inline">Pros vérifiés</span>
+                    <span className="sm:hidden">Vérifiés</span>
                   </div>
                 </div>
               </div>
@@ -209,113 +214,117 @@ export default function Home() {
 
         {/* Description adaptative selon le service sélectionné */}
         {selectedService && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-12 max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-8 mb-12 max-w-6xl mx-auto">
             {selectedService === 'reverse-bidding' && (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Quel est votre besoin ?
-                </h2>
-                <p className="text-gray-600 mb-8">
-                  Décrivez votre projet et recevez des offres personnalisées de professionnels qualifiés
-                </p>
-                <Button 
-                  onClick={() => setShowMissionForm(true)}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105"
-                >
-                  <Megaphone className="w-5 h-5 mr-2" />
-                  Lancer un appel d'offres
-                </Button>
+              <div>
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                    Quel est votre besoin ?
+                  </h2>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    Sélectionnez votre domaine et décrivez votre projet
+                  </p>
+                </div>
+
+                {/* Categories avec logos */}
+                <div className="mb-8">
+                  <CategorySelector
+                    selectedCategory={selectedCategory}
+                    onCategorySelect={setSelectedCategory}
+                    serviceType={selectedService}
+                  />
+                </div>
+
+                {/* Formulaire de description */}
+                <div className="space-y-4 max-w-4xl mx-auto">
+                  <Textarea
+                    placeholder="Décrivez votre besoin en détail... (ex: Je recherche un développeur pour créer une application mobile de e-commerce)"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    className="h-32 resize-none text-sm sm:text-base"
+                  />
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Input
+                      type="text"
+                      placeholder="Localisation (optionnel)"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className="flex-1 text-sm sm:text-base"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Budget estimé (€)"
+                      value={formData.budget}
+                      onChange={(e) => handleInputChange('budget', e.target.value)}
+                      className="flex-1 text-sm sm:text-base"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleCreateMission}
+                    disabled={createMissionMutation.isPending}
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-lg transition-all"
+                  >
+                    {createMissionMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Publication...
+                      </>
+                    ) : (
+                      <>
+                        <Megaphone className="w-5 h-5 mr-2" />
+                        Publier mon appel d'offres
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
 
             {selectedService === 'direct-connection' && (
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Trouvez le bon professionnel
-                </h2>
-                <p className="text-gray-600 mb-8">
-                  Parcourez les profils de prestataires et contactez directement ceux qui correspondent à vos besoins
-                </p>
-                <Button 
-                  onClick={() => setLocation('/marketplace')}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-8 rounded-xl shadow-lg transform transition hover:scale-105"
-                >
-                  <Search className="w-5 h-5 mr-2" />
-                  Explorer les profils
-                </Button>
+              <div>
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+                    Trouvez le bon professionnel
+                  </h2>
+                  <p className="text-gray-600 text-sm sm:text-base">
+                    Sélectionnez votre domaine pour découvrir les experts disponibles
+                  </p>
+                </div>
+
+                {/* Categories avec logos */}
+                <div className="mb-8">
+                  <CategorySelector
+                    selectedCategory={selectedCategory}
+                    onCategorySelect={setSelectedCategory}
+                    serviceType={selectedService}
+                  />
+                </div>
+
+                <div className="text-center">
+                  <Button 
+                    onClick={() => setLocation('/marketplace')}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 sm:px-8 rounded-xl shadow-lg transform transition hover:scale-105 text-sm sm:text-base"
+                  >
+                    <Search className="w-5 h-5 mr-2" />
+                    Explorer les profils
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Need Input Section */}
-      {showMissionForm && (
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Quel est votre besoin ?
-          </h2>
-
-          {/* Categories */}
-          <div className="mb-8">
-            <CategorySelector
-              selectedCategory={selectedCategory}
-              onCategorySelect={setSelectedCategory}
-              serviceType={selectedService}
-            />
-          </div>
-
-          {/* Need Description */}
-          <div className="space-y-4">
-            <Textarea
-              placeholder="Décrivez votre besoin en détail... (ex: Je recherche un développeur pour créer une application mobile de e-commerce)"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className="h-32 resize-none"
-            />
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Input
-                type="text"
-                placeholder="Localisation (optionnel)"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                className="flex-1"
-              />
-              <Input
-                type="number"
-                placeholder="Budget estimé (€)"
-                value={formData.budget}
-                onChange={(e) => handleInputChange('budget', e.target.value)}
-                className="flex-1"
-              />
-            </div>
-
-            <Button
-              onClick={handleCreateMission}
-              disabled={createMissionMutation.isPending}
-              className="w-full bg-gradient-to-r from-primary to-primary-dark text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
-            >
-              {createMissionMutation.isPending ? 'Publication...' : 
-              selectedService === 'direct-connection' ? 'Demander une mise en relation' : 'Publier mon appel d\'offres'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowMissionForm(false)}
-              className="w-full mt-2"
-            >
-              Annuler
-            </Button>
-          </div>
-        </div>
-      )}
+      
 
       {/* Demo Missions */}
-      <div className="mb-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+      <div className="mb-12 px-2 sm:px-0">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
           Missions en cours
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {recentMissions.map((mission) => (
             <MissionCard
               key={mission.id}
@@ -325,10 +334,10 @@ export default function Home() {
           ))}
         </div>
         {missions.length > 6 && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-6 sm:mt-8">
             <Button
               onClick={() => setLocation('/marketplace')}
-              className="bg-primary hover:bg-primary-dark text-white px-8 py-3 rounded-xl font-semibold"
+              className="bg-primary hover:bg-primary-dark text-white px-6 sm:px-8 py-3 rounded-xl font-semibold text-sm sm:text-base"
             >
               Voir toutes les missions
             </Button>
