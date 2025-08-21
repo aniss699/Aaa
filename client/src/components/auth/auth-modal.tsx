@@ -86,10 +86,10 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         password: formData.password,
       });
     } else {
-      if (!formData.name || !formData.type) {
+      if (!formData.name || !formData.email || !formData.password || !formData.type) {
         toast({
           title: 'Champs requis',
-          description: 'Veuillez remplir tous les champs',
+          description: 'Veuillez remplir tous les champs obligatoires',
           variant: 'destructive',
         });
         return;
