@@ -66,15 +66,6 @@
   }
 }
 
-* {
-  border-color: hsl(var(--border));
-}
-
-body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(210 25% 7.8431%);
@@ -175,8 +166,8 @@ body {
   }
 
   body {
-    @apply font-inter antialiased bg-background text-foreground;
-    font-family: var(--font-inter);
+    @apply antialiased bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
 }
 
