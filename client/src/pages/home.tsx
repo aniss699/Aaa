@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useLocation } from 'wouter';
 import { Link } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Home() {
   const { user } = useAuth();

@@ -1,4 +1,3 @@
-
 export interface Category {
   id: string;
   name: string;
@@ -196,7 +195,7 @@ export function getBudgetRangeById(budgetAmount: number) {
 export function formatBudget(amount: string | number): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(num)) return '0€';
-  
+
   if (num >= 1000000) {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -206,7 +205,7 @@ export function formatBudget(amount: string | number): string {
       notation: 'compact'
     }).format(num);
   }
-  
+
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: 'EUR',
@@ -227,7 +226,7 @@ export function formatRelativeTime(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffInHours = (now.getTime() - dateObj.getTime()) / (1000 * 60 * 60);
-  
+
   if (diffInHours < 1) return 'À l\'instant';
   if (diffInHours < 24) return `Il y a ${Math.floor(diffInHours)}h`;
   if (diffInHours < 168) return `Il y a ${Math.floor(diffInHours / 24)} jour${Math.floor(diffInHours / 24) > 1 ? 's' : ''}`;
@@ -245,6 +244,6 @@ export function calculateSuccessScore(provider: any): number {
   const completionRate = (provider.completedProjects || 0) / Math.max(provider.totalProjects || 1, 1);
   const avgRating = provider.rating || 0;
   const responseTime = Math.max(0, 10 - (provider.avgResponseTime || 24)) / 10;
-  
+
   return Math.round((completionRate * 0.4 + (avgRating / 5) * 0.4 + responseTime * 0.2) * 100);
 }
