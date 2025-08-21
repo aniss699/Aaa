@@ -81,23 +81,60 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
     e.preventDefault();
     
     if (mode === 'login') {
+      if (!formData.email.trim() || !formData.password.trim()) {
+        toast({
+          title: 'Champs requis',
+          description: 'Veuillez remplir tous les champs',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
       loginMutation.mutate({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
       });
     } else {
-      if (!formData.name || !formData.email || !formData.password || !formData.type) {
+      // Validation stricte pour l'inscription
+      if (!formData.name.trim()) {
         toast({
-          title: 'Champs requis',
-          description: 'Veuillez remplir tous les champs obligatoires',
+          title: 'Nom requis',
+          description: 'Veuillez saisir votre nom complet',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.email.trim()) {
+        toast({
+          title: 'Email requis',
+          description: 'Veuillez saisir votre adresse email',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.password.trim() || formData.password.length < 6) {
+        toast({
+          title: 'Mot de passe invalide',
+          description: 'Le mot de passe doit contenir au moins 6 caractères',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      if (!formData.type) {
+        toast({
+          title: 'Type de compte requis',
+          description: 'Veuillez sélectionner si vous êtes client ou prestataire',
           variant: 'destructive',
         });
         return;
       }
       
       registerMutation.mutate({
-        name: formData.name,
-        email: formData.email,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
         password: formData.password,
         type: formData.type,
       });

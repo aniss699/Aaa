@@ -1,140 +1,196 @@
-
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   TrendingUp, 
-  Users, 
-  Clock, 
   DollarSign, 
-  Target, 
-  Award,
-  BarChart3,
-  PieChart,
+  Users, 
+  Award, 
+  BarChart3, 
   Calendar,
-  MapPin
+  Target,
+  Clock,
+  Zap,
+  Download,
+  Filter,
+  RefreshCw
 } from 'lucide-react';
 
 interface AnalyticsData {
   totalRevenue: number;
-  completedMissions: number;
-  avgResponseTime: number;
-  successRate: number;
-  topCategories: Array<{ name: string; count: number; revenue: number }>;
-  monthlyTrends: Array<{ month: string; revenue: number; missions: number }>;
-  clientSatisfaction: number;
-  repeatClientRate: number;
+  totalProjects: number;
+  averageRating: number;
+  completionRate: number;
+  monthlyGrowth: number;
+  clientRetention: number;
+  averageProjectValue: number;
+  responseTime: number;
+  marketShare: number;
+  skillsDemand: { skill: string; demand: number; growth: number }[];
+  revenueByMonth: { month: string; revenue: number; projects: number }[];
+  topCategories: { category: string; count: number; revenue: number }[];
+  competitorAnalysis: { 
+    yourPrice: number; 
+    marketAverage: number; 
+    topPerformers: number; 
+    recommendation: string;
+  };
 }
 
-interface AnalyticsDashboardProps {
-  data: AnalyticsData;
-  userType: 'client' | 'provider';
-}
+export function AnalyticsDashboard() {
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
 
-export function AnalyticsDashboard({ data, userType }: AnalyticsDashboardProps) {
-  const formatCurrency = (amount: number) => 
-    new Intl.NumberFormat('fr-FR', { 
-      style: 'currency', 
-      currency: 'EUR',
-      notation: amount > 10000 ? 'compact' : 'standard'
-    }).format(amount);
-
-  const MetricCard = ({ icon: Icon, title, value, subtitle, trend }: {
-    icon: any;
-    title: string;
-    value: string | number;
-    subtitle?: string;
-    trend?: 'up' | 'down' | 'neutral';
-  }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <div className="flex items-center gap-2">
-              <h3 className="text-2xl font-bold">{value}</h3>
-              {trend && (
-                <Badge variant={trend === 'up' ? 'default' : trend === 'down' ? 'destructive' : 'secondary'}>
-                  <TrendingUp className={`h-3 w-3 mr-1 ${trend === 'down' ? 'rotate-180' : ''}`} />
-                  {subtitle}
-                </Badge>
-              )}
-            </div>
-          </div>
-          <Icon className="h-8 w-8 text-muted-foreground" />
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const data: AnalyticsData = {
+    totalRevenue: 45280,
+    totalProjects: 127,
+    averageRating: 4.8,
+    completionRate: 94,
+    monthlyGrowth: 23,
+    clientRetention: 87,
+    averageProjectValue: 1850,
+    responseTime: 2.4,
+    marketShare: 12,
+    skillsDemand: [
+      { skill: 'React/Next.js', demand: 95, growth: 18 },
+      { skill: 'UI/UX Design', demand: 88, growth: 25 },
+      { skill: 'Mobile App', demand: 82, growth: 15 },
+      { skill: 'E-commerce', demand: 76, growth: 12 },
+    ],
+    revenueByMonth: [
+      { month: 'Jan', revenue: 3200, projects: 8 },
+      { month: 'Fév', revenue: 4100, projects: 11 },
+      { month: 'Mar', revenue: 3800, projects: 9 },
+      { month: 'Avr', revenue: 5200, projects: 14 },
+      { month: 'Mai', revenue: 4900, projects: 12 },
+      { month: 'Juin', revenue: 6100, projects: 16 },
+    ],
+    topCategories: [
+      { category: 'Développement Web', count: 45, revenue: 18500 },
+      { category: 'Design UI/UX', count: 32, revenue: 12800 },
+      { category: 'Mobile', count: 28, revenue: 9200 },
+      { category: 'Marketing', count: 22, revenue: 4780 },
+    ],
+    competitorAnalysis: {
+      yourPrice: 65,
+      marketAverage: 75,
+      topPerformers: 90,
+      recommendation: 'Augmentez vos tarifs de 15-20% pour vous aligner sur le marché'
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Métriques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          icon={DollarSign}
-          title={userType === 'provider' ? 'Chiffre d\'affaires' : 'Budget dépensé'}
-          value={formatCurrency(data.totalRevenue)}
-          subtitle="+12%"
-          trend="up"
-        />
-        <MetricCard
-          icon={Target}
-          title="Missions réussies"
-          value={data.completedMissions}
-          subtitle="+8%"
-          trend="up"
-        />
-        <MetricCard
-          icon={Clock}
-          title="Temps de réponse moyen"
-          value={`${data.avgResponseTime}h`}
-          subtitle="-15%"
-          trend="up"
-        />
-        <MetricCard
-          icon={Award}
-          title="Taux de réussite"
-          value={`${data.successRate}%`}
-          subtitle="+3%"
-          trend="up"
-        />
+      {/* Header avec contrôles */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Analytics & Performance</h2>
+          <p className="text-gray-600">Analysez vos performances et optimisez votre activité</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select 
+            value={selectedPeriod} 
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="border rounded px-3 py-2 text-sm"
+          >
+            <option value="7d">7 derniers jours</option>
+            <option value="30d">30 derniers jours</option>
+            <option value="90d">3 derniers mois</option>
+            <option value="12m">12 derniers mois</option>
+          </select>
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-1" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+      {/* KPIs principaux */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Revenus totaux</p>
+                <p className="text-3xl font-bold">{data.totalRevenue.toLocaleString()}€</p>
+                <p className="text-blue-100 text-sm mt-1">+{data.monthlyGrowth}% vs période précédente</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Projets complétés</p>
+                <p className="text-3xl font-bold">{data.totalProjects}</p>
+                <p className="text-green-100 text-sm mt-1">{data.completionRate}% de réussite</p>
+              </div>
+              <Award className="h-8 w-8 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Valeur moyenne</p>
+                <p className="text-3xl font-bold">{data.averageProjectValue}€</p>
+                <p className="text-purple-100 text-sm mt-1">Par projet</p>
+              </div>
+              <Target className="h-8 w-8 text-purple-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Temps de réponse</p>
+                <p className="text-3xl font-bold">{data.responseTime}h</p>
+                <p className="text-orange-100 text-sm mt-1">Moyenne</p>
+              </div>
+              <Clock className="h-8 w-8 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Onglets détaillés */}
+      <Tabs defaultValue="performance" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="trends">Tendances</TabsTrigger>
-          <TabsTrigger value="geography">Géographie</TabsTrigger>
+          <TabsTrigger value="market">Marché</TabsTrigger>
+          <TabsTrigger value="skills">Compétences</TabsTrigger>
+          <TabsTrigger value="recommendations">IA Insights</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="performance" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top catégories */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
-                  Top Catégories
+                <CardTitle className="flex items-center text-gray-900">
+                  <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+                  Évolution mensuelle
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {data.topCategories.map((category, index) => (
-                    <div key={category.name} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{category.name}</span>
-                        <span className="font-medium">{formatCurrency(category.revenue)}</span>
-                      </div>
-                      <Progress 
-                        value={(category.revenue / data.topCategories[0].revenue) * 100} 
-                        className="h-2"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{category.count} missions</span>
-                        <span>#{index + 1}</span>
+                  {data.revenueByMonth.map((month, index) => (
+                    <div key={month.month} className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{month.month}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-600">{month.projects} projets</span>
+                        <span className="font-semibold">{month.revenue.toLocaleString()}€</span>
                       </div>
                     </div>
                   ))}
@@ -142,153 +198,196 @@ export function AnalyticsDashboard({ data, userType }: AnalyticsDashboardProps) 
               </CardContent>
             </Card>
 
-            {/* Satisfaction client */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Satisfaction Client
+                <CardTitle className="flex items-center text-gray-900">
+                  <BarChart3 className="w-5 h-5 mr-2 text-green-600" />
+                  Top catégories
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm">Note moyenne</span>
-                      <span className="font-bold">{data.clientSatisfaction}/5</span>
-                    </div>
-                    <Progress value={data.clientSatisfaction * 20} className="h-3" />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm">Clients fidèles</span>
-                      <span className="font-bold">{data.repeatClientRate}%</span>
-                    </div>
-                    <Progress value={data.repeatClientRate} className="h-3" />
-                  </div>
-
-                  <div className="pt-4 border-t">
-                    <Badge variant="outline" className="mr-2">⭐ 98% recommandent</Badge>
-                    <Badge variant="outline">🔄 85% reviennent</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="performance">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Performance mensuelle
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-end justify-between gap-2">
-                  {data.monthlyTrends.map((month, index) => (
-                    <div key={month.month} className="flex-1 flex flex-col items-center">
-                      <div 
-                        className="w-full bg-primary rounded-t"
-                        style={{ height: `${(month.revenue / Math.max(...data.monthlyTrends.map(m => m.revenue))) * 200}px` }}
-                      />
-                      <span className="text-xs mt-2 text-center">{month.month}</span>
+                <div className="space-y-4">
+                  {data.topCategories.map((category) => (
+                    <div key={category.category} className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{category.category}</span>
+                        <span className="text-sm text-gray-600">
+                          {category.count} projets • {category.revenue.toLocaleString()}€
+                        </span>
+                      </div>
+                      <Progress value={(category.count / data.totalProjects) * 100} className="h-2" />
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Cette semaine
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Nouvelles missions</span>
-                    <Badge>+12</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Messages reçus</span>
-                    <Badge>+47</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Offres soumises</span>
-                    <Badge>+8</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Projets terminés</span>
-                    <Badge>+3</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="trends">
+        <TabsContent value="market" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Analyse des tendances</CardTitle>
+              <CardTitle className="flex items-center text-gray-900">
+                <Target className="w-5 h-5 mr-2 text-blue-600" />
+                Analyse concurrentielle
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <TrendingUp className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                  <h4 className="font-semibold">Croissance</h4>
-                  <p className="text-2xl font-bold text-blue-600">+25%</p>
-                  <p className="text-sm text-muted-foreground">vs mois dernier</p>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">{data.competitorAnalysis.yourPrice}€/h</div>
+                  <div className="text-sm text-gray-600">Vos tarifs</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <Users className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                  <h4 className="font-semibold">Nouveaux clients</h4>
-                  <p className="text-2xl font-bold text-green-600">34</p>
-                  <p className="text-sm text-muted-foreground">ce mois</p>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gray-600">{data.competitorAnalysis.marketAverage}€/h</div>
+                  <div className="text-sm text-gray-600">Moyenne marché</div>
                 </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <Award className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                  <h4 className="font-semibold">Note moyenne</h4>
-                  <p className="text-2xl font-bold text-purple-600">4.9</p>
-                  <p className="text-sm text-muted-foreground">sur 5 étoiles</p>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">{data.competitorAnalysis.topPerformers}€/h</div>
+                  <div className="text-sm text-gray-600">Top performers</div>
+                </div>
+              </div>
+              <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <Zap className="w-5 h-5 text-yellow-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-yellow-800">Recommandation tarifaire</h4>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      {data.competitorAnalysis.recommendation}
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="geography">
+        <TabsContent value="skills" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Répartition géographique
+              <CardTitle className="flex items-center text-gray-900">
+                <TrendingUp className="w-5 h-5 mr-2 text-purple-600" />
+                Demande par compétence
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { region: 'Île-de-France', missions: 45, revenue: 25000 },
-                  { region: 'Rhône-Alpes', missions: 23, revenue: 15000 },
-                  { region: 'PACA', missions: 18, revenue: 12000 },
-                  { region: 'Occitanie', missions: 15, revenue: 8000 }
-                ].map(region => (
-                  <div key={region.region} className="text-center p-4 border rounded-lg">
-                    <h4 className="font-semibold">{region.region}</h4>
-                    <p className="text-lg font-bold text-primary">{region.missions}</p>
-                    <p className="text-xs text-muted-foreground">missions</p>
-                    <p className="text-sm font-medium">{formatCurrency(region.revenue)}</p>
+              <div className="space-y-6">
+                {data.skillsDemand.map((skill) => (
+                  <div key={skill.skill} className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{skill.skill}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={skill.growth > 20 ? 'default' : 'secondary'}>
+                          +{skill.growth}% croissance
+                        </Badge>
+                        <span className="text-sm text-gray-600">{skill.demand}% demande</span>
+                      </div>
+                    </div>
+                    <Progress value={skill.demand} className="h-3" />
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="recommendations" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-900">
+                  <Zap className="w-5 h-5 mr-2 text-blue-600" />
+                  Recommandations IA
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div>
+                      <h4 className="font-medium text-blue-900">Optimisation des tarifs</h4>
+                      <p className="text-sm text-blue-700 mt-1">
+                        Vos prix sont 15% en dessous du marché. Augmentez-les progressivement pour maximiser vos revenus.
+                      </p>
+                      <div className="mt-2">
+                        <Badge className="bg-blue-100 text-blue-800">Impact: +3200€/mois</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                    <div>
+                      <h4 className="font-medium text-green-900">Créneaux porteurs</h4>
+                      <p className="text-sm text-green-700 mt-1">
+                        Les projets React/Next.js ont une croissance de +25%. Mettez en avant cette compétence.
+                      </p>
+                      <div className="mt-2">
+                        <Badge className="bg-green-100 text-green-800">Opportunité: Élevée</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                    <div>
+                      <h4 className="font-medium text-orange-900">Temps de réponse</h4>
+                      <p className="text-sm text-orange-700 mt-1">
+                        Répondez 30% plus vite aux messages pour améliorer votre taux de conversion de 12%.
+                      </p>
+                      <div className="mt-2">
+                        <Badge className="bg-orange-100 text-orange-800">Objectif: &lt;2h</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-900">
+                  <Target className="w-5 h-5 mr-2 text-purple-600" />
+                  Objectifs du mois
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-600">Revenus (7500€)</span>
+                    <span className="font-medium">73%</span>
+                  </div>
+                  <Progress value={73} className="h-2" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-600">Nouveaux clients (8)</span>
+                    <span className="font-medium">62%</span>
+                  </div>
+                  <Progress value={62} className="h-2" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-600">Projets livrés (15)</span>
+                    <span className="font-medium">87%</span>
+                  </div>
+                  <Progress value={87} className="h-2" />
+                </div>
+
+                <div className="mt-6 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    Vous êtes en bonne voie pour atteindre vos objectifs ce mois !
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
