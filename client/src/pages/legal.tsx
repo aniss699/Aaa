@@ -1,208 +1,138 @@
 
-import { useLocation } from 'wouter';
-
 export default function Legal() {
-  const [location] = useLocation();
-  const isTerms = location === '/cgv';
-  const isPrivacy = location === '/mentions-legales';
-
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {isTerms && (
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">
-            Conditions Générales de Vente
-          </h1>
-          
-          <div className="prose prose-lg max-w-none">
-            <h2>1. Objet</h2>
-            <p>
-              Les présentes conditions générales de vente (CGV) régissent l'utilisation de la plateforme AppelsPro,
-              service de mise en relation entre clients et prestataires de services.
-            </p>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          Mentions Légales & Politique de Confidentialité
+        </h1>
+        <p className="text-gray-600">
+          Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
+        </p>
+      </div>
 
-            <h2>2. Acceptation des conditions</h2>
-            <p>
-              L'utilisation de la plateforme AppelsPro implique l'acceptation pleine et entière des présentes CGV.
-              Ces conditions sont accessibles à tout moment sur le site et prévaudront sur toute autre document.
-            </p>
-
-            <h2>3. Description du service</h2>
-            <p>
-              AppelsPro propose deux services principaux :
-            </p>
-            <ul>
-              <li><strong>Appels d'offres inverses :</strong> Publication de projets et réception d'offres de prestataires</li>
-              <li><strong>Mise en relation directe :</strong> Contact direct avec des professionnels spécialisés</li>
-            </ul>
-
-            <h2>4. Inscription et compte utilisateur</h2>
-            <p>
-              L'inscription sur la plateforme est gratuite. L'utilisateur s'engage à fournir des informations exactes
-              et à maintenir ses données à jour. Chaque utilisateur est responsable de son compte et de ses activités.
-            </p>
-
-            <h2>5. Obligations des utilisateurs</h2>
-            <h3>5.1 Clients</h3>
-            <ul>
-              <li>Fournir des descriptions précises et complètes des projets</li>
-              <li>Respecter les prestataires et leurs propositions</li>
-              <li>Honorer les engagements pris lors de l'acceptation d'une offre</li>
-            </ul>
-            
-            <h3>5.2 Prestataires</h3>
-            <ul>
-              <li>Proposer des services conformes à leurs compétences</li>
-              <li>Respecter les délais et engagements pris</li>
-              <li>Fournir des prestations de qualité professionnelle</li>
-            </ul>
-
-            <h2>6. Tarification</h2>
-            <p>
-              L'utilisation de base de la plateforme est gratuite. Des services premium pourront être proposés
-              ultérieurement avec une tarification spécifique qui sera communiquée aux utilisateurs.
-            </p>
-
-            <h2>7. Responsabilité</h2>
-            <p>
-              AppelsPro est un intermédiaire technique facilitant la mise en relation. La plateforme n'est pas
-              responsable de la qualité des prestations, des litiges entre utilisateurs, ou des dommages
-              résultant de l'utilisation du service.
-            </p>
-
-            <h2>8. Propriété intellectuelle</h2>
-            <p>
-              Tous les éléments de la plateforme (design, textes, logos) sont protégés par le droit d'auteur.
-              Les utilisateurs conservent leurs droits sur les contenus qu'ils publient.
-            </p>
-
-            <h2>9. Résiliation</h2>
-            <p>
-              Les utilisateurs peuvent supprimer leur compte à tout moment. AppelsPro se réserve le droit
-              de suspendre ou supprimer un compte en cas de violation des présentes conditions.
-            </p>
-
-            <h2>10. Droit applicable</h2>
-            <p>
-              Les présentes CGV sont soumises au droit français. En cas de litige, les tribunaux français
-              seront seuls compétents.
-            </p>
-
-            <p className="text-sm text-gray-600 mt-8">
-              Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
-            </p>
+      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-8">
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Éditeur du site</h2>
+          <div className="text-gray-700 space-y-2">
+            <p><strong>Nom de l'entreprise :</strong> AppelsPro</p>
+            <p><strong>Adresse :</strong> À définir</p>
+            <p><strong>Email :</strong> contact@appelspro.fr</p>
+            <p><strong>Directeur de la publication :</strong> À définir</p>
           </div>
-        </div>
-      )}
+        </section>
 
-      {isPrivacy && (
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">
-            Mentions Légales
-          </h1>
-          
-          <div className="prose prose-lg max-w-none">
-            <h2>1. Éditeur du site</h2>
-            <p>
-              <strong>AppelsPro</strong><br />
-              Plateforme de mise en relation professionnelle<br />
-              [Adresse à compléter]<br />
-              Email : contact@appelspro.fr<br />
-              Téléphone : [À compléter]
-            </p>
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Hébergement</h2>
+          <div className="text-gray-700 space-y-2">
+            <p><strong>Hébergeur :</strong> Replit</p>
+            <p><strong>Adresse :</strong> 767 Bryant Street, San Francisco, CA 94107</p>
+          </div>
+        </section>
 
-            <h2>2. Hébergement</h2>
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Collecte des données personnelles</h2>
+          <div className="text-gray-700 space-y-4">
             <p>
-              Ce site est hébergé par :<br />
-              <strong>Replit, Inc.</strong><br />
-              767 Bryant St. #203<br />
-              San Francisco, CA 94107<br />
-              États-Unis
+              Dans le cadre de l'utilisation de notre plateforme, nous collectons les données suivantes :
             </p>
-
-            <h2>3. Protection des données personnelles</h2>
-            <p>
-              Conformément au Règlement Général sur la Protection des Données (RGPD) et à la loi Informatique et Libertés,
-              vous disposez d'un droit d'accès, de rectification, de suppression et d'opposition aux données vous concernant.
-            </p>
-            
-            <h3>3.1 Données collectées</h3>
-            <ul>
+            <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Nom et prénom</li>
               <li>Adresse email</li>
-              <li>Informations de profil professionnel</li>
+              <li>Informations sur vos projets et missions</li>
               <li>Données de navigation (cookies techniques)</li>
             </ul>
+          </div>
+        </section>
 
-            <h3>3.2 Finalité du traitement</h3>
-            <ul>
-              <li>Gestion des comptes utilisateurs</li>
-              <li>Mise en relation entre clients et prestataires</li>
-              <li>Amélioration du service</li>
-              <li>Communication liée au service</li>
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Utilisation des données</h2>
+          <div className="text-gray-700 space-y-4">
+            <p>Vos données personnelles sont utilisées pour :</p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>Créer et gérer votre compte utilisateur</li>
+              <li>Faciliter la mise en relation entre clients et prestataires</li>
+              <li>Améliorer nos services</li>
+              <li>Vous envoyer des notifications importantes</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Vos droits</h2>
+          <div className="text-gray-700 space-y-4">
+            <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+            <ul className="list-disc list-inside space-y-2 ml-4">
+              <li>Droit d'accès à vos données</li>
+              <li>Droit de rectification</li>
+              <li>Droit à l'effacement</li>
+              <li>Droit à la portabilité des données</li>
+              <li>Droit d'opposition</li>
+            </ul>
+            <p className="mt-4">
+              Pour exercer ces droits, contactez-nous à l'adresse : 
+              <a href="mailto:contact@appelspro.fr" className="text-primary hover:underline ml-1">
+                contact@appelspro.fr
+              </a>
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Conditions Générales de Vente</h2>
+          <div className="text-gray-700 space-y-4">
+            <h3 className="text-lg font-semibold">Article 1 - Objet</h3>
+            <p>
+              AppelsPro est une plateforme de mise en relation entre clients recherchant des services 
+              et prestataires proposant leurs compétences.
+            </p>
+
+            <h3 className="text-lg font-semibold mt-6">Article 2 - Services</h3>
+            <p>
+              Nous proposons deux types de services :
+            </p>
+            <ul className="list-disc list-inside space-y-1 ml-4">
+              <li>Appels d'offres inverses : les clients publient leurs besoins</li>
+              <li>Mise en relation directe : connexion immédiate avec des professionnels</li>
             </ul>
 
-            <h3>3.3 Conservation des données</h3>
+            <h3 className="text-lg font-semibold mt-6">Article 3 - Responsabilités</h3>
             <p>
-              Les données personnelles sont conservées pendant la durée nécessaire aux finalités
-              pour lesquelles elles sont collectées, et au maximum 3 ans après la dernière activité.
+              AppelsPro agit uniquement en tant qu'intermédiaire. Les contrats sont conclus 
+              directement entre clients et prestataires.
             </p>
 
-            <h2>4. Cookies</h2>
+            <h3 className="text-lg font-semibold mt-6">Article 4 - Tarifs</h3>
             <p>
-              Le site utilise uniquement des cookies techniques nécessaires au fonctionnement de la plateforme.
-              Aucun cookie de tracking ou publicitaire n'est utilisé.
-            </p>
-
-            <h2>5. Droit applicable</h2>
-            <p>
-              Les présentes mentions légales sont soumises au droit français.
-            </p>
-
-            <h2>6. Contact</h2>
-            <p>
-              Pour toute question relative à ces mentions légales ou à la protection de vos données,
-              vous pouvez nous contacter à : <strong>contact@appelspro.fr</strong>
-            </p>
-
-            <p className="text-sm text-gray-600 mt-8">
-              Dernière mise à jour : {new Date().toLocaleDateString('fr-FR')}
+              L'inscription et la publication de projets sont gratuites pour les clients. 
+              Des frais peuvent s'appliquer aux prestataires selon les conditions d'utilisation.
             </p>
           </div>
-        </div>
-      )}
+        </section>
 
-      {!isTerms && !isPrivacy && (
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">
-            Informations Légales
-          </h1>
-          <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-            <a 
-              href="/cgv"
-              className="bg-white rounded-xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow"
-            >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Conditions Générales de Vente
-              </h2>
-              <p className="text-gray-600">
-                Consultez nos conditions d'utilisation et modalités de service
-              </p>
-            </a>
-            <a 
-              href="/mentions-legales"
-              className="bg-white rounded-xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow"
-            >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Mentions Légales
-              </h2>
-              <p className="text-gray-600">
-                Informations légales et politique de confidentialité
-              </p>
-            </a>
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Cookies</h2>
+          <div className="text-gray-700">
+            <p>
+              Notre site utilise uniquement des cookies techniques nécessaires au fonctionnement 
+              de la plateforme. Aucun cookie publicitaire ou de tracking n'est utilisé.
+            </p>
           </div>
-        </div>
-      )}
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact</h2>
+          <div className="text-gray-700">
+            <p>
+              Pour toute question concernant ces mentions légales ou notre politique de confidentialité, 
+              vous pouvez nous contacter à l'adresse : 
+              <a href="mailto:contact@appelspro.fr" className="text-primary hover:underline ml-1">
+                contact@appelspro.fr
+              </a>
+            </p>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

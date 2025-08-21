@@ -30,7 +30,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <div className="min-h-screen bg-gray-50 font-inter">
+          <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Router />
           </div>

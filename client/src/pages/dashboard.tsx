@@ -7,7 +7,7 @@ import { formatBudget, formatDate } from '@/lib/categories';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardList, Hand, Star, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { ClipboardList, Hand, Star, TrendingUp, Users, DollarSign, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 export default function Dashboard() {
@@ -147,6 +147,7 @@ export default function Dashboard() {
               <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg mb-4">Aucune mission publiée</p>
               <Button onClick={() => setLocation('/')}>
+                <Plus className="w-4 h-4 mr-2" />
                 Publier ma première mission
               </Button>
             </div>
