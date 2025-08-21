@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
@@ -79,7 +78,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (mode === 'login') {
       if (!formData.email.trim() || !formData.password.trim()) {
         toast({
@@ -89,7 +88,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         });
         return;
       }
-      
+
       loginMutation.mutate({
         email: formData.email.trim(),
         password: formData.password,
@@ -104,7 +103,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         });
         return;
       }
-      
+
       if (!formData.password.trim() || formData.password.length < 6) {
         toast({
           title: 'Mot de passe invalide',
@@ -113,7 +112,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         });
         return;
       }
-      
+
       registerMutation.mutate({
         name: formData.name.trim() || 'Utilisateur',
         email: formData.email.trim(),
@@ -148,9 +147,27 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
           <DialogTitle className="text-2xl font-bold text-blue-900 text-center">
             {mode === 'login' ? 'Connexion' : 'Créer un compte'}
           </DialogTitle>
+          <div className="sr-only">
+            {mode === 'login' ? 'Connectez-vous à votre compte' : 'Créez votre compte PrestServices'}
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {mode === 'register' && (
+            <div>
+              <Label htmlFor="name" className="text-sm font-medium text-blue-800">
+                Nom
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                className="mt-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                required
+              />
+            </div>
+          )}
+
           <div>
             <Label htmlFor="email" className="text-sm font-medium text-blue-800">
               Email
@@ -178,6 +195,23 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
               required
             />
           </div>
+
+          {mode === 'register' && (
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="type" className="text-sm font-medium text-blue-800">
+                Type de compte :
+              </Label>
+              <select
+                id="type"
+                value={formData.type}
+                onChange={(e) => handleInputChange('type', e.target.value)}
+                className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-md px-2 py-1"
+              >
+                <option value="client">Client</option>
+                <option value="provider">Prestataire</option>
+              </select>
+            </div>
+          )}
 
           <Button
             type="submit"

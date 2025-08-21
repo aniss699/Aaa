@@ -25,7 +25,7 @@ export function Navbar() {
   const getUserTypeInfo = () => {
     if (!user) return null;
 
-    return user.type === 'client' 
+    return user.type === 'client'
       ? { icon: Briefcase, label: 'Client', color: 'bg-blue-600' }
       : { icon: Users, label: 'Prestataire', color: 'bg-blue-500' };
   };
