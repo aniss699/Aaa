@@ -34,7 +34,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
   if (!mission || isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-0 shadow-2xl">
           <DialogHeader>
             <DialogTitle>Chargement...</DialogTitle>
           </DialogHeader>
@@ -76,7 +76,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white border-0 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 pr-8">
             {mission.title}

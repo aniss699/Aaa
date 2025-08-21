@@ -166,7 +166,19 @@
   }
 
   body {
-    @apply font-inter antialiased bg-background text-foreground;
+    @apply antialiased bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Amélioration des modals */
+  [data-state="open"][data-radix-dialog-overlay] {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  [data-radix-dialog-content] {
+    background-color: white !important;
+    border: none !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
   }
 }
 
@@ -177,7 +189,7 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  
+
   .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -189,7 +201,7 @@
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Éviter les problèmes de zoom sur iOS */
   input[type="text"],
   input[type="email"],
@@ -199,7 +211,7 @@
   select {
     font-size: 16px;
   }
-  
+
   @media (max-width: 767px) {
     input[type="text"],
     input[type="email"], 
