@@ -333,4 +333,14 @@
       background-position: 0% 50%;
     }
   }
+
+  /* Blue theme variables */
+  :root {
+    --primary-blue: #2563eb;
+    --primary-blue-dark: #1d4ed8;
+    --primary-blue-light: #3b82f6;
+    --accent-blue: #60a5fa;
+    --background-blue: #eff6ff;
+  }
+  }
 }

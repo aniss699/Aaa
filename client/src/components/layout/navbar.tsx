@@ -24,8 +24,8 @@ export function Navbar() {
     if (!user) return null;
 
     return user.type === 'client' 
-      ? { icon: Briefcase, label: 'Client', color: 'bg-blue-500' }
-      : { icon: Users, label: 'Prestataire', color: 'bg-green-500' };
+      ? { icon: Briefcase, label: 'Client', color: 'bg-blue-600' }
+      : { icon: Users, label: 'Prestataire', color: 'bg-blue-500' };
   };
 
   const userTypeInfo = getUserTypeInfo();
@@ -86,7 +86,7 @@ export function Navbar() {
               ) : (
                 <Button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2 px-5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   Se connecter
                 </Button>
@@ -172,7 +172,7 @@ export function Navbar() {
                       setShowAuthModal(true);
                       setShowMobileMenu(false);
                     }}
-                    className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-2 px-5 rounded-full shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all duration-200"
                   >
                     Se connecter
                   </Button>
