@@ -103,22 +103,73 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* User Type Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white rounded-full p-1 shadow-lg border border-gray-200">
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setSelectedService('reverse-bidding')}
+                className={`px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 ${
+                  selectedService === 'reverse-bidding'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'text-gray-600 hover:text-blue-500'
+                }`}
+              >
+                👨‍💼 Je suis client
+              </button>
+              <button
+                onClick={() => setSelectedService('direct-connection')}
+                className={`px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 ${
+                  selectedService === 'direct-connection'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'text-gray-600 hover:text-green-500'
+                }`}
+              >
+                🛠️ Je suis prestataire
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Hero Section avec animations */}
         <div className="text-center mb-12 sm:mb-16 relative px-2 sm:px-0">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 rounded-3xl blur-3xl"></div>
           <div className="relative">
             <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 animate-fade-in leading-tight">
-              <span className="text-gray-900">Trouvez le </span>
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                prestataire idéal
-              </span>
-              <br />
-              <span className="text-gray-900">pour vos projets</span>
+              {selectedService === 'reverse-bidding' ? (
+                <>
+                  <span className="text-gray-900">Trouvez le </span>
+                  <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    prestataire idéal
+                  </span>
+                  <br />
+                  <span className="text-gray-900">pour vos projets</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-gray-900">Développez </span>
+                  <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                    votre activité
+                  </span>
+                  <br />
+                  <span className="text-gray-900">en tant que pro</span>
+                </>
+              )}
             </h1>
             <p className="text-base sm:text-xl text-gray-700 mb-8 sm:mb-10 max-w-4xl mx-auto leading-relaxed animate-fade-in-delay px-4 sm:px-0">
-              🚀 AppelsPro révolutionne la mise en relation entre clients et prestataires. 
-              <br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>Publiez votre projet et recevez des devis personnalisés en quelques heures.
+              {selectedService === 'reverse-bidding' ? (
+                <>
+                  🚀 AppelsPro révolutionne la mise en relation entre clients et prestataires. 
+                  <br className="hidden sm:block" />
+                  <span className="sm:hidden"> </span>Publiez votre projet et recevez des devis personnalisés en quelques heures.
+                </>
+              ) : (
+                <>
+                  💼 Accédez à de nouvelles opportunités business sans prospection.
+                  <br className="hidden sm:block" />
+                  <span className="sm:hidden"> </span>Répondez aux appels d'offres qui correspondent à vos compétences.
+                </>
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center animate-fade-in-delay-2 text-sm sm:text-base">
               <div className="flex items-center text-green-600 font-semibold">

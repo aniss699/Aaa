@@ -79,41 +79,68 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white border-0 shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900 pr-8">
-            {mission.title}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white border-0 shadow-2xl rounded-xl">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white rounded-t-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl font-bold pr-8">
+              {mission.title}
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Mission Info */}
           <div className="border-b pb-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                <IconComponent className={`w-8 h-8 ${category?.color || 'text-gray-500'}`} />
+            <div className="flex items-start space-x-4 mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center shadow-lg">
+                <IconComponent className={`w-8 h-8 ${category?.color || 'text-blue-600'}`} />
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">{mission.title}</h3>
-                <p className="text-gray-500">
-                  Par {mission.clientName} • {formatDate(mission.createdAt!)}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900">{mission.title}</h3>
+                  <Badge className="bg-green-100 text-green-700 border-green-200">
+                    {category?.name || mission.category}
+                  </Badge>
+                </div>
+                <p className="text-gray-500 mb-3">
+                  Publié par <span className="font-medium text-blue-600">{mission.clientName}</span> • {formatDate(mission.createdAt!)}
                 </p>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-700 leading-relaxed">{mission.description}</p>
+                </div>
               </div>
             </div>
-            <p className="text-gray-700 mb-4">{mission.description}</p>
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <span className="flex items-center">
-                <Euro className="w-4 h-4 mr-2" />
-                Budget: {formatBudget(mission.budget || '0')}
-              </span>
-              <span className="flex items-center">
-                <MapPin className="w-4 h-4 mr-2" />
-                {mission.location || 'Non spécifié'}
-              </span>
-              <span className="flex items-center">
-                <Users className="w-4 h-4 mr-2" />
-                {mission.bids.length} offre(s) reçue(s)
-              </span>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="flex items-center mb-2">
+                  <Euro className="w-5 h-5 text-green-600 mr-2" />
+                  <span className="font-medium text-gray-700">Budget</span>
+                </div>
+                <div className="text-xl font-bold text-green-600">
+                  {formatBudget(mission.budget || '0')}
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="flex items-center mb-2">
+                  <MapPin className="w-5 h-5 text-blue-600 mr-2" />
+                  <span className="font-medium text-gray-700">Localisation</span>
+                </div>
+                <div className="text-blue-600 font-medium">
+                  {mission.location || 'Non spécifié'}
+                </div>
+              </div>
+              
+              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <div className="flex items-center mb-2">
+                  <Users className="w-5 h-5 text-purple-600 mr-2" />
+                  <span className="font-medium text-gray-700">Candidatures</span>
+                </div>
+                <div className="text-xl font-bold text-purple-600">
+                  {mission.bids.length}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -124,49 +151,63 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
 
           {/* Existing Bids */}
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              Offres reçues ({mission.bids.length})
-            </h4>
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="text-lg font-semibold text-gray-900">
+                Offres reçues ({mission.bids.length})
+              </h4>
+              {sortedBids.length > 0 && (
+                <div className="text-sm text-gray-500">
+                  Triées par prix croissant
+                </div>
+              )}
+            </div>
             <div className="space-y-4">
-              {sortedBids.map((bid: Bid) => (
-                <div key={bid.id} className="border border-gray-200 rounded-xl p-6">
+              {sortedBids.map((bid: Bid, index: number) => (
+                <div key={bid.id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h5 
-                          className="font-semibold text-gray-900 cursor-pointer hover:text-primary"
-                          onClick={() => {
-                            setSelectedProviderId(bid.providerId);
-                            setSelectedProviderName(bid.providerName);
-                          }}
-                        >
-                          {bid.providerName}
-                        </h5>
-                        {/* Future IA optimization badge */}
-                        {(bid as any).isAiOptimized && (
-                          <span className="px-2 py-1 text-xs bg-gradient-to-r from-purple-100 to-blue-100 text-purple-700 rounded-full border border-purple-200">
-                            ✨ Offre optimisée
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <div className="flex items-center">
-                          {renderStars(bid.rating || '5.0')}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {bid.providerName.charAt(0).toUpperCase()}
                         </div>
-                        <span className="text-sm text-gray-600">
-                          {parseFloat(bid.rating || '5.0').toFixed(1)}/5
-                        </span>
+                        <div>
+                          <h5 
+                            className="font-semibold text-gray-900 cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => {
+                              setSelectedProviderId(bid.providerId);
+                              setSelectedProviderName(bid.providerName);
+                            }}
+                          >
+                            {bid.providerName}
+                          </h5>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex items-center">
+                              {renderStars(bid.rating || '5.0')}
+                            </div>
+                            <span className="text-sm text-gray-600">
+                              {parseFloat(bid.rating || '5.0').toFixed(1)}/5
+                            </span>
+                            {index === 0 && sortedBids.length > 1 && (
+                              <Badge className="bg-green-100 text-green-700 text-xs">
+                                Meilleure offre
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">
+                      <div className="text-2xl font-bold text-green-600">
                         {formatBudget(bid.price)}
                       </div>
-                      <div className="text-sm text-gray-500">{bid.timeline}</div>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        {bid.timeline}
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <p className="text-gray-700 whitespace-pre-line">{bid.proposal}</p>
+                  <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 mb-4 border-l-4 border-blue-400">
+                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">{bid.proposal}</p>
                   </div>
                   {user && mission.clientName === user.name && (
                     <div className="flex gap-2">
@@ -175,16 +216,15 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
                           setSelectedBidId(bid.id);
                           setSelectedBidderName(bid.providerName);
                         }}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold flex items-center gap-2"
+                        variant="outline"
+                        className="border-blue-500 text-blue-600 hover:bg-blue-50 font-semibold flex items-center gap-2"
                       >
-                        <span>💬</span>
-                        Répondre
+                        💬 Répondre
                       </Button>
                       <Button 
                         className="bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center gap-2"
                       >
-                        <span>✅</span>
-                        Accepter directement
+                        ✅ Accepter l'offre
                       </Button>
                     </div>
                   )}
