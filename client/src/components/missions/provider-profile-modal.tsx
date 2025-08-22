@@ -1,12 +1,18 @@
-
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Calendar, Award, Briefcase, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/categories';
 import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
+import { MessageCircle, Phone } from 'lucide-react';
 
 interface ProviderProfileModalProps {
   providerId: string | null;
@@ -52,6 +58,7 @@ interface ProviderProfile {
 }
 
 export function ProviderProfileModal({ providerId, providerName, isOpen, onClose }: ProviderProfileModalProps) {
+  const { toast } = useToast();
   const { data: profile, isLoading } = useQuery<ProviderProfile>({
     queryKey: ['/api/providers', providerId, 'profile'],
     enabled: !!providerId && isOpen,
@@ -125,6 +132,34 @@ export function ProviderProfileModal({ providerId, providerName, isOpen, onClose
               </div>
             </div>
 
+            {/* Action Buttons: Message and Call */}
+            <div className="flex gap-3">
+              <Button
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={() => {
+                  // Navigate to messages page with provider info
+                  window.location.href = `/messages?contact=${providerId}&name=${encodeURIComponent(providerName)}`;
+                }}
+              >
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Message
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-green-500 text-green-600 hover:bg-green-50"
+                onClick={() => {
+                  // Show toast with contact info or initiate call
+                  toast({
+                    title: "Contacter le prestataire",
+                    description: `Appelez ${providerName} pour discuter du projet`,
+                  });
+                }}
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                Appeler
+              </Button>
+            </div>
+
             {/* Portfolio */}
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
@@ -169,7 +204,7 @@ export function ProviderProfileModal({ providerId, providerName, isOpen, onClose
               </h3>
               <Card>
                 <CardContent className="p-4">
-                  <AvailabilityCalendar 
+                  <AvailabilityCalendar
                     readOnly={true}
                     initialAvailability={profile.availability || []}
                   />

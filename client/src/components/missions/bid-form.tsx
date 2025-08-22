@@ -31,6 +31,7 @@ export function BidForm({ missionId, onSuccess }: BidFormProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/missions', missionId] });
       queryClient.invalidateQueries({ queryKey: ['/api/missions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users', user?.id, 'bids'] });
       toast({
         title: 'Offre envoyée !',
         description: 'Votre offre a été envoyée avec succès',
