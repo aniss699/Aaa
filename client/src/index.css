@@ -172,13 +172,15 @@
 
   /* Amélioration des modals */
   [data-state="open"][data-radix-dialog-overlay] {
-    background-color: rgba(0, 0, 0, 0.8) !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
   }
 
   [data-radix-dialog-content] {
     background-color: white !important;
-    border: none !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 12px !important;
   }
 }
 
@@ -200,6 +202,14 @@
   /* Améliorations pour mobile */
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hover card improvements */
+  [data-radix-hover-card-content] {
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
   }
 
   /* Éviter les problèmes de zoom sur iOS */

@@ -45,6 +45,7 @@ export class MemStorage implements IStorage {
         type: "client" as const,
         rating: null,
         createdAt: new Date("2024-01-01"),
+        availability: []
       },
       {
         id: "provider1",
@@ -54,6 +55,11 @@ export class MemStorage implements IStorage {
         type: "provider" as const,
         rating: "4.8",
         createdAt: new Date("2024-01-01"),
+        availability: [
+          { start: new Date("2024-03-10T09:00:00"), end: new Date("2024-03-10T17:00:00") },
+          { start: new Date("2024-03-11T10:00:00"), end: new Date("2024-03-11T12:00:00") },
+          { start: new Date("2024-03-12T14:00:00"), end: new Date("2024-03-12T18:00:00") },
+        ]
       },
       {
         id: "provider2",
@@ -63,6 +69,10 @@ export class MemStorage implements IStorage {
         type: "provider" as const,
         rating: "4.9",
         createdAt: new Date("2024-01-01"),
+        availability: [
+          { start: new Date("2024-03-10T08:00:00"), end: new Date("2024-03-10T12:00:00") },
+          { start: new Date("2024-03-11T13:00:00"), end: new Date("2024-03-11T17:00:00") },
+        ]
       },
       {
         id: "provider3",
@@ -72,6 +82,10 @@ export class MemStorage implements IStorage {
         type: "provider" as const,
         rating: "4.7",
         createdAt: new Date("2024-01-01"),
+        availability: [
+          { start: new Date("2024-03-11T09:00:00"), end: new Date("2024-03-11T18:00:00") },
+          { start: new Date("2024-03-13T10:00:00"), end: new Date("2024-03-13T16:00:00") },
+        ]
       },
     ];
 
@@ -165,7 +179,8 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id, 
       createdAt: new Date(),
-      rating: insertUser.type === "provider" ? "5.0" : null
+      rating: insertUser.type === "provider" ? "5.0" : null,
+      availability: [] // Default empty availability for new users
     };
     this.users.set(id, user);
     return user;
@@ -179,7 +194,7 @@ export class MemStorage implements IStorage {
   async getMissionWithBids(id: string): Promise<MissionWithBids | undefined> {
     const mission = this.missions.get(id);
     if (!mission) return undefined;
-    
+
     const bids = Array.from(this.bids.values()).filter(bid => bid.missionId === id);
     return { ...mission, bids };
   }

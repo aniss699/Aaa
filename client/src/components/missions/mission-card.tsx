@@ -19,7 +19,7 @@ export function MissionCard({ mission, onClick }: MissionCardProps) {
 
   return (
     <Card
-      className="hover:shadow-lg transition-all duration-300 cursor-pointer border-l-4 border-l-primary hover:scale-[1.02]"
+      className="hover:shadow-lg transition-all duration-300 cursor-pointer border-l-4 border-l-blue-500 hover:scale-[1.02] bg-white"
       onClick={onClick}
     >
       <CardHeader className="pb-3">

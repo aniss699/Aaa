@@ -4,8 +4,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, MapPin, Calendar, Award, Briefcase } from 'lucide-react';
+import { Star, MapPin, Calendar, Award, Briefcase, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/categories';
+import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
 
 interface ProviderProfileModalProps {
   providerId: string | null;
@@ -24,6 +25,14 @@ interface ProviderProfile {
   description: string;
   skills: string[];
   totalProjects: number;
+  availability: Array<{
+    date: Date;
+    slots: Array<{
+      start: string;
+      end: string;
+      rate: number;
+    }>;
+  }>;
   evaluations: Array<{
     id: string;
     rating: number;
@@ -150,6 +159,22 @@ export function ProviderProfileModal({ providerId, providerName, isOpen, onClose
                   Aucune réalisation disponible pour le moment
                 </p>
               )}
+            </div>
+
+            {/* Calendrier de disponibilité */}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Clock className="w-5 h-5 mr-2" />
+                Disponibilités
+              </h3>
+              <Card>
+                <CardContent className="p-4">
+                  <AvailabilityCalendar 
+                    readOnly={true}
+                    initialAvailability={profile.availability || []}
+                  />
+                </CardContent>
+              </Card>
             </div>
 
             {/* Evaluations */}
