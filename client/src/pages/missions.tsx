@@ -6,11 +6,13 @@ import { formatBudget, formatDate } from '@/lib/categories';
 import { Button } from '@/components/ui/button';
 import { ClipboardList, Hand, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { MissionDetailModal } from '@/components/missions/mission-detail-modal';
 
 export default function Missions() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<'posted' | 'bids'>('posted');
+  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
 
   const { data: userMissions = [] } = useQuery<Mission[]>({
     queryKey: ['/api/users', user?.id, 'missions'],
@@ -111,7 +113,11 @@ export default function Missions() {
                     <span>Lieu: {mission.location || 'Non spécifié'}</span>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedMissionId(mission.id)}
+                    >
                       Voir les offres
                     </Button>
                     <Button variant="outline" size="sm">
@@ -126,7 +132,7 @@ export default function Missions() {
               <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg mb-4">Vous n'avez pas encore publié de missions</p>
               <Button
-                onClick={() => setLocation('/')}
+                onClick={() => setLocation('/create-mission')}
                 className="bg-primary hover:bg-primary-dark text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -177,6 +183,12 @@ export default function Missions() {
           )}
         </div>
       )}
+
+      <MissionDetailModal
+        missionId={selectedMissionId}
+        isOpen={!!selectedMissionId}
+        onClose={() => setSelectedMissionId(null)}
+      />
     </div>
   );
 }

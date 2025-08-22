@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { User, LogOut, Menu, X, Briefcase, Users } from 'lucide-react';
 
 export function Navbar() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -48,16 +48,18 @@ export function Navbar() {
               </Link>
 
               <div className="hidden md:flex space-x-8">
-                <Link href="/marketplace">
-                  <a className="text-gray-700 hover:text-blue-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-blue-50">
-                    Marketplace
-                  </a>
-                </Link>
-                <Link href="/missions">
-                  <a className="text-gray-700 hover:text-purple-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-purple-50">
-                    Missions
-                  </a>
-                </Link>
+                <button
+                onClick={() => setLocation('/marketplace')}
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Marketplace
+              </button>
+                <button
+                onClick={() => setLocation('/missions')}
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Mes Missions
+              </button>
                 <Link href="/features">
                   <a className="text-gray-700 hover:text-green-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-green-50">
                     Fonctionnalités
@@ -124,18 +126,20 @@ export function Navbar() {
           <div className="md:hidden border-t border-gray-200 bg-white/90 shadow-lg backdrop-blur-sm">
             <div className="px-3 pt-4 pb-3 space-y-4">
               {navigationItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <div
+                <div
                     className={`flex items-center px-4 py-3 text-base font-medium cursor-pointer rounded-xl transition-all duration-200 ${
                       location === item.href
                         ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
                         : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                     }`}
-                    onClick={() => setShowMobileMenu(false)}
+                    onClick={() => {
+                      setLocation(item.href);
+                      setShowMobileMenu(false);
+                    }}
+                    key={item.href}
                   >
                     {item.label}
                   </div>
-                </Link>
               ))}
 
               <div className="border-t border-gray-200 mt-4 pt-4">

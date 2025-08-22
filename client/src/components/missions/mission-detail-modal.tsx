@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import * as LucideIcons from 'lucide-react';
 import { MapPin, Calendar, Users, Star, Euro } from 'lucide-react';
 import { ProviderProfileModal } from './provider-profile-modal';
