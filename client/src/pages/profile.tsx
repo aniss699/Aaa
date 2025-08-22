@@ -137,14 +137,6 @@ export default function Profile() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium">Mode Client</span>
-                <Switch 
-                  checked={activeProfile === 'provider'}
-                  onCheckedChange={(checked) => setActiveProfile(checked ? 'provider' : 'client')}
-                />
-                <span className="text-sm font-medium">Mode Prestataire</span>
-              </div>
               <Button
                 onClick={() => setIsEditing(!isEditing)}
                 variant={isEditing ? "outline" : "default"}
@@ -152,6 +144,43 @@ export default function Profile() {
                 <Edit className="w-4 h-4 mr-2" />
                 {isEditing ? 'Annuler' : 'Modifier'}
               </Button>
+            </div>
+          </div>
+          
+          {/* Mode Selector - Plus visible */}
+          <div className="mt-6">
+            <div className="bg-white rounded-xl p-4 shadow-lg border">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Changer de mode</h3>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => setActiveProfile('client')}
+                  className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+                    activeProfile === 'client'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Briefcase className="w-5 h-5 mr-2" />
+                  Mode Client
+                </button>
+                <button
+                  onClick={() => setActiveProfile('provider')}
+                  className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
+                    activeProfile === 'provider'
+                      ? 'bg-green-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Users className="w-5 h-5 mr-2" />
+                  Mode Prestataire
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                {activeProfile === 'client' 
+                  ? 'Publiez des missions et trouvez des prestataires'
+                  : 'Recherchez des missions et proposez vos services'
+                }
+              </p>
             </div>
           </div>
         </div>

@@ -13,9 +13,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import * as LucideIcons from 'lucide-react';
-import { MapPin, Calendar, Users, Star, Euro } from 'lucide-react';
+import { MapPin, Calendar, Users, Star, Euro, Briefcase, Send } from 'lucide-react';
 import { ProviderProfileModal } from './provider-profile-modal';
 import { BidResponseModal } from './bid-response-modal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface MissionDetailModalProps {
   missionId: string | null;
@@ -29,6 +30,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
   const [selectedProviderName, setSelectedProviderName] = useState<string>('');
   const [selectedBidId, setSelectedBidId] = useState<string | null>(null);
   const [selectedBidderName, setSelectedBidderName] = useState<string>('');
+  const [showBidForm, setShowBidForm] = useState(false); // State to control bid form visibility
 
   const { data: mission, isLoading } = useQuery<MissionWithBids>({
     queryKey: ['/api/missions', missionId],
@@ -111,7 +113,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                 <div className="flex items-center mb-1">
@@ -122,7 +124,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
                   {formatBudget(mission.budget || '0')}
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                 <div className="flex items-center mb-1">
                   <MapPin className="w-4 h-4 text-blue-600 mr-2" />
@@ -132,7 +134,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
                   {mission.location || 'Non spécifié'}
                 </div>
               </div>
-              
+
               <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
                 <div className="flex items-center mb-1">
                   <Users className="w-4 h-4 text-purple-600 mr-2" />
