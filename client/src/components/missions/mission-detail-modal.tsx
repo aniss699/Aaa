@@ -146,15 +146,36 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
           </div>
 
           {/* Bidding Section for Providers */}
-          {user && user.type === 'provider' && (
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-md">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">🚀</span>
+          {user && user.type === 'provider' && mission.clientName !== user.name && (
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 sm:p-6 border-2 border-green-200 shadow-md mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-lg">💼</span>
                 </div>
-                <h4 className="text-lg font-bold text-gray-900">Postuler à cette mission</h4>
+                <div>
+                  <h4 className="text-lg sm:text-xl font-bold text-gray-900">Postuler à cette mission</h4>
+                  <p className="text-sm text-gray-600">Soumettez votre offre avec prix et délai</p>
+                </div>
               </div>
-              <BidForm missionId={mission.id} onSuccess={() => {}} />
+              <BidForm 
+                missionId={mission.id} 
+                onSuccess={() => {
+                  // Optionnel: fermer le modal après soumission
+                  // onClose();
+                }} 
+              />
+            </div>
+          )}
+
+          {/* Message si c'est sa propre mission */}
+          {user && user.type === 'provider' && mission.clientName === user.name && (
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 mb-6">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">ℹ️</span>
+                </div>
+                <p className="text-blue-700 font-medium">Ceci est votre propre mission</p>
+              </div>
             </div>
           )}
 
