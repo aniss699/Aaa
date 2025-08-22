@@ -125,7 +125,7 @@ export function Navbar() {
             <div className="px-3 pt-4 pb-3 space-y-4">
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href}>
-                  <span
+                  <div
                     className={`flex items-center px-4 py-3 text-base font-medium cursor-pointer rounded-xl transition-all duration-200 ${
                       location === item.href
                         ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
@@ -134,7 +134,7 @@ export function Navbar() {
                     onClick={() => setShowMobileMenu(false)}
                   >
                     {item.label}
-                  </span>
+                  </div>
                 </Link>
               ))}
 

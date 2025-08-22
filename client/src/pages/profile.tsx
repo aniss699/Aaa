@@ -7,8 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   User, 
   Briefcase, 
@@ -21,7 +19,8 @@ import {
   X,
   Camera,
   Save,
-  Edit
+  Edit,
+  Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
@@ -213,16 +212,27 @@ export default function Profile() {
 
         {/* Profile Content */}
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="general">Informations générales</TabsTrigger>
-            {activeProfile === 'provider' && (
-              <>
-                <TabsTrigger value="skills">Compétences</TabsTrigger>
-                <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-                <TabsTrigger value="availability">Disponibilités</TabsTrigger>
-              </>
-            )}
-            <TabsTrigger value="preferences">Préférences</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="general" className="flex items-center">
+              <User className="w-4 h-4 mr-2" />
+              Informations
+            </TabsTrigger>
+            <TabsTrigger value="skills" className="flex items-center">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Compétences
+            </TabsTrigger>
+            <TabsTrigger value="portfolio" className="flex items-center">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Portfolio
+            </TabsTrigger>
+            <TabsTrigger value="availability" className="flex items-center">
+              <Clock className="w-4 h-4 mr-2" />
+              Disponibilités
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="flex items-center">
+              <Star className="w-4 h-4 mr-2" />
+              Préférences
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
@@ -439,10 +449,13 @@ export default function Profile() {
               </TabsContent>
 
               {/* Availability Tab */}
-              <TabsContent value="availability">
+              <TabsContent value="availability" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Mes disponibilités</CardTitle>
+                    <CardTitle className="flex items-center text-gray-800">
+                      <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                      Gérer mes disponibilités
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">

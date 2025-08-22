@@ -123,79 +123,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get provider profile
   router.get('/api/providers/:id/profile', (req, res) => {
-    const providerId = req.params.id;
+    const { id } = req.params;
 
-    // Mock provider profile data
-    const mockProfile = {
-      id: providerId,
-      name: 'Jean Dupont',
-      email: 'jean@example.com',
-      rating: '4.8',
-      location: 'Paris, France',
-      joinedAt: '2023-06-15',
-      description: 'Développeur full-stack avec 5 ans d\'expérience spécialisé dans React, Node.js et les applications web modernes.',
-      skills: ['React', 'Node.js', 'TypeScript', 'MongoDB', 'PostgreSQL', 'AWS'],
+    // Simulation d'un profil prestataire détaillé
+    const profile = {
+      id,
+      name: "Jean Dupont",
+      email: "jean.dupont@email.com",
+      rating: "4.8",
+      location: "Paris, France",
+      joinedAt: "2023-01-15",
+      description: "Développeur full-stack passionné avec plus de 8 ans d'expérience. Spécialisé dans React, Node.js et les architectures cloud. J'aime créer des solutions élégantes et performantes pour mes clients.",
+      skills: ["React", "Node.js", "TypeScript", "AWS", "Docker", "PostgreSQL"],
       totalProjects: 47,
       availability: [
         {
-          date: new Date('2024-01-20'),
+          date: '2024-12-20T00:00:00.000Z',
           slots: [
-            { start: '09:00', end: '12:00', rate: 65 },
-            { start: '14:00', end: '18:00', rate: 65 }
+            { start: '09:00', end: '12:00', rate: 75 },
+            { start: '14:00', end: '18:00', rate: 75 }
           ]
         },
         {
-          date: new Date('2024-01-22'),
+          date: '2024-12-21T00:00:00.000Z',
           slots: [
-            { start: '10:00', end: '16:00', rate: 70 }
+            { start: '10:00', end: '16:00', rate: 80 }
           ]
         },
         {
-          date: new Date('2024-01-25'),
+          date: '2024-12-23T00:00:00.000Z',
           slots: [
-            { start: '09:00', end: '17:00', rate: 65 }
+            { start: '08:00', end: '12:00', rate: 85 },
+            { start: '13:00', end: '17:00', rate: 85 }
+          ]
+        },
+        {
+          date: '2024-12-24T00:00:00.000Z',
+          slots: [
+            { start: '09:00', end: '13:00', rate: 90 }
           ]
         }
       ],
       evaluations: [
         {
-          id: 'eval1',
+          id: "eval1",
           rating: 5,
-          comment: 'Excellent travail, très professionnel et à l\'écoute des besoins.',
-          clientName: 'Marie L.',
-          createdAt: '2024-01-10',
+          comment: "Excellent travail ! Jean a livré le projet en avance et la qualité dépasse nos attentes. Communication parfaite tout au long du projet.",
+          clientName: "Marie Martin",
+          createdAt: "2024-11-15",
           photos: []
         },
         {
-          id: 'eval2',
+          id: "eval2",
+          rating: 5,
+          comment: "Très professionnel et réactif. Le site développé fonctionne parfaitement et respecte toutes nos spécifications.",
+          clientName: "Pierre Leblanc",
+          createdAt: "2024-10-28",
+          photos: []
+        },
+        {
+          id: "eval3",
           rating: 4,
-          comment: 'Bon développeur, travail de qualité et dans les temps.',
-          clientName: 'Pierre M.',
-          createdAt: '2024-01-05',
+          comment: "Bon développeur, travail de qualité. Quelques retards mineurs mais le résultat final est satisfaisant.",
+          clientName: "Sophie Chen",
+          createdAt: "2024-09-12",
           photos: []
         }
       ],
       portfolio: [
         {
-          id: 'portfolio1',
-          title: 'E-commerce pour boutique de mode',
-          description: 'Développement complet d\'une boutique en ligne avec système de paiement intégré.',
-          images: ['https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300'],
-          category: 'E-commerce',
-          completedAt: '2024-01-01'
+          id: "project1",
+          title: "E-commerce Platform",
+          description: "Développement d'une plateforme e-commerce complète avec React et Node.js. Intégration de Stripe pour les paiements.",
+          images: ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400"],
+          category: "Développement web",
+          completedAt: "2024-11-01"
         },
         {
-          id: 'portfolio2',
-          title: 'Application de gestion RH',
-          description: 'Interface d\'administration pour la gestion des employés et des congés.',
-          images: ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300'],
-          category: 'Web App',
-          completedAt: '2023-12-15'
+          id: "project2",
+          title: "Application Mobile",
+          description: "Application React Native pour la gestion d'inventaire avec synchronisation cloud temps réel.",
+          images: ["https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400"],
+          category: "Développement mobile",
+          completedAt: "2024-09-15"
+        },
+        {
+          id: "project3",
+          title: "Dashboard Analytics",
+          description: "Tableau de bord interactif avec D3.js pour visualiser des données complexes en temps réel.",
+          images: ["https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400"],
+          category: "Data Visualization",
+          completedAt: "2024-08-20"
+        },
+        {
+          id: "project4",
+          title: "API REST",
+          description: "API scalable avec Node.js, Express et PostgreSQL pour une application fintech.",
+          images: ["https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=400"],
+          category: "Backend",
+          completedAt: "2024-07-10"
         }
       ]
     };
 
-    res.json(mockProfile);
+    res.json(profile);
   });
 
   app.use(router); // Mount the router
