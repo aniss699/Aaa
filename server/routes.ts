@@ -112,6 +112,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Respond to a bid
+  router.post("/api/bids/respond", async (req, res) => {
+    try {
+      const { bidId, action, message } = req.body;
+
+      if (!bidId || !action) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Here you would typically update the bid status and send a notification
+      // For now, we'll just return success
+      res.json({ 
+        success: true, 
+        message: `Response sent for bid ${bidId}`,
+        action,
+        responseMessage: message 
+      });
+    } catch (error) {
+      console.error("Error responding to bid:", error);
+      res.status(400).json({ error: "Error processing response" });
+    }
+  });
+
   router.get("/api/users/:id/bids", async (req, res) => {
     try {
       const bids = await storage.getUserBids(req.params.id);

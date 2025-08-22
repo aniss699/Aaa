@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import * as LucideIcons from 'lucide-react';
 import { MapPin, Calendar, Users, Star, Euro } from 'lucide-react';
 import { ProviderProfileModal } from './provider-profile-modal';
+import { BidResponseModal } from './bid-response-modal';
 
 interface MissionDetailModalProps {
   missionId: string | null;
@@ -25,6 +26,8 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
   const { user } = useAuth();
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
   const [selectedProviderName, setSelectedProviderName] = useState<string>('');
+  const [selectedBidId, setSelectedBidId] = useState<string | null>(null);
+  const [selectedBidderName, setSelectedBidderName] = useState<string>('');
 
   const { data: mission, isLoading } = useQuery<MissionWithBids>({
     queryKey: ['/api/missions', missionId],
@@ -162,11 +165,28 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
                       <div className="text-sm text-gray-500">{bid.timeline}</div>
                     </div>
                   </div>
-                  <p className="text-gray-700 mb-4">{bid.proposal}</p>
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p className="text-gray-700 whitespace-pre-line">{bid.proposal}</p>
+                  </div>
                   {user && mission.clientName === user.name && (
-                    <Button className="bg-green-500 hover:bg-green-600 text-white font-semibold">
-                      Choisir cette offre
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => {
+                          setSelectedBidId(bid.id);
+                          setSelectedBidderName(bid.providerName);
+                        }}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold flex items-center gap-2"
+                      >
+                        <span>💬</span>
+                        Répondre
+                      </Button>
+                      <Button 
+                        className="bg-green-500 hover:bg-green-600 text-white font-semibold flex items-center gap-2"
+                      >
+                        <span>✅</span>
+                        Accepter directement
+                      </Button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -189,6 +209,16 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
         onClose={() => {
           setSelectedProviderId(null);
           setSelectedProviderName('');
+        }}
+      />
+
+      <BidResponseModal
+        bidId={selectedBidId}
+        bidderName={selectedBidderName}
+        isOpen={!!selectedBidId}
+        onClose={() => {
+          setSelectedBidId(null);
+          setSelectedBidderName('');
         }}
       />
     </Dialog>
