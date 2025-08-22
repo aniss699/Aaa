@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [activeProfile, setActiveProfile] = useState<'client' | 'provider'>(user?.type || 'client');
@@ -65,11 +65,29 @@ export default function Profile() {
   const [newAvailabilitySlot, setNewAvailabilitySlot] = useState<{ start: Date, end: Date } | undefined>(undefined); // State for new availability
 
   const handleSave = () => {
+    // Sauvegarder le changement de type d'utilisateur
+    if (user && user.type !== activeProfile) {
+      const updatedUser = { ...user, type: activeProfile };
+      login(updatedUser);
+    }
+    
     toast({
       title: 'Profil sauvegardé',
       description: 'Vos informations ont été mises à jour avec succès.',
     });
     setIsEditing(false);
+  };
+
+  const handleProfileTypeChange = (newType: 'client' | 'provider') => {
+    setActiveProfile(newType);
+    if (user) {
+      const updatedUser = { ...user, type: newType };
+      login(updatedUser);
+      toast({
+        title: 'Mode changé',
+        description: `Vous êtes maintenant en mode ${newType === 'client' ? 'Client' : 'Prestataire'}`,
+      });
+    }
   };
 
   const addSkill = () => {
@@ -153,7 +171,7 @@ export default function Profile() {
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Changer de mode</h3>
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => setActiveProfile('client')}
+                  onClick={() => handleProfileTypeChange('client')}
                   className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
                     activeProfile === 'client'
                       ? 'bg-blue-600 text-white shadow-md'
@@ -164,7 +182,7 @@ export default function Profile() {
                   Mode Client
                 </button>
                 <button
-                  onClick={() => setActiveProfile('provider')}
+                  onClick={() => handleProfileTypeChange('provider')}
                   className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
                     activeProfile === 'provider'
                       ? 'bg-green-600 text-white shadow-md'

@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import * as LucideIcons from 'lucide-react';
-import { MapPin, Calendar, Users, Star, Euro, Briefcase, Send } from 'lucide-react';
+import { MapPin, Calendar, Users, Star, Euro, Briefcase, Send, Bookmark } from 'lucide-react';
 import { ProviderProfileModal } from './provider-profile-modal';
 import { BidResponseModal } from './bid-response-modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
