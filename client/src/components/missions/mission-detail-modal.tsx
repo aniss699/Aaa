@@ -89,7 +89,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
           </DialogHeader>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-6">
+        <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
           {/* Mission Info */}
           <div className="border-b pb-6">
             <div className="flex items-start space-x-4 mb-6">
@@ -112,42 +112,50 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center mb-2">
-                  <Euro className="w-5 h-5 text-green-600 mr-2" />
-                  <span className="font-medium text-gray-700">Budget</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                <div className="flex items-center mb-1">
+                  <Euro className="w-4 h-4 text-green-600 mr-2" />
+                  <span className="font-medium text-gray-700 text-sm">Budget</span>
                 </div>
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-lg font-bold text-green-600">
                   {formatBudget(mission.budget || '0')}
                 </div>
               </div>
               
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <div className="flex items-center mb-2">
-                  <MapPin className="w-5 h-5 text-blue-600 mr-2" />
-                  <span className="font-medium text-gray-700">Localisation</span>
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                <div className="flex items-center mb-1">
+                  <MapPin className="w-4 h-4 text-blue-600 mr-2" />
+                  <span className="font-medium text-gray-700 text-sm">Localisation</span>
                 </div>
-                <div className="text-blue-600 font-medium">
+                <div className="text-blue-600 font-medium text-sm">
                   {mission.location || 'Non spécifié'}
                 </div>
               </div>
               
-              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                <div className="flex items-center mb-2">
-                  <Users className="w-5 h-5 text-purple-600 mr-2" />
-                  <span className="font-medium text-gray-700">Candidatures</span>
+              <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                <div className="flex items-center mb-1">
+                  <Users className="w-4 h-4 text-purple-600 mr-2" />
+                  <span className="font-medium text-gray-700 text-sm">Candidatures</span>
                 </div>
-                <div className="text-xl font-bold text-purple-600">
+                <div className="text-lg font-bold text-purple-600">
                   {mission.bids.length}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bidding Section */}
+          {/* Bidding Section for Providers */}
           {user && user.type === 'provider' && (
-            <BidForm missionId={mission.id} onSuccess={() => {}} />
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-md">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">🚀</span>
+                </div>
+                <h4 className="text-lg font-bold text-gray-900">Postuler à cette mission</h4>
+              </div>
+              <BidForm missionId={mission.id} onSuccess={() => {}} />
+            </div>
           )}
 
           {/* Existing Bids */}
@@ -164,7 +172,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
             </div>
             <div className="space-y-4">
               {sortedBids.map((bid: Bid, index: number) => (
-                <div key={bid.id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div key={bid.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">

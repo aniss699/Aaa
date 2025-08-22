@@ -22,7 +22,7 @@ export function MissionCard({ mission, onClick }: MissionCardProps) {
       className="hover:shadow-lg transition-all duration-300 cursor-pointer border-l-4 border-l-blue-500 hover:scale-[1.02] bg-white h-fit"
       onClick={onClick}
     >
-      <CardHeader className="pb-2 pt-4">
+      <CardHeader className="pb-2 pt-3">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-semibold text-base line-clamp-2 flex-1 leading-tight">
             {mission.title}
@@ -40,7 +40,7 @@ export function MissionCard({ mission, onClick }: MissionCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="py-2">
+      <CardContent className="py-1">
         <p className="text-gray-600 line-clamp-2 mb-3 text-sm leading-relaxed">
           {mission.description}
         </p>
