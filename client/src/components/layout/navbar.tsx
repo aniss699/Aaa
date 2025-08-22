@@ -22,6 +22,14 @@ export function Navbar() {
     { href: '/features', label: 'Fonctionnalités' },
   ];
 
+  const desktopItems = [
+    { href: '/', label: 'Accueil' },
+    { href: '/marketplace', label: 'Marketplace' },
+    { href: '/dashboard', label: 'Tableau de bord' },
+    { href: '/missions', label: 'Mes Missions' },
+  ];
+
+
   const getUserTypeInfo = () => {
     if (!user) return null;
 
@@ -47,63 +55,68 @@ export function Navbar() {
                 </a>
               </Link>
 
-              <div className="hidden md:flex space-x-8">
-                <button
-                onClick={() => setLocation('/marketplace')}
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Marketplace
-              </button>
-                <button
-                onClick={() => setLocation('/missions')}
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
-              >
-                Mes Missions
-              </button>
-                <Link href="/features">
-                  <a className="text-gray-700 hover:text-green-600 font-semibold transition-colors duration-200 px-3 py-2 rounded-lg hover:bg-green-50">
-                    Fonctionnalités
-                  </a>
-                </Link>
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-6">
+                {desktopItems.map((item) => (
+                  <Link key={item.href} href={item.href}>
+                    <span className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
+                      location === item.href 
+                        ? 'text-blue-600 bg-blue-50 font-semibold' 
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}>
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </div>
 
             {/* User Actions */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-4">
               {user ? (
-                <div className="flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2 shadow-inner">
-                  {userTypeInfo && (
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-7 h-7 ${userTypeInfo.color} rounded-full flex items-center justify-center animate-pulse`}>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2 shadow-sm border">
+                    {userTypeInfo && (
+                      <div className={`w-8 h-8 ${userTypeInfo.color} rounded-full flex items-center justify-center animate-pulse`}>
                         <userTypeInfo.icon className="w-4 h-4 text-white" />
                       </div>
-                      <Badge variant="premium" className="text-xs font-bold">
-                        {userTypeInfo.label}
-                      </Badge>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900 leading-tight">{user.name}</span>
+                      {userTypeInfo && (
+                        <Badge variant="premium" className="text-xs font-bold mt-1">
+                          {userTypeInfo.label}
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  <div className="flex items-center space-x-2">
-                    <User className="w-5 h-5 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-900">{user.name}</span>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={logout}
+                    className="text-red-500 hover:text-red-700 font-semibold border-red-300 hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Déconnexion
+                  </Button>
                 </div>
               ) : (
-                <Button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  Se connecter
-                </Button>
-              )}
-              {user && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={logout}
-                  className="text-gray-500 hover:text-red-600 focus:text-red-600 rounded-full hover:bg-red-100 transition-colors duration-200"
-                >
-                  <LogOut className="w-6 h-6" />
-                </Button>
+                <div className="flex items-center space-x-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowAuthModal(true)}
+                    className="font-semibold border-blue-300 text-blue-600 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-200"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Se connecter
+                  </Button>
+                  <Button 
+                    onClick={() => setShowAuthModal(true)}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  >
+                    Commencer
+                  </Button>
+                </div>
               )}
             </div>
 
