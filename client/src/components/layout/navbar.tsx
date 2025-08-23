@@ -21,6 +21,8 @@ export function Navbar() {
     { href: '/messages', label: 'Messages' },
     { href: '/profile', label: 'Mon Profil' },
     { href: '/features', label: 'Fonctionnalités' },
+    { href: '/ai-test', label: '🧪 Test IA' },
+    { href: '/ai-features', label: '🧠 IA Features' },
   ];
 
   const desktopItems = [
