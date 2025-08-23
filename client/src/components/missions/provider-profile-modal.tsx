@@ -132,10 +132,10 @@ export function ProviderProfileModal({ providerId, providerName, isOpen, onClose
               </div>
             </div>
 
-            {/* Action Buttons: Message and Call */}
-            <div className="flex gap-3">
+            {/* Action Buttons: Message, Call, and Book */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Button
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={() => {
                   // Navigate to messages page with provider info
                   window.location.href = `/messages?contact=${providerId}&name=${encodeURIComponent(providerName)}`;
@@ -146,7 +146,7 @@ export function ProviderProfileModal({ providerId, providerName, isOpen, onClose
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-green-500 text-green-600 hover:bg-green-50"
+                className="border-green-500 text-green-600 hover:bg-green-50"
                 onClick={() => {
                   // Show toast with contact info or initiate call
                   toast({
@@ -157,6 +157,19 @@ export function ProviderProfileModal({ providerId, providerName, isOpen, onClose
               >
                 <Phone className="w-4 h-4 mr-2" />
                 Appeler
+              </Button>
+              <Button
+                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                onClick={() => {
+                  toast({
+                    title: "Réservation de créneau",
+                    description: `Fonctionnalité de réservation avec ${providerName} en cours de développement`,
+                  });
+                  // TODO: Implement booking modal or navigation
+                }}
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Réserver un créneau
               </Button>
             </div>
 

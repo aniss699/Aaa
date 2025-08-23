@@ -85,9 +85,10 @@ export function BidResponseModal({ bidId, bidderName, isOpen, onClose }: BidResp
     }
 
     respondToBid.mutate({
-      bidId,
-      action: responseType,
+      bidId: bidId,
+      status: responseType,
       message: message.trim() || null,
+      clientResponse: responseType,
     });
   };
 
