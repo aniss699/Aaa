@@ -73,23 +73,35 @@ export function Navbar() {
                     </span>
                   </Link>
                 ))}
-                <Link href="/ai-test">
-                  <span className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
+                <Link 
+                  href="/ai-test"
+                  className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
                     location === '/ai-test'
                       ? 'text-green-600 bg-green-50 font-semibold'
                       : 'text-green-700 hover:text-green-600 hover:bg-green-50'
-                  }`}>
-                    🧪 Lab IA
-                  </span>
+                  }`}
+                >
+                  🧪 Lab IA
                 </Link>
-                <Link href="/ai-features">
-                  <span className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
+                <Link 
+                  href="/ai-features"
+                  className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
                     location === '/ai-features'
                       ? 'text-purple-600 bg-purple-50 font-semibold'
                       : 'text-purple-700 hover:text-purple-600 hover:bg-purple-50'
-                  }`}>
-                    🧠 IA Features
-                  </span>
+                  }`}
+                >
+                  🧠 IA Features
+                </Link>
+                <Link 
+                  href="/features"
+                  className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
+                    location === '/features'
+                      ? 'text-blue-600 bg-blue-50 font-semibold'
+                      : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                >
+                  📋 Fonctionnalités
                 </Link>
               </div>
             </div>

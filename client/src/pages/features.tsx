@@ -189,3 +189,73 @@ export default function Features() {
     </div>
   );
 }
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle } from "lucide-react";
+
+export default function Features() {
+  const features = [
+    {
+      title: "Marketplace Intelligent",
+      description: "Système d'enchères inversées pour obtenir les meilleurs prix",
+      benefits: ["Comparaison automatique", "Prix compétitifs", "Gain de temps"]
+    },
+    {
+      title: "IA Avancée",
+      description: "Intelligence artificielle pour optimiser vos projets",
+      benefits: ["Recommandations personnalisées", "Analyse des offres", "Standardisation automatique"]
+    },
+    {
+      title: "Géolocalisation",
+      description: "Trouvez des prestataires près de chez vous",
+      benefits: ["Recherche locale", "Carte interactive", "Distances calculées"]
+    },
+    {
+      title: "Système de Notation",
+      description: "Évaluations et avis pour choisir en confiance",
+      benefits: ["Profils vérifiés", "Historique des prestations", "Système de badges"]
+    }
+  ];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Fonctionnalités AppelsPro
+          </h1>
+          <p className="text-xl text-gray-600">
+            Découvrez toutes les fonctionnalités qui font d'AppelsPro la plateforme de référence
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {features.map((feature, index) => (
+            <Card key={index} className="h-full">
+              <CardHeader>
+                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardDescription>{feature.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {feature.benefits.map((benefit, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">{benefit}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <Badge variant="secondary" className="text-lg px-4 py-2">
+            🚀 Plus de fonctionnalités à venir !
+          </Badge>
+        </div>
+      </div>
+    </div>
+  );
+}
