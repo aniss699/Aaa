@@ -11,6 +11,89 @@ app.use(express.static(path.join(__dirname, "../dist/public")));
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "AppelsPro API is running" });
 });
+app.get("/api/missions", (req, res) => {
+  const demoMissions = [
+    {
+      id: "mission1",
+      title: "D\xE9veloppement d'une application mobile de e-commerce",
+      description: "Je recherche un d\xE9veloppeur exp\xE9riment\xE9 pour cr\xE9er une application mobile compl\xE8te de vente en ligne avec syst\xE8me de paiement int\xE9gr\xE9.",
+      category: "development",
+      budget: "5000",
+      location: "Paris, France",
+      clientId: "client1",
+      clientName: "Marie Dubois",
+      status: "open",
+      createdAt: /* @__PURE__ */ new Date("2024-01-15"),
+      bids: []
+    },
+    {
+      id: "mission2",
+      title: "Refonte compl\xE8te du site web d'entreprise",
+      description: "Modernisation du site vitrine de notre entreprise avec nouveau design responsive et optimisation SEO.",
+      category: "design",
+      budget: "3000",
+      location: "Lyon, France",
+      clientId: "client2",
+      clientName: "Pierre Martin",
+      status: "open",
+      createdAt: /* @__PURE__ */ new Date("2024-01-18"),
+      bids: []
+    },
+    {
+      id: "mission3",
+      title: "Campagne marketing digital et r\xE9seaux sociaux",
+      description: "Lancement d'une campagne compl\xE8te sur les r\xE9seaux sociaux pour augmenter la notori\xE9t\xE9 de notre marque.",
+      category: "marketing",
+      budget: "2000",
+      location: "Marseille, France",
+      clientId: "client3",
+      clientName: "Sophie Leclerc",
+      status: "open",
+      createdAt: /* @__PURE__ */ new Date("2024-01-20"),
+      bids: []
+    },
+    {
+      id: "mission4",
+      title: "D\xE9veloppement d'une plateforme SaaS",
+      description: "Cr\xE9ation d'une plateforme SaaS compl\xE8te avec tableau de bord, API, authentification et facturation.",
+      category: "development",
+      budget: "15000",
+      location: "Remote",
+      clientId: "client4",
+      clientName: "Tech Startup",
+      status: "open",
+      createdAt: /* @__PURE__ */ new Date("2024-01-22"),
+      bids: []
+    },
+    {
+      id: "mission5",
+      title: "Application mobile React Native",
+      description: "D\xE9veloppement d'une application mobile cross-platform avec React Native pour la gestion de t\xE2ches.",
+      category: "mobile",
+      budget: "8000",
+      location: "Lille, France",
+      clientId: "client5",
+      clientName: "Productivity Corp",
+      status: "open",
+      createdAt: /* @__PURE__ */ new Date("2024-01-25"),
+      bids: []
+    },
+    {
+      id: "mission6",
+      title: "Int\xE9gration IA et Machine Learning",
+      description: "Int\xE9gration d'intelligence artificielle dans une plateforme existante pour l'analyse pr\xE9dictive.",
+      category: "ai",
+      budget: "12000",
+      location: "Paris, France",
+      clientId: "client6",
+      clientName: "AI Solutions",
+      status: "open",
+      createdAt: /* @__PURE__ */ new Date("2024-01-28"),
+      bids: []
+    }
+  ];
+  res.json(demoMissions);
+});
 app.post("/api/ai/analyze-bid", (req, res) => {
   const { projectData, bidData } = req.body;
   const mockAnalysis = {
@@ -91,8 +174,8 @@ app.post("/api/auth/login", (req, res) => {
 });
 app.post("/api/auth/register", (req, res) => {
   const { name, email, password, type } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "Tous les champs sont requis" });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email et mot de passe requis" });
   }
   if (password.length < 6) {
     return res.status(400).json({ message: "Le mot de passe doit contenir au moins 6 caract\xE8res" });
@@ -103,7 +186,7 @@ app.post("/api/auth/register", (req, res) => {
   }
   const user = {
     id: Date.now(),
-    name: name.trim(),
+    name: name || email.split("@")[0],
     email: email.trim().toLowerCase(),
     type: type || "client"
   };
