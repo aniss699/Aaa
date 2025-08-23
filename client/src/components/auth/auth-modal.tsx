@@ -94,11 +94,31 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         password: formData.password,
       });
     } else {
-      // Validation simple pour l'inscription
+      // Validation complète pour l'inscription
+      if (!formData.name.trim()) {
+        toast({
+          title: 'Nom requis',
+          description: 'Veuillez saisir votre nom',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       if (!formData.email.trim()) {
         toast({
           title: 'Email requis',
           description: 'Veuillez saisir votre adresse email',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validation email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        toast({
+          title: 'Email invalide',
+          description: 'Veuillez saisir un email valide',
           variant: 'destructive',
         });
         return;
@@ -156,13 +176,14 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
           {mode === 'register' && (
             <div>
               <Label htmlFor="name" className="text-sm font-medium text-blue-800">
-                Nom
+                Nom *
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 className="mt-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Votre nom complet"
                 required
               />
             </div>

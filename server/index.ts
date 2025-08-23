@@ -1,4 +1,3 @@
-
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,7 +20,7 @@ app.get('/api/health', (req, res) => {
 // Mock AI endpoints pour tester
 app.post('/api/ai/analyze-bid', (req, res) => {
   const { projectData, bidData } = req.body;
-  
+
   const mockAnalysis = {
     score: Math.floor(Math.random() * 100),
     priceAnalysis: {
@@ -39,13 +38,13 @@ app.post('/api/ai/analyze-bid', (req, res) => {
       'Proposez un délai plus précis'
     ]
   };
-  
+
   res.json(mockAnalysis);
 });
 
 app.post('/api/ai/match-missions', (req, res) => {
   const { providerProfile } = req.body;
-  
+
   const mockMatches = [
     {
       id: 1,
@@ -60,13 +59,13 @@ app.post('/api/ai/match-missions', (req, res) => {
       reasons: ['Stack technique compatible', 'Budget aligné']
     }
   ];
-  
+
   res.json(mockMatches);
 });
 
 app.post('/api/ai/predict-revenue', (req, res) => {
   const { missionData, providerData } = req.body;
-  
+
   const mockPrediction = {
     estimatedRevenue: Math.floor(Math.random() * 10000) + 2000,
     confidence: Math.floor(Math.random() * 40) + 60,
@@ -76,13 +75,13 @@ app.post('/api/ai/predict-revenue', (req, res) => {
       'Demande du marché'
     ]
   };
-  
+
   res.json(mockPrediction);
 });
 
 app.post('/api/ai/detect-dumping', (req, res) => {
   const { bidData } = req.body;
-  
+
   const mockDetection = {
     isDumping: Math.random() > 0.7,
     confidenceLevel: Math.floor(Math.random() * 50) + 50,
@@ -92,9 +91,59 @@ app.post('/api/ai/detect-dumping', (req, res) => {
     ] : [],
     recommendedMinPrice: Math.floor(Math.random() * 2000) + 1000
   };
-  
+
   res.json(mockDetection);
 });
+
+// Mock auth endpoints
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email et mot de passe requis' });
+  }
+
+  // Simple mock authentication
+  const user = {
+    id: 1,
+    name: email.split('@')[0],
+    email,
+    type: 'client'
+  };
+
+  res.json({ user });
+});
+
+app.post('/api/auth/register', (req, res) => {
+  const { name, email, password, type } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Tous les champs sont requis' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Format d\'email invalide' });
+  }
+
+  // Simple mock registration
+  const user = {
+    id: Date.now(),
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    type: type || 'client'
+  };
+
+  res.status(201).json({ 
+    user,
+    message: 'Compte créé avec succès'
+  });
+});
+
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {

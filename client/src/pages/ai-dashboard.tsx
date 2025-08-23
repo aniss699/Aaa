@@ -17,7 +17,9 @@ import {
   CheckCircle,
   AlertTriangle,
   Clock,
-  Star
+  Star,
+  Settings,
+  Sparkles
 } from 'lucide-react';
 
 // Import des composants IA
@@ -130,29 +132,47 @@ export default function AIDashboard() {
     loadAIMetrics();
   }, [selectedTimeRange]);
 
-  const MetricCard = ({ title, value, unit, icon: Icon, trend, trendValue, color = 'blue' }: any) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className={`text-2xl font-bold text-${color}-600`}>
-              {value}{unit}
-            </p>
-            {trend && (
-              <div className={`flex items-center mt-1 text-sm ${
-                trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                <TrendingUp className={`w-3 h-3 mr-1 ${trend === 'down' ? 'rotate-180' : ''}`} />
-                {trendValue}
-              </div>
-            )}
+  const MetricCard = ({ title, value, unit, icon: Icon, trend, trendValue, color = 'blue' }: any) => {
+    const colorClasses = {
+      blue: 'text-blue-600',
+      green: 'text-green-600',
+      red: 'text-red-600',
+      purple: 'text-purple-600',
+      orange: 'text-orange-600'
+    };
+    
+    const iconColorClasses = {
+      blue: 'text-blue-500',
+      green: 'text-green-500',
+      red: 'text-red-500',
+      purple: 'text-purple-500',
+      orange: 'text-orange-500'
+    };
+
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">{title}</p>
+              <p className={`text-2xl font-bold ${colorClasses[color as keyof typeof colorClasses] || colorClasses.blue}`}>
+                {value}{unit}
+              </p>
+              {trend && (
+                <div className={`flex items-center mt-1 text-sm ${
+                  trend === 'up' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  <TrendingUp className={`w-3 h-3 mr-1 ${trend === 'down' ? 'rotate-180' : ''}`} />
+                  {trendValue}
+                </div>
+              )}
+            </div>
+            <Icon className={`w-8 h-8 ${iconColorClasses[color as keyof typeof iconColorClasses] || iconColorClasses.blue}`} />
           </div>
-          <Icon className={`w-8 h-8 text-${color}-500`} />
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (isLoading) {
     return (

@@ -245,7 +245,9 @@ export default function AIFeatures() {
                 <div>
                   <h3 className="font-semibold text-purple-900">Smart Matching</h3>
                   <p className="text-sm text-purple-700">IA propriétaire de correspondance</p>
-                  <Badge variant="secondary" className="mt-1 text-xs">94% précision</Badge>
+                  <Badge variant="outline" className="mt-1 text-xs bg-purple-100 text-purple-800 border-purple-300">
+                    94% précision
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -258,7 +260,9 @@ export default function AIFeatures() {
                 <div>
                   <h3 className="font-semibold text-blue-900">Bid Optimizer</h3>
                   <p className="text-sm text-blue-700">Analyse prédictive avancée</p>
-                  <Badge variant="secondary" className="mt-1 text-xs">+23% succès</Badge>
+                  <Badge variant="outline" className="mt-1 text-xs bg-blue-100 text-blue-800 border-blue-300">
+                    +23% succès
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -271,7 +275,9 @@ export default function AIFeatures() {
                 <div>
                   <h3 className="font-semibold text-green-900">Revenue Engine</h3>
                   <p className="text-sm text-green-700">Prédiction et optimisation</p>
-                  <Badge variant="secondary" className="mt-1 text-xs">89% précision</Badge>
+                  <Badge variant="outline" className="mt-1 text-xs bg-green-100 text-green-800 border-green-300">
+                    89% précision
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -284,7 +290,9 @@ export default function AIFeatures() {
                 <div>
                   <h3 className="font-semibold text-orange-900">Market Intel</h3>
                   <p className="text-sm text-orange-700">Analyse temps réel</p>
-                  <Badge variant="secondary" className="mt-1 text-xs">Live data</Badge>
+                  <Badge variant="outline" className="mt-1 text-xs bg-orange-100 text-orange-800 border-orange-300">
+                    Live data
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -469,7 +477,7 @@ export default function AIFeatures() {
                   <span>Neural Matching Engine - Deep Learning</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
                     <Settings className="w-3 h-3 mr-1" />
                     Mode Démo
                   </Badge>

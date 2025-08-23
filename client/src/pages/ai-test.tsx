@@ -155,9 +155,18 @@ export default function AITest() {
                   <div className="mt-6 space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-semibold">Score global</span>
-                      <Badge variant={bidAnalysis.score > 75 ? 'default' : bidAnalysis.score > 50 ? 'secondary' : 'destructive'}>
-                        {bidAnalysis.score}/100
-                      </Badge>
+                      <Badge 
+                      variant={bidAnalysis.score > 75 ? 'default' : bidAnalysis.score > 50 ? 'secondary' : 'destructive'}
+                      className={`${
+                        bidAnalysis.score > 75 
+                          ? 'bg-green-100 text-green-800 border-green-300' 
+                          : bidAnalysis.score > 50 
+                          ? 'bg-yellow-100 text-yellow-800 border-yellow-300' 
+                          : 'bg-red-100 text-red-800 border-red-300'
+                      }`}
+                    >
+                      {bidAnalysis.score}/100
+                    </Badge>
                     </div>
                     
                     <Progress value={bidAnalysis.score} className="w-full" />
