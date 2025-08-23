@@ -395,11 +395,13 @@ export default function AvailableProviders() {
 
                           {/* Changes applied here */}
                           <span className="text-sm text-gray-500">
-                            Dernier vu: {provider.lastSeen ? new Date(provider.lastSeen).toLocaleDateString() : 'Récemment'}
+                            Dernier vu: {provider.lastSeen && provider.lastSeen !== 'Invalid Date' ? 
+                              new Date(provider.lastSeen).toLocaleDateString('fr-FR') : 'Récemment'}
                           </span>
                           <br />
                           <span className="text-sm text-gray-500">
-                            Membre depuis {provider.memberSince ? new Date(provider.memberSince).getFullYear() : '2024'}
+                            Membre depuis {provider.memberSince && provider.memberSince !== 'Invalid Date' ? 
+                              new Date(provider.memberSince).getFullYear() : '2024'}
                           </span>
 
                         </div>
