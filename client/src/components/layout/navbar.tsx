@@ -173,66 +173,68 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 bg-white/90 shadow-lg backdrop-blur-sm">
-            <div className="px-3 pt-4 pb-3 space-y-4">
-              {navigationItems.map((item) => (
-                <div
-                    className={`flex items-center px-4 py-3 text-base font-medium cursor-pointer rounded-xl transition-all duration-200 ${
-                      location === item.href
-                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
-                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                    onClick={() => {
-                      setLocation(item.href);
-                      setShowMobileMenu(false);
-                    }}
-                    key={item.href}
-                  >
-                    {item.label}
-                  </div>
-              ))}
-
-              <div className="border-t border-gray-200 mt-4 pt-4">
-                {user ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3 bg-gray-50 rounded-full p-3 shadow-inner">
-                      {userTypeInfo && (
-                        <div className={`w-8 h-8 ${userTypeInfo.color} rounded-full flex items-center justify-center animate-bounce`}>
-                          <userTypeInfo.icon className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900 leading-tight">{user.name}</span>
-                        {userTypeInfo && (
-                          <Badge variant="premium" className="text-xs font-bold mt-1">
-                            {userTypeInfo.label}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      variant="outline"
+          <div className="md:hidden border-t border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm fixed left-0 right-0 top-[72px] bottom-0 z-40 overflow-hidden">
+            <div className="h-full overflow-y-auto px-3 pt-4 pb-4">
+              <div className="space-y-2 max-h-full">
+                {navigationItems.map((item) => (
+                  <div
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium cursor-pointer rounded-lg transition-all duration-200 ${
+                        location === item.href
+                          ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-md'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
                       onClick={() => {
-                        logout();
+                        setLocation(item.href);
                         setShowMobileMenu(false);
                       }}
-                      className="w-full justify-center text-red-500 hover:text-red-700 font-semibold py-2 px-4 rounded-full border-red-300 hover:border-red-500 shadow-sm hover:shadow-md transition-all duration-200"
+                      key={item.href}
                     >
-                      <LogOut className="w-5 h-5 mr-2" />
-                      Déconnexion
+                      {item.label}
+                    </div>
+                ))}
+
+                <div className="border-t border-gray-200 mt-4 pt-4">
+                  {user ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-3">
+                        {userTypeInfo && (
+                          <div className={`w-7 h-7 ${userTypeInfo.color} rounded-full flex items-center justify-center`}>
+                            <userTypeInfo.icon className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-sm font-medium text-gray-900 truncate">{user.name}</span>
+                          {userTypeInfo && (
+                            <Badge variant="secondary" className="text-xs mt-1 w-fit">
+                              {userTypeInfo.label}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          logout();
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full justify-center text-red-500 hover:text-red-700 font-medium py-2 px-3 rounded-lg border-red-200 hover:border-red-400 text-sm"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Déconnexion
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        setShowAuthModal(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm"
+                    >
+                      Se connecter
                     </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={() => {
-                      setShowAuthModal(true);
-                      setShowMobileMenu(false);
-                    }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all duration-200"
-                  >
-                    Se connecter
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
