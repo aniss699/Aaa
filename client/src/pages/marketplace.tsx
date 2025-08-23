@@ -14,9 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import MissionMatchingEngine from '@/components/ai/mission-matching-engine';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function Marketplace() {
+  const { user } = useAuth();
   const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
+  const [showAIMatching, setShowAIMatching] = useState(false);
   const [filters, setFilters] = useState({
     category: 'all',
     budget: 'all',
@@ -160,21 +164,53 @@ export default function Marketplace() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
             Toutes les missions ({filteredAndSortedMissions.length})
           </h2>
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <span className="text-sm text-gray-500 whitespace-nowrap">Trier par:</span>
-            <Select value={filters.sort} onValueChange={(value) => handleFilterChange('sort', value)}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Plus récent</SelectItem>
-                <SelectItem value="budget-high">Budget décroissant</SelectItem>
-                <SelectItem value="budget-low">Budget croissant</SelectItem>
-                <SelectItem value="bids">Nombre d'offres</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+            {user?.type === 'provider' && (
+              <Button
+                onClick={() => setShowAIMatching(!showAIMatching)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full sm:w-auto"
+              >
+                🤖 Matching IA
+              </Button>
+            )}
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <span className="text-sm text-gray-500 whitespace-nowrap">Trier par:</span>
+              <Select value={filters.sort} onValueChange={(value) => handleFilterChange('sort', value)}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Plus récent</SelectItem>
+                  <SelectItem value="budget-high">Budget décroissant</SelectItem>
+                  <SelectItem value="budget-low">Budget croissant</SelectItem>
+                  <SelectItem value="bids">Nombre d'offres</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
+
+        {showAIMatching && user?.type === 'provider' && (
+          <div className="mb-8">
+            <MissionMatchingEngine
+              providerProfile={{
+                id: user.id,
+                skills: ['React', 'Node.js', 'TypeScript', 'Python'],
+                location: 'Paris',
+                rating: 4.7,
+                completedProjects: 28,
+                portfolio: [],
+                hourlyRate: 65,
+                categories: ['web-development', 'mobile-development']
+              }}
+              missions={filteredAndSortedMissions}
+              onMissionRecommended={(mission) => {
+                setSelectedMissionId(mission.missionId);
+                setShowAIMatching(false);
+              }}
+            />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredAndSortedMissions.map((mission) => (

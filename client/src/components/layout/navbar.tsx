@@ -73,6 +73,12 @@ export function Navbar() {
                     </span>
                   </Link>
                 ))}
+                <Link href="/features" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Fonctionnalités
+                </Link>
+                <Link href="/ai-features" className="text-purple-600 hover:text-purple-700 px-3 py-2 rounded-md text-sm font-medium font-semibold">
+                  🧠 IA Features
+                </Link>
               </div>
             </div>
 

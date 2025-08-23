@@ -17,6 +17,7 @@ import { MapPin, Calendar, Users, Star, Euro, Briefcase, Send, Bookmark } from '
 import { ProviderProfileModal } from './provider-profile-modal';
 import { BidResponseModal } from './bid-response-modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import SmartBidAnalyzer from '@/components/ai/smart-bid-analyzer';
 
 interface MissionDetailModalProps {
   missionId: string | null;
@@ -31,6 +32,9 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
   const [selectedBidId, setSelectedBidId] = useState<string | null>(null);
   const [selectedBidderName, setSelectedBidderName] = useState<string>('');
   const [showBidForm, setShowBidForm] = useState(false); // State to control bid form visibility
+  const [showAIAnalyzer, setShowAIAnalyzer] = useState(false); // State to control AI analyzer visibility
+  const [currentBid, setCurrentBid] = useState<Partial<Bid>>({}); // State to hold the current bid proposal
+
 
   const { data: mission, isLoading } = useQuery<MissionWithBids>({
     queryKey: ['/api/missions', missionId],
@@ -159,13 +163,64 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
                   <p className="text-sm text-gray-600">Soumettez votre offre avec prix et délai</p>
                 </div>
               </div>
-              <BidForm 
-                missionId={mission.id} 
-                onSuccess={() => {
-                  // Optionnel: fermer le modal après soumission
-                  // onClose();
-                }} 
-              />
+              {/* Button to toggle AI Analyzer and Bid Form */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => setShowBidForm(!showBidForm)}
+                    className="bg-primary hover:bg-primary/90"
+                    size="lg"
+                  >
+                    {showBidForm ? 'Masquer le formulaire' : 'Soumettre une offre'}
+                  </Button>
+
+                  <Button 
+                    onClick={() => setShowAIAnalyzer(!showAIAnalyzer)}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    size="lg"
+                  >
+                    🧠 Analyser avec l'IA
+                  </Button>
+                </div>
+
+                {/* AI Analyzer Section */}
+                {showAIAnalyzer && (
+                  <div className="mt-6">
+                    <SmartBidAnalyzer
+                      missionTitle={mission.title}
+                      missionDescription={mission.description}
+                      missionBudget={parseFloat(mission.budget || '0')}
+                      missionCategory={mission.category}
+                      currentBid={currentBid}
+                      providerProfile={{
+                        rating: 4.5, // Replace with actual provider rating
+                        completedProjects: 25, // Replace with actual completed projects count
+                        skills: ['React', 'Node.js', 'TypeScript'], // Replace with actual skills
+                        portfolio: [] // Replace with actual portfolio items
+                      }}
+                      competitorBids={mission.bids}
+                      onOptimizedBidGenerated={(optimizedBid) => {
+                        setCurrentBid(optimizedBid);
+                        setShowBidForm(true); // Automatically show bid form when a bid is generated
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Bid Form Section */}
+                {showBidForm && (
+                  <div className="mt-6 p-6 bg-gray-50 rounded-lg border">
+                    <BidForm 
+                      missionId={mission.id} 
+                      onSuccess={() => {
+                        setShowBidForm(false);
+                        setShowAIAnalyzer(false); // Close AI analyzer when bid form is submitted
+                      }}
+                      initialValues={currentBid.proposal ? currentBid : undefined}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

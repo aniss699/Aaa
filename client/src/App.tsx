@@ -28,15 +28,7 @@ function App() {
               <Route path="/" component={Home} />
               <Route path="/marketplace" component={Marketplace} />
               <Route path="/available-providers" component={AvailableProviders} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/missions" component={Missions} />
-              <Route path="/create-mission" component={lazy(() => import('./pages/create-mission'))} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/messages" component={Messages} />
-              <Route path="/features" component={Features} />
-              <Route path="/legal" component={Legal} />
-              <Route path="/cgv" component={Legal} />
-              <Route path="/mentions-legales" component={Legal} />
+              <Route path="/ai-features" component={AIFeatures} />
               <Route component={NotFound} />
             </Switch>
           </div>
