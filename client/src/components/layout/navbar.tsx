@@ -81,7 +81,7 @@ export function Navbar() {
                       : 'text-green-700 hover:text-green-600 hover:bg-green-50'
                   }`}
                 >
-                  🧪 Lab IA
+                  🧪 Test IA
                 </Link>
                 <Link 
                   href="/ai-features"

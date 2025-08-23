@@ -25,8 +25,18 @@ interface StandardizationResult {
   };
 }
 
-export function MissionStandardizer() {
-  const [originalText, setOriginalText] = useState('');
+interface MissionStandardizerProps {
+  onOptimizedTextGenerated?: (optimizedText: string) => void;
+  showApplyButton?: boolean;
+  initialText?: string;
+}
+
+export function MissionStandardizer({ 
+  onOptimizedTextGenerated, 
+  showApplyButton = false, 
+  initialText = '' 
+}: MissionStandardizerProps) {
+  const [originalText, setOriginalText] = useState(initialText);
   const [result, setResult] = useState<StandardizationResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -247,6 +257,16 @@ ${context}
                   <Edit3 className="w-4 h-4 mr-2" />
                   Éditer
                 </Button>
+                {showApplyButton && onOptimizedTextGenerated && (
+                  <Button 
+                    size="sm" 
+                    onClick={() => onOptimizedTextGenerated(result.standardizedText)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Appliquer à ma mission
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
