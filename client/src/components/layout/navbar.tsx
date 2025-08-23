@@ -10,6 +10,14 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
+} from "@/components/ui/navigation-menu"
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
@@ -68,44 +76,71 @@ export function Navbar() {
                 </div>
               </Link>
 
-              {/* Desktop Navigation - Show burger menu on all sizes */}
-              <div className="flex items-center space-x-4">
+              {/* Desktop Navigation */}
+              <NavigationMenu className="hidden lg:flex items-center space-x-4">
+                <NavigationMenuList>
+                  {desktopItems.map((item) => (
+                    <NavigationMenuItem key={item.href}>
+                      <NavigationMenuLink asChild>
+                        <div className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50">
+                          <Link href={item.href}>{item.label}</Link>
+                        </div>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  ))}
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md bg-transparent focus:bg-transparent data-[state=open]:bg-transparent">
+                      Plus
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid gap-3 p-4 md:w-[400px] lg:grid-cols-2 ">
+                        <li className="row-span-3">
+                          <NavigationMenuLink asChild>
+                            <a
+                              className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-br from-muted/50 to-muted/80 p-6 no-underline outline-none focus:shadow-md"
+                              href="/"
+                            >
+                              <Briefcase className="h-6 w-6 text-blue-500" />
+                              <div className="mb-2 mt-4 text-lg font-medium">
+                                AppelsPro
+                              </div>
+                              <p className="text-sm leading-tight text-muted-foreground">
+                                Votre plateforme de mise en relation pour les missions freelance.
+                              </p>
+                            </a>
+                          </NavigationMenuLink>
+                        </li>
+                        <ListItem href="/ai-test" title="Test IA">
+                          Expérimentez avec nos fonctionnalités IA.
+                        </ListItem>
+                        <ListItem href="/ai-features" title="IA Features">
+                          Découvrez les capacités avancées de notre IA.
+                        </ListItem>
+                        <ListItem href="/ai-dashboard" title="Dashboard IA">
+                          Visualisez les performances de l'IA.
+                        </ListItem>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+
+              {/* Burger Menu */}
+              <div className="flex items-center md:hidden">
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="lg:hidden text-gray-700 focus:text-gray-900">
+                    <Button variant="ghost" size="icon" className="text-gray-700 focus:text-gray-900">
                       {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="right" className="w-80">
                     <div className="flex flex-col space-y-4 mt-6">
-                      <Link href="/dashboard" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <BarChart3 className="h-4 w-4" />
-                        <span>Dashboard</span>
-                      </Link>
-                      <Link href="/missions" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <Target className="h-4 w-4" />
-                        <span>Missions</span>
-                      </Link>
-                      <Link href="/available-providers" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <Users className="h-4 w-4" />
-                        <span>Prestataires</span>
-                      </Link>
-                      <Link href="/ai-test" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <Brain className="h-4 w-4" />
-                        <span>Test IA</span>
-                      </Link>
-                      <Link href="/ai-dashboard" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <BarChart3 className="h-4 w-4" />
-                        <span>Dashboard IA</span>
-                      </Link>
-                      <Link href="/messages" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>Messages</span>
-                      </Link>
-                      <Link href="/profile" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
-                        <User className="h-4 w-4" />
-                        <span>Profil</span>
-                      </Link>
+                      {navigationItems.map((item) => (
+                        <Link href={item.href} key={item.href} className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                          {/* Icon placeholder, you might want to map icons to labels */}
+                          <span>{item.label}</span>
+                        </Link>
+                      ))}
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -165,7 +200,7 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Burger Menu - Works on all screen sizes */}
+        {/* Mobile Menu (when sheet is open) */}
         {showMobileMenu && (
           <div className="border-t border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm fixed left-0 right-0 top-[72px] bottom-0 z-40 overflow-hidden">
             <div className="h-full overflow-y-auto px-3 pt-4 pb-4">
@@ -240,5 +275,21 @@ export function Navbar() {
         onClose={() => setShowAuthModal(false)}
       />
     </>
+  );
+}
+
+// Helper component for ListItem
+function ListItem({ className, title, children, ...props }) {
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <div className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+          <div className="text-sm font-medium leading-none">{title}</div>
+          <p className="text-sm leading-tight text-muted-foreground">
+            {children}
+          </p>
+        </div>
+      </NavigationMenuLink>
+    </li>
   );
 }

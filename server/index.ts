@@ -1,71 +1,108 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
+const port = process.env.PORT || 5000;
+
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, '../dist/public')));
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
+// API Routes
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'AppelsPro API is running' });
 });
 
-(async () => {
-  const server = await registerRoutes(app);
+// Mock AI endpoints pour tester
+app.post('/api/ai/analyze-bid', (req, res) => {
+  const { projectData, bidData } = req.body;
+  
+  const mockAnalysis = {
+    score: Math.floor(Math.random() * 100),
+    priceAnalysis: {
+      competitiveness: Math.floor(Math.random() * 100),
+      marketPosition: 'competitive'
+    },
+    riskAssessment: {
+      technical: Math.floor(Math.random() * 100),
+      timeline: Math.floor(Math.random() * 100),
+      budget: Math.floor(Math.random() * 100)
+    },
+    recommendations: [
+      'Considérez ajuster le prix de 5-10%',
+      'Mettez en avant votre expérience similaire',
+      'Proposez un délai plus précis'
+    ]
+  };
+  
+  res.json(mockAnalysis);
+});
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+app.post('/api/ai/match-missions', (req, res) => {
+  const { providerProfile } = req.body;
+  
+  const mockMatches = [
+    {
+      id: 1,
+      title: 'Développement d\'application mobile',
+      matchScore: 85,
+      reasons: ['Compétences React Native', 'Expérience mobile', 'Localisation proche']
+    },
+    {
+      id: 2,
+      title: 'Site web e-commerce',
+      matchScore: 72,
+      reasons: ['Stack technique compatible', 'Budget aligné']
+    }
+  ];
+  
+  res.json(mockMatches);
+});
 
-    res.status(status).json({ message });
-    throw err;
-  });
+app.post('/api/ai/predict-revenue', (req, res) => {
+  const { missionData, providerData } = req.body;
+  
+  const mockPrediction = {
+    estimatedRevenue: Math.floor(Math.random() * 10000) + 2000,
+    confidence: Math.floor(Math.random() * 40) + 60,
+    factors: [
+      'Historique de prix similaires',
+      'Complexité du projet',
+      'Demande du marché'
+    ]
+  };
+  
+  res.json(mockPrediction);
+});
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+app.post('/api/ai/detect-dumping', (req, res) => {
+  const { bidData } = req.body;
+  
+  const mockDetection = {
+    isDumping: Math.random() > 0.7,
+    confidenceLevel: Math.floor(Math.random() * 50) + 50,
+    reasons: Math.random() > 0.5 ? [
+      'Prix 40% en dessous de la moyenne marché',
+      'Pattern inhabituel dans les enchères'
+    ] : [],
+    recommendedMinPrice: Math.floor(Math.random() * 2000) + 1000
+  };
+  
+  res.json(mockDetection);
+});
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+// Serve React app for all other routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/public/index.html'));
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 AppelsPro server running on http://0.0.0.0:${port}`);
+  console.log(`📱 Frontend: http://0.0.0.0:${port}`);
+  console.log(`🔧 API Health: http://0.0.0.0:${port}/api/health`);
+});
