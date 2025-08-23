@@ -51,8 +51,8 @@ interface AvailableProvider {
   skills: string[];
   responseTime: string;
   completedProjects: number;
-  lastSeen?: Date | string; // Added for the change
-  memberSince?: Date | string; // Added for the change
+  lastSeen?: string; // Added for the change
+  memberSince?: string; // Added for the change
 }
 
 export default function AvailableProviders() {
@@ -91,17 +91,17 @@ export default function AvailableProviders() {
 
   const mockProviders: AvailableProvider[] = [
     {
-      id: "1",
-      name: "Alexandre Martin",
-      category: "development", // Changed from expertise to category for consistency
-      rating: 4.8,
-      hourlyRate: 45,
-      location: "Paris, France",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      skills: ["React", "Node.js", "TypeScript", "MongoDB"],
-      responseTime: "< 1h",
-      completedProjects: 156, // Changed from completedJobs to completedProjects
-      availability: [ // Changed from string to array of objects
+      id: '1',
+      name: 'Sophie Martin',
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+      category: 'design',
+      location: 'Paris',
+      rating: 4.9,
+      hourlyRate: 65,
+      skills: ['UI/UX Design', 'Figma', 'Adobe Creative'],
+      responseTime: '< 1h',
+      completedProjects: 127,
+      availability: [
         {
           date: today.toISOString().split('T')[0],
           timeSlots: ['09:00-12:00', '14:00-17:00']
@@ -111,51 +111,41 @@ export default function AvailableProviders() {
           timeSlots: ['10:00-16:00']
         }
       ],
-      lastSeen: new Date("2024-01-15T10:30:00Z"),
-      memberSince: new Date("2023-01-15T00:00:00Z"), // Added for consistency
-      // description: "Développeur fullstack avec 8 ans d'expérience en React et Node.js. Spécialisé dans les applications web modernes et les API RESTful.",
-      // portfolio: [
-      //   { title: "E-commerce Platform", image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=300&h=200&fit=crop" },
-      //   { title: "Dashboard Analytics", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&h=200&fit=crop" }
-      // ]
+      lastSeen: '2024-07-26T10:00:00Z',
+      memberSince: '2023-01-15T00:00:00Z'
     },
     {
-      id: "2", 
-      name: "Sophie Dubois",
-      category: "design", // Changed from expertise to category for consistency
-      rating: 4.9,
-      hourlyRate: 55,
-      location: "Lyon, France",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face",
-      skills: ["Figma", "Adobe XD", "Prototyping", "User Research"],
-      responseTime: "< 30min",
-      completedProjects: 203, // Changed from completedJobs to completedProjects
-      availability: [ // Changed from string to array of objects
+      id: '2',
+      name: 'Thomas Dubois',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
+      category: 'development',
+      location: 'Lyon',
+      rating: 4.8,
+      hourlyRate: 80,
+      skills: ['React', 'Node.js', 'TypeScript'],
+      responseTime: '< 30min',
+      completedProjects: 89,
+      availability: [
         {
           date: today.toISOString().split('T')[0],
           timeSlots: ['08:00-12:00', '13:00-18:00']
         }
       ],
-      lastSeen: new Date("2024-01-16T14:20:00Z"),
-      memberSince: new Date("2022-05-20T00:00:00Z"), // Added for consistency
-      // description: "Designer UX/UI passionnée par la création d'expériences utilisateur exceptionnelles. 6 ans d'expérience dans le design d'interfaces.",
-      // portfolio: [
-      //   { title: "Mobile Banking App", image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=300&h=200&fit=crop" },
-      //   { title: "SaaS Dashboard", image: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=300&h=200&fit=crop" }
-      // ]
+      lastSeen: '2024-07-25T15:30:00Z',
+      memberSince: '2022-05-20T00:00:00Z'
     },
     {
-      id: "3",
-      name: "Thomas Leclerc", 
-      category: "marketing", // Changed from expertise to category for consistency
+      id: '3',
+      name: 'Marie Leroy',
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
+      category: 'marketing',
+      location: 'Marseille',
       rating: 4.7,
-      hourlyRate: 38,
-      location: "Bordeaux, France",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-      skills: ["SEO", "Google Ads", "Social Media", "Analytics"],
-      responseTime: "< 2h",
-      completedProjects: 128, // Changed from completedJobs to completedProjects
-      availability: [ // Changed from string to array of objects
+      hourlyRate: 55,
+      skills: ['SEO', 'Google Ads', 'Analytics'],
+      responseTime: '< 2h',
+      completedProjects: 156,
+      availability: [
         {
           date: today.toISOString().split('T')[0],
           timeSlots: ['09:00-13:00']
@@ -165,13 +155,8 @@ export default function AvailableProviders() {
           timeSlots: ['14:00-18:00']
         }
       ],
-      lastSeen: new Date("2024-01-14T09:15:00Z"),
-      memberSince: new Date("2023-11-01T00:00:00Z"), // Added for consistency
-      // description: "Expert en marketing digital avec une approche data-driven. Spécialisé dans l'acquisition de trafic et l'optimisation des conversions.",
-      // portfolio: [
-      //   { title: "SEO Campaign +150%", image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=200&fit=crop" },
-      //   { title: "Social Media Growth", image: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=200&fit=crop" }
-      // ]
+      lastSeen: '2024-07-26T09:00:00Z',
+      memberSince: '2023-11-01T00:00:00Z'
     }
   ];
 
@@ -410,11 +395,11 @@ export default function AvailableProviders() {
 
                           {/* Changes applied here */}
                           <span className="text-sm text-gray-500">
-                            Dernier vu: {provider.lastSeen instanceof Date ? provider.lastSeen.toLocaleDateString('fr-FR') : 'Récemment'}
+                            Dernier vu: {provider.lastSeen ? new Date(provider.lastSeen).toLocaleDateString() : 'Récemment'}
                           </span>
                           <br />
                           <span className="text-sm text-gray-500">
-                            Membre depuis {provider.memberSince instanceof Date ? provider.memberSince.getFullYear() : '2024'}
+                            Membre depuis {provider.memberSince ? new Date(provider.memberSince).getFullYear() : '2024'}
                           </span>
 
                         </div>

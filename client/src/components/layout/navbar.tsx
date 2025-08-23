@@ -150,21 +150,20 @@ export function Navbar() {
           <div className="md:hidden border-t border-gray-200 bg-white/90 shadow-lg backdrop-blur-sm">
             <div className="px-3 pt-4 pb-3 space-y-4">
               {navigationItems.map((item) => (
-                <Link href={item.href} key={item.href}>
-                  <div
-                      className={`flex items-center px-4 py-3 text-base font-medium cursor-pointer rounded-xl transition-all duration-200 ${
-                        location === item.href
-                          ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
-                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
-                      onClick={() => {
-                        setLocation(item.href);
-                        setShowMobileMenu(false);
-                      }}
-                    >
-                      {item.label}
-                    </div>
-                </Link>
+                <div
+                    className={`flex items-center px-4 py-3 text-base font-medium cursor-pointer rounded-xl transition-all duration-200 ${
+                      location === item.href
+                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                    onClick={() => {
+                      setLocation(item.href);
+                      setShowMobileMenu(false);
+                    }}
+                    key={item.href}
+                  >
+                    {item.label}
+                  </div>
               ))}
 
               <div className="border-t border-gray-200 mt-4 pt-4">

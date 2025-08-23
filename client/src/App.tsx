@@ -16,6 +16,7 @@ import AvailableProviders from './pages/available-providers';
 import NotFound from "@/pages/not-found";
 import Dashboard from "./pages/dashboard";
 import AIFeatures from "./pages/ai-features";
+import { lazy } from "react";
 
 function App() {
   return (
@@ -27,14 +28,8 @@ function App() {
             <Switch>
               <Route path="/" component={Home} />
               <Route path="/marketplace" component={Marketplace} />
-              <Route path="/missions" component={Missions} />
               <Route path="/available-providers" component={AvailableProviders} />
               <Route path="/ai-features" component={AIFeatures} />
-              <Route path="/features" component={Features} />
-              <Route path="/messages" component={Messages} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/legal" component={Legal} />
               <Route component={NotFound} />
             </Switch>
           </div>
