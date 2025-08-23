@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = parseInt(process.env.PORT || '5000', 10);
 
 // Middleware
 app.use(express.json());
@@ -105,4 +105,7 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 AppelsPro server running on http://0.0.0.0:${port}`);
   console.log(`📱 Frontend: http://0.0.0.0:${port}`);
   console.log(`🔧 API Health: http://0.0.0.0:${port}/api/health`);
+}).on('error', (err) => {
+  console.error('❌ Server failed to start:', err.message);
+  process.exit(1);
 });

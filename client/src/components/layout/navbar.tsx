@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '@/hooks/use-auth';
-import { User, LogOut, Menu, X, Briefcase, Users, BarChart3, Target, Brain, MessageSquare } from 'lucide-react';
+import { User, LogOut, Menu, X, Briefcase, Users, BarChart3, Target, Brain, MessageSquare, Search, Zap, TrendingUp } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -18,6 +18,13 @@ import {
   NavigationMenuTrigger,
   NavigationMenuContent,
 } from "@/components/ui/navigation-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
