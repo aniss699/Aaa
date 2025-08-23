@@ -392,7 +392,7 @@ export default function AvailableProviders() {
                           <div className="text-2xl font-bold text-green-600 mb-2">
                             {provider.hourlyRate}€/h
                           </div>
-                          
+
                           {/* Changes applied here */}
                           <span className="text-sm text-gray-500">
                             Dernier vu: {provider.lastSeen ? new Date(provider.lastSeen).toLocaleDateString() : 'Récemment'}
