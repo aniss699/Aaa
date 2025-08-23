@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +25,7 @@ import AdvancedScoringEngine from '@/components/ai/advanced-scoring-engine';
 import AntiDumpingDetector from '@/components/ai/anti-dumping-detector';
 import IntelligentBiddingGuide from '@/components/ai/intelligent-bidding-guide';
 import { RecommendationEngine } from '@/components/ai/recommendation-engine';
+import { AIDashboardOverview } from '@/components/ai/ai-dashboard-overview';
 
 export default function AIDashboard() {
   const [aiMetrics, setAiMetrics] = useState<any>({});
@@ -112,7 +112,7 @@ export default function AIDashboard() {
     const loadAIMetrics = async () => {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       setAiMetrics({
         totalAnalyses: 1247,
         successfulPredictions: 89.6,
@@ -123,7 +123,7 @@ export default function AIDashboard() {
         lastModelUpdate: '2024-01-15T10:30:00Z',
         systemHealth: 98.7
       });
-      
+
       setIsLoading(false);
     };
 
@@ -194,7 +194,7 @@ export default function AIDashboard() {
           <p className="text-xl text-gray-600">
             Monitoring et contrôle de tous les systèmes d'intelligence artificielle
           </p>
-          
+
           <div className="flex justify-center space-x-2 mt-4">
             {['24h', '7d', '30d'].map(range => (
               <Button
@@ -207,6 +207,11 @@ export default function AIDashboard() {
               </Button>
             ))}
           </div>
+        </div>
+
+        {/* Overview Component */}
+        <div className="mb-8">
+          <AIDashboardOverview />
         </div>
 
         {/* Métriques générales */}
@@ -267,7 +272,7 @@ export default function AIDashboard() {
                 <Progress value={94} className="h-2" />
                 <div className="text-xs text-gray-500">Précision: 94%</div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Anti-Dumping</span>
@@ -276,7 +281,7 @@ export default function AIDashboard() {
                 <Progress value={98} className="h-2" />
                 <div className="text-xs text-gray-500">Détection: 98%</div>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Guidage Enchères</span>
@@ -420,7 +425,7 @@ export default function AIDashboard() {
                 </div>
                 <Badge variant="outline" className="text-yellow-700">Nouveau</Badge>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center">
                   <TrendingUp className="w-4 h-4 mr-2 text-blue-600" />
@@ -428,7 +433,7 @@ export default function AIDashboard() {
                 </div>
                 <Badge variant="outline" className="text-blue-700">Info</Badge>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center">
                   <CheckCircle className="w-4 h-4 mr-2 text-green-600" />
