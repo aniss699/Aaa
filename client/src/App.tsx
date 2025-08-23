@@ -7,7 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
 import Home from "@/pages/home";
 import Marketplace from "@/pages/marketplace";
-import Missions from "@/pages/missions";
+import Missions from '@/pages/missions';
 import Legal from '@/pages/legal';
 import Features from '@/pages/features';
 import Profile from '@/pages/profile';
@@ -27,15 +27,16 @@ function App() {
             <Switch>
               <Route path="/" component={Home} />
               <Route path="/marketplace" component={Marketplace} />
+              <Route path="/available-providers" component={AvailableProviders} />
+              <Route path="/dashboard" component={Dashboard} />
+              <Route path="/missions" component={Missions} />
               <Route path="/create-mission" component={lazy(() => import('./pages/create-mission'))} />
               <Route path="/profile" component={Profile} />
               <Route path="/messages" component={Messages} />
-              <Route path="/available-providers" component={AvailableProviders} />
               <Route path="/features" component={Features} />
               <Route path="/legal" component={Legal} />
               <Route path="/cgv" component={Legal} />
               <Route path="/mentions-legales" component={Legal} />
-              <Route path="/dashboard" component={Dashboard} />
               <Route component={NotFound} />
             </Switch>
           </div>

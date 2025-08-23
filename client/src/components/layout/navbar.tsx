@@ -15,6 +15,7 @@ export function Navbar() {
   const navigationItems = [
     { href: '/', label: 'Accueil' },
     { href: '/marketplace', label: 'Marketplace' },
+    { href: '/available-providers', label: 'Prestataires Disponibles' },
     { href: '/dashboard', label: 'Tableau de bord' },
     { href: '/missions', label: 'Mes Missions' },
     { href: '/messages', label: 'Messages' },
@@ -25,6 +26,7 @@ export function Navbar() {
   const desktopItems = [
     { href: '/', label: 'Accueil' },
     { href: '/marketplace', label: 'Marketplace' },
+    { href: '/available-providers', label: 'Prestataires Disponibles' },
     { href: '/dashboard', label: 'Tableau de bord' },
     { href: '/missions', label: 'Mes Missions' },
     { href: '/messages', label: 'Messages' },

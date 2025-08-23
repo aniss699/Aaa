@@ -84,6 +84,10 @@ export default function AvailableProviders() {
   });
 
   // Données de démonstration
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
   const mockProviders: AvailableProvider[] = [
     {
       id: '1',
@@ -98,11 +102,11 @@ export default function AvailableProviders() {
       completedProjects: 127,
       availability: [
         {
-          date: new Date().toISOString().split('T')[0],
+          date: today.toISOString().split('T')[0],
           timeSlots: ['09:00-12:00', '14:00-17:00']
         },
         {
-          date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          date: tomorrow.toISOString().split('T')[0],
           timeSlots: ['10:00-16:00']
         }
       ]
@@ -120,7 +124,7 @@ export default function AvailableProviders() {
       completedProjects: 89,
       availability: [
         {
-          date: new Date().toISOString().split('T')[0],
+          date: today.toISOString().split('T')[0],
           timeSlots: ['08:00-12:00', '13:00-18:00']
         }
       ]
@@ -138,11 +142,11 @@ export default function AvailableProviders() {
       completedProjects: 156,
       availability: [
         {
-          date: new Date().toISOString().split('T')[0],
+          date: today.toISOString().split('T')[0],
           timeSlots: ['09:00-13:00']
         },
         {
-          date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          date: tomorrow.toISOString().split('T')[0],
           timeSlots: ['14:00-18:00']
         }
       ]
@@ -163,23 +167,30 @@ export default function AvailableProviders() {
   });
 
   const getAvailabilityForDate = (provider: AvailableProvider, date: Date) => {
+    if (!date || isNaN(date.getTime())) return [];
     const dateStr = date.toISOString().split('T')[0];
     return provider.availability.find(avail => avail.date === dateStr)?.timeSlots || [];
   };
 
-  const selectedDateStr = selectedDate.toISOString().split('T')[0];
+  const selectedDateStr = selectedDate && !isNaN(selectedDate.getTime()) 
+    ? selectedDate.toISOString().split('T')[0] 
+    : new Date().toISOString().split('T')[0];
   const providersAvailableOnDate = filteredProviders.filter(provider => 
     provider.availability.some(avail => avail.date === selectedDateStr)
   );
 
   const handleBookingOpen = (provider: AvailableProvider, timeSlot?: string) => {
+    const bookingDate = selectedDate && !isNaN(selectedDate.getTime()) 
+      ? selectedDate.toISOString().split('T')[0] 
+      : new Date().toISOString().split('T')[0];
+    
     setBookingModal({
       isOpen: true,
       provider,
       selectedTimeSlot: timeSlot || ''
     });
     setBookingForm({
-      date: selectedDate.toISOString().split('T')[0],
+      date: bookingDate,
       timeSlot: timeSlot || '',
       duration: '1',
       description: '',
@@ -456,7 +467,7 @@ export default function AvailableProviders() {
                                       <SelectValue placeholder="Sélectionner un créneau" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {getAvailabilityForDate(provider, new Date(bookingForm.date)).map((slot) => (
+                                      {bookingForm.date && getAvailabilityForDate(provider, new Date(bookingForm.date)).map((slot) => (
                                         <SelectItem key={slot} value={slot}>{slot}</SelectItem>
                                       ))}
                                     </SelectContent>
