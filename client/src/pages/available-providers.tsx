@@ -7,6 +7,16 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   Select,
   SelectContent,
@@ -51,6 +61,22 @@ export default function AvailableProviders() {
     location: '',
     maxRate: '',
     availability: 'today'
+  });
+  const [bookingModal, setBookingModal] = useState<{
+    isOpen: boolean;
+    provider: AvailableProvider | null;
+    selectedTimeSlot: string;
+  }>({
+    isOpen: false,
+    provider: null,
+    selectedTimeSlot: ''
+  });
+  const [bookingForm, setBookingForm] = useState({
+    date: '',
+    timeSlot: '',
+    duration: '1',
+    description: '',
+    budget: ''
   });
 
   const { data: availableProviders = [] } = useQuery<AvailableProvider[]>({
@@ -146,6 +172,31 @@ export default function AvailableProviders() {
     provider.availability.some(avail => avail.date === selectedDateStr)
   );
 
+  const handleBookingOpen = (provider: AvailableProvider, timeSlot?: string) => {
+    setBookingModal({
+      isOpen: true,
+      provider,
+      selectedTimeSlot: timeSlot || ''
+    });
+    setBookingForm({
+      date: selectedDate.toISOString().split('T')[0],
+      timeSlot: timeSlot || '',
+      duration: '1',
+      description: '',
+      budget: ''
+    });
+  };
+
+  const handleBookingSubmit = () => {
+    // Logique de réservation à implémenter
+    console.log('Réservation:', {
+      provider: bookingModal.provider?.id,
+      ...bookingForm
+    });
+    setBookingModal({ isOpen: false, provider: null, selectedTimeSlot: '' });
+    // Afficher un message de succès
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -160,19 +211,23 @@ export default function AvailableProviders() {
       <div className="grid lg:grid-cols-4 gap-8">
         {/* Filtres et Calendrier */}
         <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Filter className="w-5 h-5 mr-2" />
-                Filtres
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Catégorie</label>
+          <div className="bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 rounded-3xl shadow-xl border border-blue-100/50 p-6 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Filter className="w-5 h-5 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Filtrer les prestataires</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  Catégorie
+                </label>
                 <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({...prev, category: value}))}>
-                  <SelectTrigger>
-                    <SelectValue />
+                  <SelectTrigger className="bg-white/80 border-gray-200 hover:border-blue-400 transition-colors">
+                    <SelectValue placeholder="Toutes les catégories" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Toutes</SelectItem>
@@ -183,29 +238,40 @@ export default function AvailableProviders() {
                 </Select>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Localisation</label>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  Localisation
+                </label>
                 <Input
-                  placeholder="Ville..."
+                  placeholder="Ville, région..."
                   value={filters.location}
                   onChange={(e) => setFilters(prev => ({...prev, location: e.target.value}))}
+                  className="bg-white/80 border-gray-200 hover:border-green-400 focus:border-green-500 transition-colors"
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Tarif max/h</label>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  Tarif max/h
+                </label>
                 <Input
                   type="number"
                   placeholder="€"
                   value={filters.maxRate}
                   onChange={(e) => setFilters(prev => ({...prev, maxRate: e.target.value}))}
+                  className="bg-white/80 border-gray-200 hover:border-purple-400 focus:border-purple-500 transition-colors"
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Disponibilité</label>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                  Disponibilité
+                </label>
                 <Select value={filters.availability} onValueChange={(value) => setFilters(prev => ({...prev, availability: value}))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/80 border-gray-200 hover:border-orange-400 transition-colors">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -218,13 +284,13 @@ export default function AvailableProviders() {
 
               <Button 
                 variant="outline" 
-                className="w-full"
+                className="w-full border-gray-300 hover:bg-gray-50 transition-all duration-200 hover:shadow-md mt-4"
                 onClick={() => setFilters({category: 'all', location: '', maxRate: '', availability: 'today'})}
               >
-                Réinitialiser
+                🔄 Réinitialiser les filtres
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           <Card>
             <CardHeader>
@@ -336,7 +402,7 @@ export default function AvailableProviders() {
                           </div>
                         )}
 
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 flex-wrap">
                           <Button 
                             size="sm" 
                             variant="outline"
@@ -347,12 +413,99 @@ export default function AvailableProviders() {
                           </Button>
                           <Button 
                             size="sm" 
-                            className="bg-blue-600 hover:bg-blue-700"
+                            variant="outline"
+                            className="border-green-600 text-green-600 hover:bg-green-50"
                             onClick={() => window.open(`tel:+33${Math.floor(Math.random() * 1000000000)}`, '_self')}
                           >
                             <Phone className="w-4 h-4 mr-1" />
                             Contacter
                           </Button>
+                          <Dialog open={bookingModal.isOpen && bookingModal.provider?.id === provider.id} onOpenChange={(open) => !open && setBookingModal({ isOpen: false, provider: null, selectedTimeSlot: '' })}>
+                            <DialogTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                                onClick={() => handleBookingOpen(provider)}
+                              >
+                                <CalendarIcon className="w-4 h-4 mr-1" />
+                                Réserver
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Réserver un créneau</DialogTitle>
+                                <DialogDescription>
+                                  Réservez un créneau avec {provider.name}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div>
+                                  <Label htmlFor="date">Date</Label>
+                                  <Input
+                                    id="date"
+                                    type="date"
+                                    value={bookingForm.date}
+                                    onChange={(e) => setBookingForm(prev => ({ ...prev, date: e.target.value }))}
+                                    min={new Date().toISOString().split('T')[0]}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="timeSlot">Créneaux disponibles</Label>
+                                  <Select value={bookingForm.timeSlot} onValueChange={(value) => setBookingForm(prev => ({ ...prev, timeSlot: value }))}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Sélectionner un créneau" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {getAvailabilityForDate(provider, new Date(bookingForm.date)).map((slot) => (
+                                        <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label htmlFor="duration">Durée (heures)</Label>
+                                  <Select value={bookingForm.duration} onValueChange={(value) => setBookingForm(prev => ({ ...prev, duration: value }))}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="1">1 heure</SelectItem>
+                                      <SelectItem value="2">2 heures</SelectItem>
+                                      <SelectItem value="4">4 heures</SelectItem>
+                                      <SelectItem value="8">Journée complète</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label htmlFor="budget">Budget estimé</Label>
+                                  <Input
+                                    id="budget"
+                                    type="number"
+                                    placeholder={`${provider.hourlyRate * parseInt(bookingForm.duration)}€`}
+                                    value={bookingForm.budget}
+                                    onChange={(e) => setBookingForm(prev => ({ ...prev, budget: e.target.value }))}
+                                  />
+                                </div>
+                                <div>
+                                  <Label htmlFor="description">Description du projet</Label>
+                                  <Textarea
+                                    id="description"
+                                    placeholder="Décrivez brièvement votre projet..."
+                                    value={bookingForm.description}
+                                    onChange={(e) => setBookingForm(prev => ({ ...prev, description: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="flex space-x-2">
+                                  <Button variant="outline" className="flex-1" onClick={() => setBookingModal({ isOpen: false, provider: null, selectedTimeSlot: '' })}>
+                                    Annuler
+                                  </Button>
+                                  <Button className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700" onClick={handleBookingSubmit}>
+                                    Confirmer la réservation
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </div>
                     </div>
