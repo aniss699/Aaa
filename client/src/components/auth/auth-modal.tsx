@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -26,10 +27,8 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
   const { login } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
-    type: 'client',
   });
 
   const loginMutation = useMutation({
@@ -94,16 +93,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
         password: formData.password,
       });
     } else {
-      // Validation complète pour l'inscription
-      if (!formData.name.trim()) {
-        toast({
-          title: 'Nom requis',
-          description: 'Veuillez saisir votre nom',
-          variant: 'destructive',
-        });
-        return;
-      }
-
+      // Validation pour l'inscription
       if (!formData.email.trim()) {
         toast({
           title: 'Email requis',
@@ -134,10 +124,10 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
       }
 
       registerMutation.mutate({
-        name: formData.name.trim() || 'Utilisateur',
+        name: formData.email.split('@')[0], // Utilise la partie avant @ comme nom
         email: formData.email.trim(),
         password: formData.password,
-        type: formData.type,
+        type: 'client', // Par défaut client
       });
     }
   };
@@ -147,7 +137,7 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
   };
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', password: '', type: 'client' });
+    setFormData({ email: '', password: '' });
   };
 
   const handleClose = () => {
@@ -167,28 +157,12 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
           <DialogTitle className="text-2xl font-bold text-blue-900 text-center">
             {mode === 'login' ? 'Connexion' : 'Créer un compte'}
           </DialogTitle>
-          <div className="sr-only">
-            {mode === 'login' ? 'Connectez-vous à votre compte' : 'Créez votre compte PrestServices'}
-          </div>
+          <DialogDescription className="text-center text-blue-600">
+            {mode === 'login' ? 'Connectez-vous à votre compte' : 'Créez votre compte avec votre email'}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {mode === 'register' && (
-            <div>
-              <Label htmlFor="name" className="text-sm font-medium text-blue-800">
-                Nom *
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="mt-2 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Votre nom complet"
-                required
-              />
-            </div>
-          )}
-
           <div>
             <Label htmlFor="email" className="text-sm font-medium text-blue-800">
               Email
@@ -216,23 +190,6 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
               required
             />
           </div>
-
-          {mode === 'register' && (
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="type" className="text-sm font-medium text-blue-800">
-                Type de compte :
-              </Label>
-              <select
-                id="type"
-                value={formData.type}
-                onChange={(e) => handleInputChange('type', e.target.value)}
-                className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 rounded-md px-2 py-1"
-              >
-                <option value="client">Client</option>
-                <option value="provider">Prestataire</option>
-              </select>
-            </div>
-          )}
 
           <Button
             type="submit"

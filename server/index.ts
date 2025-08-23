@@ -17,6 +17,92 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'AppelsPro API is running' });
 });
 
+// Demo missions endpoint
+app.get('/api/missions', (req, res) => {
+  const demoMissions = [
+    {
+      id: "mission1",
+      title: "Développement d'une application mobile de e-commerce",
+      description: "Je recherche un développeur expérimenté pour créer une application mobile complète de vente en ligne avec système de paiement intégré.",
+      category: "development",
+      budget: "5000",
+      location: "Paris, France",
+      clientId: "client1",
+      clientName: "Marie Dubois",
+      status: "open",
+      createdAt: new Date("2024-01-15"),
+      bids: []
+    },
+    {
+      id: "mission2",
+      title: "Refonte complète du site web d'entreprise",
+      description: "Modernisation du site vitrine de notre entreprise avec nouveau design responsive et optimisation SEO.",
+      category: "design",
+      budget: "3000",
+      location: "Lyon, France",
+      clientId: "client2",
+      clientName: "Pierre Martin",
+      status: "open",
+      createdAt: new Date("2024-01-18"),
+      bids: []
+    },
+    {
+      id: "mission3",
+      title: "Campagne marketing digital et réseaux sociaux",
+      description: "Lancement d'une campagne complète sur les réseaux sociaux pour augmenter la notoriété de notre marque.",
+      category: "marketing",
+      budget: "2000",
+      location: "Marseille, France",
+      clientId: "client3",
+      clientName: "Sophie Leclerc",
+      status: "open",
+      createdAt: new Date("2024-01-20"),
+      bids: []
+    },
+    {
+      id: "mission4",
+      title: "Développement d'une plateforme SaaS",
+      description: "Création d'une plateforme SaaS complète avec tableau de bord, API, authentification et facturation.",
+      category: "development",
+      budget: "15000",
+      location: "Remote",
+      clientId: "client4",
+      clientName: "Tech Startup",
+      status: "open",
+      createdAt: new Date("2024-01-22"),
+      bids: []
+    },
+    {
+      id: "mission5",
+      title: "Application mobile React Native",
+      description: "Développement d'une application mobile cross-platform avec React Native pour la gestion de tâches.",
+      category: "mobile",
+      budget: "8000",
+      location: "Lille, France",
+      clientId: "client5",
+      clientName: "Productivity Corp",
+      status: "open",
+      createdAt: new Date("2024-01-25"),
+      bids: []
+    },
+    {
+      id: "mission6",
+      title: "Intégration IA et Machine Learning",
+      description: "Intégration d'intelligence artificielle dans une plateforme existante pour l'analyse prédictive.",
+      category: "ai",
+      budget: "12000",
+      location: "Paris, France",
+      clientId: "client6",
+      clientName: "AI Solutions",
+      status: "open",
+      createdAt: new Date("2024-01-28"),
+      bids: []
+    }
+  ];
+
+  res.json(demoMissions);
+});
+
 // Mock AI endpoints pour tester
 app.post('/api/ai/analyze-bid', (req, res) => {
   const { projectData, bidData } = req.body;
@@ -117,8 +203,8 @@ app.post('/api/auth/login', (req, res) => {
 app.post('/api/auth/register', (req, res) => {
   const { name, email, password, type } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Tous les champs sont requis' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email et mot de passe requis' });
   }
 
   if (password.length < 6) {
@@ -133,7 +219,7 @@ app.post('/api/auth/register', (req, res) => {
   // Simple mock registration
   const user = {
     id: Date.now(),
-    name: name.trim(),
+    name: name || email.split('@')[0],
     email: email.trim().toLowerCase(),
     type: type || 'client'
   };
