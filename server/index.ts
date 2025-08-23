@@ -30,7 +30,7 @@ app.get('/api/missions', (req, res) => {
       clientId: "client1",
       clientName: "Marie Dubois",
       status: "open",
-      createdAt: new Date("2024-01-15"),
+      createdAt: new Date("2024-01-15").toISOString(),
       bids: []
     },
     {
@@ -43,7 +43,7 @@ app.get('/api/missions', (req, res) => {
       clientId: "client2",
       clientName: "Pierre Martin",
       status: "open",
-      createdAt: new Date("2024-01-18"),
+      createdAt: new Date("2024-01-18").toISOString(),
       bids: []
     },
     {
@@ -56,7 +56,7 @@ app.get('/api/missions', (req, res) => {
       clientId: "client3",
       clientName: "Sophie Leclerc",
       status: "open",
-      createdAt: new Date("2024-01-20"),
+      createdAt: new Date("2024-01-20").toISOString(),
       bids: []
     },
     {
@@ -69,7 +69,7 @@ app.get('/api/missions', (req, res) => {
       clientId: "client4",
       clientName: "Tech Startup",
       status: "open",
-      createdAt: new Date("2024-01-22"),
+      createdAt: new Date("2024-01-22").toISOString(),
       bids: []
     },
     {
@@ -82,7 +82,7 @@ app.get('/api/missions', (req, res) => {
       clientId: "client5",
       clientName: "Productivity Corp",
       status: "open",
-      createdAt: new Date("2024-01-25"),
+      createdAt: new Date("2024-01-25").toISOString(),
       bids: []
     },
     {
@@ -95,7 +95,7 @@ app.get('/api/missions', (req, res) => {
       clientId: "client6",
       clientName: "AI Solutions",
       status: "open",
-      createdAt: new Date("2024-01-28"),
+      createdAt: new Date("2024-01-28").toISOString(),
       bids: []
     }
   ];

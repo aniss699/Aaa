@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription, // Import DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +48,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-0 shadow-2xl">
           <DialogHeader>
             <DialogTitle>Chargement...</DialogTitle>
+            <DialogDescription>Chargement des détails de la mission en cours...</DialogDescription> {/* Added DialogDescription */}
           </DialogHeader>
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
