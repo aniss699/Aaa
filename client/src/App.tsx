@@ -30,10 +30,10 @@ function App() {
               <Route path="/marketplace" component={Marketplace} />
               <Route path="/available-providers" component={AvailableProviders} />
               <Route path="/ai-features" component={AIFeatures} />
-              <Route path="/features" component={Features} />
+              <Route path="/ai-test" component={lazy(() => import('./pages/ai-test'))} />
+              <Route path="/profile" component={Profile} />
               <Route path="/missions" component={Missions} />
               <Route path="/messages" component={Messages} />
-              <Route path="/profile" component={Profile} />
               <Route path="/legal" component={Legal} />
               <Route path="/dashboard" component={Dashboard} />
               <Route component={NotFound} />
