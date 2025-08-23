@@ -1,0 +1,154 @@
+Parfait ✅
+Voici ton prompt complet à copier-coller dans Replit. Il inclut toute la logique du projet + la contrainte 100% offline (aucun appel externe).
+
+⸻
+
+📋 PROMPT REPLIT — Projet complet IA (offline, appels d’offres inversés + mise en relation)
+
+Tu es un assistant IA full-stack.
+Ta mission : générer un monorepo complet, exécutable localement (Docker), en mode 100% offline (aucun appel externe), pour une plateforme française d’appels d’offres inversés + mise en relation payante.
+
+Le code doit être complet, typé, testé, documenté (FR), prêt en 1 seule commande.
+
+⸻
+
+🎯 Objectif produit
+	•	Concept : « Le client fait le prix ».
+	•	Deux volets :
+	1.	Appels d’offres inversés (clients publient besoins → prestataires enchérissent à la baisse).
+	2.	Mise en relation payante :
+	•	Réservation de créneaux (calendrier + paiement).
+	•	Introductions ciblées (le client propose un prix pour contacter une personne précise).
+	•	IA cœur (différenciation) :
+	•	Compréhension du besoin (NLP / embeddings locaux ou fallback BM25).
+	•	Référence de prix IA (régression quantile + règles).
+	•	Enchère inversée guidée (nudges dynamiques, anti-dumping).
+	•	Scoring multi-objectif explicable (prix, qualité, fit, délai, risque, LOC).
+	•	Probabilité d’aboutissement (LOC) pour projets, réservations et intros.
+	•	Détection d’abus (collusion, dumping, spam) via graphe + IsolationForest.
+	•	Apprentissage continu (ré-entrainement local).
+
+⸻
+
+🛠️ Stack & Structure
+	•	/apps/api : Node 20, TypeScript, Fastify, Prisma (Postgres), Zod, OpenAPI, WS.
+	•	/apps/ml : Python 3.11, FastAPI, scikit-learn, LightGBM, sentence-transformers (offline), networkx.
+	•	/apps/worker : Node, BullMQ (Redis), jobs (prepare, retrain, recalc, payouts).
+	•	/packages/core : scoring (TS), constantes, types partagés.
+	•	/infra : docker-compose.yml, init.sql.
+	•	/tests : unit (Vitest, pytest), e2e (supertest), load (k6).
+	•	/models/ : tous les poids ML locaux (aucun téléchargement).
+
+Commande unique :
+
+docker-compose up --build
+
+
+⸻
+
+🔒 Mode 100% OFFLINE
+	•	Interdiction totale d’appels HTTP externes.
+	•	Variables d’env obligatoires :
+
+OFFLINE_MODE=true
+NO_EXTERNAL_CALLS=true
+TRANSFORMERS_OFFLINE=1
+HF_HUB_OFFLINE=1
+
+
+	•	Tous les modèles (embeddings, LightGBM, sklearn) sont chargés **depuis /models/** uniquement.
+	•	Fallback BM25/TF-IDF si aucun modèle dispo.
+	•	Tests doivent échouer si un appel sortant est tenté.
+
+⸻
+
+🗄️ Schéma (Prisma)
+
+Inclure tables pour :
+	•	Users, ProviderProfile, ClientProfile, Project, Bid, MatchFeature, AbuseSignal, EventLog, ModelVersion.
+	•	Mise en relation : PersonProfile, AvailabilitySlot, Booking, IntroRequest, ContactOffer, Payment, Payout.
+
+⸻
+
+🔌 API (Fastify, FR)
+	•	Projets / enchères : CRUD projets/bids, IA (prepare, price-ref, candidates, auction/start, explain, loc).
+	•	Réservations : créer profil, slots, bookings (avec prix suggéré + LOC), confirm/cancel.
+	•	Introductions : créer intro (prix proposé, calcul prix suggéré + LOC), accept/decline/complete.
+	•	Recommandations : clients → personnes, personnes → prospects.
+	•	Abus : /ai/abuse/:entity/:id.
+	•	Admin : /admin/ml/retrain, /admin/metrics.
+	•	WS : enchères (/ws/auction/:projectId), calendrier (/ws/schedule/:personId), intros (/ws/intro/:personId).
+
+Toutes les réponses IA renvoient breakdown explicable (FR).
+
+⸻
+
+🤖 Microservice ML (FastAPI)
+
+Modules à implémenter :
+	•	embedder.py : embeddings locaux (/models/embeddings/**) ou fallback BM25.
+	•	ranker.py : LightGBM scoring offres (projets↔prestataires).
+	•	auction.py : référence prix IA (quantile), règles nudges, anti-dumping.
+	•	loc.py : prédire probabilité de succès (projets, bookings, intros).
+	•	pricing_intro.py : prix suggéré (quantile regression).
+	•	rank_people.py : ranking personnes (mise en relation).
+	•	abuse.py : détection collusion/dumping/spam.
+
+Tous les modèles sont sauvegardés/chargés localement dans /models/**.
+
+⸻
+
+📊 Scoring
+	•	GlobalScore (enchères) : prix, qualité, fit, délai, risque, LOC.
+	•	PeopleScore (mise en relation) : fit, réputation, prix alignment, disponibilité, LOC_intro, risque.
+
+Toujours retourner breakdown et reasons[].
+
+⸻
+
+📦 Seeds & Démo
+	•	≥60 providers, ≥40 projets, ≥200 bids (incluant dumping & collusion).
+	•	≥50 personnes (mentors, décideurs, experts, commerciaux) avec calendriers.
+	•	≥120 bookings (inclure no-show).
+	•	≥100 intros (acceptées/refusées).
+
+Cas testables :
+	1.	Projet peinture (budget trop bas → LOC faible).
+	2.	Enchère avec collusion → abus détecté.
+	3.	Réservation slot → prix suggéré + LOC_booking affichés.
+	4.	Intro avec prix trop bas → prix suggéré + LOC_intro + explication.
+
+⸻
+
+🧪 Tests
+	•	Unit (Vitest/pytest) : scoring, LOC, pricing_intro, rank_people, auction, abuse.
+	•	E2E (supertest) : parcours complet projets, réservations, intros.
+	•	Load (k6) : 100 utilisateurs concurrents.
+	•	Offline tests : échouer si HTTP sortant.
+
+⸻
+
+📈 Admin / Observabilité
+	•	/admin/metrics → NDCG@5, award rate, dispersion prix, LOC moyens, conversion réservations/intros, taux de satisfaction, flags abus.
+	•	Logs Pino JSON + EventLog versionné.
+
+⸻
+
+✅ Definition of Done
+	•	docker-compose up --build démarre sans Internet.
+	•	API + ML + Worker + DB + Redis OK.
+	•	Price-ref, enchère inversée, LOC, réservations, intros fonctionnent.
+	•	Explicabilité visible partout.
+	•	Anti-dumping & collusion détectés.
+	•	Tests unitaires ≥80% passent.
+	•	README (FR) complet avec commandes cURL.
+
+⸻
+
+👉 Directive finale
+
+Génère maintenant le projet complet conforme à ces spécifications, en garantissant le mode 100% offline (aucun appel externe).
+
+⸻
+
+Veux-tu que je t’ajoute aussi une mini-section front HTML statique (formulaires simples pour tester manuellement les parcours) dans ce prompt, ou tu préfères rester full API ?
