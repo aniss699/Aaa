@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,6 +51,8 @@ interface AvailableProvider {
   skills: string[];
   responseTime: string;
   completedProjects: number;
+  lastSeen?: string; // Added for the change
+  memberSince?: string; // Added for the change
 }
 
 export default function AvailableProviders() {
@@ -109,7 +110,9 @@ export default function AvailableProviders() {
           date: tomorrow.toISOString().split('T')[0],
           timeSlots: ['10:00-16:00']
         }
-      ]
+      ],
+      lastSeen: '2024-07-26T10:00:00Z',
+      memberSince: '2023-01-15T00:00:00Z'
     },
     {
       id: '2',
@@ -127,7 +130,9 @@ export default function AvailableProviders() {
           date: today.toISOString().split('T')[0],
           timeSlots: ['08:00-12:00', '13:00-18:00']
         }
-      ]
+      ],
+      lastSeen: '2024-07-25T15:30:00Z',
+      memberSince: '2022-05-20T00:00:00Z'
     },
     {
       id: '3',
@@ -149,7 +154,9 @@ export default function AvailableProviders() {
           date: tomorrow.toISOString().split('T')[0],
           timeSlots: ['14:00-18:00']
         }
-      ]
+      ],
+      lastSeen: '2024-07-26T09:00:00Z',
+      memberSince: '2023-11-01T00:00:00Z'
     }
   ];
 
@@ -157,12 +164,12 @@ export default function AvailableProviders() {
     if (filters.category !== 'all' && provider.category !== filters.category) return false;
     if (filters.location && !provider.location.toLowerCase().includes(filters.location.toLowerCase())) return false;
     if (filters.maxRate && provider.hourlyRate > parseInt(filters.maxRate)) return false;
-    
+
     if (filters.availability === 'today') {
       const today = new Date().toISOString().split('T')[0];
       return provider.availability.some(avail => avail.date === today);
     }
-    
+
     return true;
   });
 
@@ -183,7 +190,7 @@ export default function AvailableProviders() {
     const bookingDate = selectedDate && !isNaN(selectedDate.getTime()) 
       ? selectedDate.toISOString().split('T')[0] 
       : new Date().toISOString().split('T')[0];
-    
+
     setBookingModal({
       isOpen: true,
       provider,
@@ -340,7 +347,7 @@ export default function AvailableProviders() {
             {filteredProviders.map((provider) => {
               const todaySlots = getAvailabilityForDate(provider, new Date());
               const selectedDateSlots = getAvailabilityForDate(provider, selectedDate);
-              
+
               return (
                 <Card key={provider.id} className="hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
@@ -350,7 +357,7 @@ export default function AvailableProviders() {
                           <AvatarImage src={provider.avatar} alt={provider.name} />
                           <AvatarFallback>{provider.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                         </Avatar>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
                             <h3 className="text-xl font-semibold">{provider.name}</h3>
@@ -359,7 +366,7 @@ export default function AvailableProviders() {
                               <span className="text-sm font-medium ml-1">{provider.rating}</span>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
                             <div className="flex items-center">
                               <MapPin className="w-4 h-4 mr-1" />
@@ -385,6 +392,16 @@ export default function AvailableProviders() {
                           <div className="text-2xl font-bold text-green-600 mb-2">
                             {provider.hourlyRate}€/h
                           </div>
+                          
+                          {/* Changes applied here */}
+                          <span className="text-sm text-gray-500">
+                            Dernier vu: {provider.lastSeen ? new Date(provider.lastSeen).toLocaleDateString() : 'Récemment'}
+                          </span>
+                          <br />
+                          <span className="text-sm text-gray-500">
+                            Membre depuis {provider.memberSince ? new Date(provider.memberSince).getFullYear() : '2024'}
+                          </span>
+
                         </div>
                       </div>
 

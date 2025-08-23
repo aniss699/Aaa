@@ -15,6 +15,7 @@ import Messages from '@/pages/messages';
 import AvailableProviders from './pages/available-providers';
 import NotFound from "@/pages/not-found";
 import Dashboard from "./pages/dashboard";
+import AIFeatures from "./pages/ai-features";
 import { lazy } from "react";
 
 function App() {
