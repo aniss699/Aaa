@@ -62,49 +62,16 @@ export function Navbar() {
                 </a>
               </Link>
 
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-6">
-                {desktopItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <span className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
-                      location === item.href
-                        ? 'text-blue-600 bg-blue-50 font-semibold'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                    }`}>
-                      {item.label}
-                    </span>
-                  </Link>
-                ))}
-                <Link 
-                  href="/ai-test"
-                  className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
-                    location === '/ai-test'
-                      ? 'text-green-600 bg-green-50 font-semibold'
-                      : 'text-green-700 hover:text-green-600 hover:bg-green-50'
-                  }`}
+              {/* Desktop Navigation - Show burger menu on all sizes */}
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="text-gray-700 focus:text-gray-900"
                 >
-                  🧪 Test IA
-                </Link>
-                <Link 
-                  href="/ai-features"
-                  className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
-                    location === '/ai-features'
-                      ? 'text-purple-600 bg-purple-50 font-semibold'
-                      : 'text-purple-700 hover:text-purple-600 hover:bg-purple-50'
-                  }`}
-                >
-                  🧠 IA Features
-                </Link>
-                <Link 
-                  href="/features"
-                  className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
-                    location === '/features'
-                      ? 'text-blue-600 bg-blue-50 font-semibold'
-                      : 'text-blue-700 hover:text-blue-600 hover:bg-blue-50'
-                  }`}
-                >
-                  📋 Fonctionnalités
-                </Link>
+                  {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </Button>
               </div>
             </div>
 
@@ -157,40 +124,28 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="text-gray-700 focus:text-gray-900"
-              >
-                {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </Button>
-            </div>
+            
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Burger Menu - Works on all screen sizes */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm fixed left-0 right-0 top-[72px] bottom-0 z-40 overflow-hidden">
+          <div className="border-t border-gray-200 bg-white/95 shadow-lg backdrop-blur-sm fixed left-0 right-0 top-[72px] bottom-0 z-40 overflow-hidden">
             <div className="h-full overflow-y-auto px-3 pt-4 pb-4">
               <div className="space-y-2 max-h-full">
                 {navigationItems.map((item) => (
-                  <div
+                  <Link key={item.href} href={item.href}>
+                    <div
                       className={`flex items-center px-3 py-2.5 text-sm font-medium cursor-pointer rounded-lg transition-all duration-200 ${
                         location === item.href
                           ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-md'
                           : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                       }`}
-                      onClick={() => {
-                        setLocation(item.href);
-                        setShowMobileMenu(false);
-                      }}
-                      key={item.href}
+                      onClick={() => setShowMobileMenu(false)}
                     >
                       {item.label}
                     </div>
+                  </Link>
                 ))}
 
                 <div className="border-t border-gray-200 mt-4 pt-4">
