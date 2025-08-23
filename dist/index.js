@@ -76,6 +76,42 @@ app.post("/api/ai/detect-dumping", (req, res) => {
   };
   res.json(mockDetection);
 });
+app.post("/api/auth/login", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email et mot de passe requis" });
+  }
+  const user = {
+    id: 1,
+    name: email.split("@")[0],
+    email,
+    type: "client"
+  };
+  res.json({ user });
+});
+app.post("/api/auth/register", (req, res) => {
+  const { name, email, password, type } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Tous les champs sont requis" });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: "Le mot de passe doit contenir au moins 6 caract\xE8res" });
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Format d'email invalide" });
+  }
+  const user = {
+    id: Date.now(),
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    type: type || "client"
+  };
+  res.status(201).json({
+    user,
+    message: "Compte cr\xE9\xE9 avec succ\xE8s"
+  });
+});
 app.get("*", (req, res) => {
   try {
     const indexPath = path.join(__dirname, "../dist/public/index.html");
