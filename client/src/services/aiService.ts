@@ -148,6 +148,272 @@ export class AIService {
     };
   }
 
+  // Nouvelles méthodes avancées
+  
+  // Analyse avancée avec scoring multicritère
+  async analyzeAdvancedBid(bidData: any, weights?: any): Promise<any> {
+    try {
+      const response = await fetch('/api/ai/advanced-scoring', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bidData, weights })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Advanced scoring failed');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Advanced scoring error:', error);
+      return this.fallbackAdvancedScoring(bidData);
+    }
+  }
+
+  // Guidage d'enchères intelligent
+  async getIntelligentBiddingGuidance(mission: any, provider: any, existingBids: any[]): Promise<any> {
+    const marketAnalysis = this.analyzeMarket(mission.category, mission.complexity);
+    
+    // Calcul de stratégies multiples
+    const strategies = [
+      this.calculateAggressiveStrategy(existingBids, mission.budget),
+      this.calculateCompetitiveStrategy(existingBids, marketAnalysis.averagePrice),
+      this.calculateValueStrategy(existingBids, provider.rating),
+      this.calculatePremiumStrategy(mission.budget, provider.completedProjects)
+    ];
+
+    return {
+      strategies: strategies.sort((a, b) => b.winProbability - a.winProbability),
+      marketIntelligence: marketAnalysis,
+      recommendedStrategy: strategies[0],
+      nudges: this.generateBiddingNudges(mission, existingBids)
+    };
+  }
+
+  // Détection avancée d'abus
+  async detectAdvancedAbuse(bids: any[], mission: any): Promise<any> {
+    const dumpingAnalysis = this.analyzeDumping(bids, mission.budget);
+    const collusionAnalysis = this.analyzeCollusion(bids);
+    const temporalAnalysis = this.analyzeTemporalPatterns(bids);
+
+    return {
+      dumping: dumpingAnalysis,
+      collusion: collusionAnalysis,
+      temporal: temporalAnalysis,
+      riskLevel: this.calculateOverallRiskLevel(dumpingAnalysis, collusionAnalysis),
+      recommendations: this.generateAbuseRecommendations(dumpingAnalysis, collusionAnalysis)
+    };
+  }
+
+  // Calcul de probabilité de succès LOC
+  async calculateLOCProbability(bidData: any): Promise<number> {
+    const { provider, mission, price } = bidData;
+    
+    let probability = provider.successRate * 70; // Base historique
+
+    // Ajustements selon le prix
+    const priceRatio = price / mission.budget;
+    if (priceRatio < 0.6) probability -= 20; // Prix trop bas = risque
+    if (priceRatio > 1.2) probability -= 10; // Prix trop haut = rejet
+
+    // Ajustements selon l'expérience
+    if (provider.completedProjects >= 20) probability += 15;
+    if (provider.rating >= 4.5) probability += 10;
+
+    // Ajustements selon la complexité
+    const complexityPenalty = { low: 0, medium: -5, high: -15 }[mission.complexity] || 0;
+    probability += complexityPenalty;
+
+    return Math.max(5, Math.min(95, probability));
+  }
+
+  // Méthodes privées étendues
+  
+  private fallbackAdvancedScoring(bidData: any) {
+    // Version fallback du scoring avancé
+    const baseScore = this.calculateBaseScore(bidData);
+    return {
+      totalScore: baseScore,
+      breakdown: {
+        price: baseScore * 0.25,
+        quality: baseScore * 0.20,
+        fit: baseScore * 0.20,
+        delay: baseScore * 0.15,
+        risk: baseScore * 0.10,
+        completion: baseScore * 0.10
+      },
+      confidence: 75,
+      recommendations: ['Score calculé en mode fallback']
+    };
+  }
+
+  private calculateBaseScore(bidData: any): number {
+    const { price, provider, mission } = bidData;
+    
+    let score = 50; // Base
+    
+    // Score prix
+    const priceRatio = price / mission.budget;
+    if (priceRatio <= 0.8) score += 20;
+    else if (priceRatio <= 1.0) score += 15;
+    else score -= 10;
+
+    // Score qualité
+    score += (provider.rating / 5) * 20;
+    score += Math.min(15, provider.completedProjects);
+
+    return Math.max(0, Math.min(100, score));
+  }
+
+  private calculateAggressiveStrategy(bids: any[], budget: number) {
+    const lowestBid = bids.length > 0 ? Math.min(...bids.map(b => b.price)) : budget * 0.8;
+    return {
+      strategy: 'aggressive',
+      suggestedPrice: Math.max(lowestBid * 0.95, budget * 0.6),
+      winProbability: 85,
+      reasoning: 'Prix agressif pour maximiser les chances'
+    };
+  }
+
+  private calculateCompetitiveStrategy(bids: any[], averagePrice: number) {
+    return {
+      strategy: 'competitive',
+      suggestedPrice: averagePrice * 0.92,
+      winProbability: 70,
+      reasoning: 'Prix compétitif équilibré'
+    };
+  }
+
+  private calculateValueStrategy(bids: any[], rating: number) {
+    const avgPrice = bids.length > 0 ? bids.reduce((sum, b) => sum + b.price, 0) / bids.length : 0;
+    return {
+      strategy: 'value',
+      suggestedPrice: avgPrice * (0.85 + rating * 0.02),
+      winProbability: 65,
+      reasoning: 'Positionnement rapport qualité-prix'
+    };
+  }
+
+  private calculatePremiumStrategy(budget: number, projects: number) {
+    return {
+      strategy: 'premium',
+      suggestedPrice: budget * (0.85 + Math.min(0.1, projects * 0.005)),
+      winProbability: 45,
+      reasoning: 'Positionnement premium basé sur l\'expertise'
+    };
+  }
+
+  private analyzeDumping(bids: any[], budget: number) {
+    const dumpingThreshold = budget * 0.6;
+    const dumpingCases = bids.filter(bid => bid.price < dumpingThreshold);
+    
+    return {
+      detected: dumpingCases.length > 0,
+      cases: dumpingCases.length,
+      severity: dumpingCases.some(b => b.price < budget * 0.4) ? 'high' : 'medium'
+    };
+  }
+
+  private analyzeCollusion(bids: any[]) {
+    // Analyse simplifiée de collusion
+    const priceGroups = this.groupBidsByPrice(bids, 0.05);
+    const suspiciousGroups = priceGroups.filter(group => group.length >= 3);
+    
+    return {
+      detected: suspiciousGroups.length > 0,
+      suspiciousGroups: suspiciousGroups.length,
+      confidence: suspiciousGroups.length > 0 ? 60 : 0
+    };
+  }
+
+  private analyzeTemporalPatterns(bids: any[]) {
+    const timestamps = bids.map(b => new Date(b.createdAt || Date.now()).getTime());
+    const intervals = [];
+    
+    for (let i = 1; i < timestamps.length; i++) {
+      intervals.push(timestamps[i] - timestamps[i-1]);
+    }
+    
+    const avgInterval = intervals.length > 0 ? 
+      intervals.reduce((a, b) => a + b, 0) / intervals.length : 0;
+    
+    return {
+      averageInterval: avgInterval / (1000 * 60), // en minutes
+      suspiciouslyFast: intervals.filter(i => i < 5 * 60 * 1000).length
+    };
+  }
+
+  private groupBidsByPrice(bids: any[], tolerance: number) {
+    const groups: any[][] = [];
+    const processed = new Set();
+
+    bids.forEach(bid => {
+      if (processed.has(bid.id)) return;
+      
+      const group = [bid];
+      bids.forEach(other => {
+        if (other.id !== bid.id && !processed.has(other.id)) {
+          const priceDiff = Math.abs(bid.price - other.price) / Math.max(bid.price, other.price);
+          if (priceDiff <= tolerance) {
+            group.push(other);
+          }
+        }
+      });
+      
+      group.forEach(b => processed.add(b.id));
+      groups.push(group);
+    });
+
+    return groups;
+  }
+
+  private calculateOverallRiskLevel(dumpingAnalysis: any, collusionAnalysis: any) {
+    if (dumpingAnalysis.severity === 'high' || collusionAnalysis.confidence > 70) {
+      return 'high';
+    }
+    if (dumpingAnalysis.detected || collusionAnalysis.confidence > 40) {
+      return 'medium';
+    }
+    return 'low';
+  }
+
+  private generateAbuseRecommendations(dumpingAnalysis: any, collusionAnalysis: any) {
+    const recommendations = [];
+    
+    if (dumpingAnalysis.detected) {
+      recommendations.push('Vérifier la viabilité des offres à prix très bas');
+      recommendations.push('Demander une justification détaillée des coûts');
+    }
+    
+    if (collusionAnalysis.detected) {
+      recommendations.push('Analyser les liens entre prestataires suspects');
+      recommendations.push('Surveiller les patterns d\'enchères coordonnées');
+    }
+    
+    return recommendations;
+  }
+
+  private generateBiddingNudges(mission: any, existingBids: any[]) {
+    const nudges = [];
+    
+    if (existingBids.length > 10) {
+      nudges.push('Forte concurrence - différenciez-vous par la qualité');
+    }
+    
+    if (mission.urgency === 'high') {
+      nudges.push('Mission urgente - mettez en avant votre disponibilité');
+    }
+    
+    const avgPrice = existingBids.length > 0 ? 
+      existingBids.reduce((sum, b) => sum + b.price, 0) / existingBids.length : mission.budget;
+    
+    if (avgPrice < mission.budget * 0.7) {
+      nudges.push('Prix du marché très bas - attention au dumping');
+    }
+    
+    return nudges;
+  }
+
   // Méthodes privées
   private analyzeMarket(category: string, complexity: number) {
     // Simulation d'analyse de marché

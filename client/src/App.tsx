@@ -37,6 +37,7 @@ function App() {
               <Route path="/messages" component={Messages} />
               <Route path="/legal" component={Legal} />
               <Route path="/dashboard" component={Dashboard} />
+              <Route path="/ai-dashboard" component={Dashboard} />
               <Route component={NotFound} />
             </Switch>
           </div>

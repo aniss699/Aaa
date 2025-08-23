@@ -4,7 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '@/hooks/use-auth';
-import { User, LogOut, Menu, X, Briefcase, Users } from 'lucide-react';
+import { User, LogOut, Menu, X, Briefcase, Users, BarChart3, Target, Brain, MessageSquare } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
@@ -23,6 +28,7 @@ export function Navbar() {
     { href: '/features', label: 'Fonctionnalités' },
     { href: '/ai-test', label: '🧪 Test IA' },
     { href: '/ai-features', label: '🧠 IA Features' },
+    { href: '/ai-dashboard', label: 'Dashboard IA' },
   ];
 
   const desktopItems = [
@@ -64,14 +70,45 @@ export function Navbar() {
 
               {/* Desktop Navigation - Show burger menu on all sizes */}
               <div className="flex items-center space-x-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="text-gray-700 focus:text-gray-900"
-                >
-                  {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                </Button>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="lg:hidden text-gray-700 focus:text-gray-900">
+                      {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-80">
+                    <div className="flex flex-col space-y-4 mt-6">
+                      <Link href="/dashboard" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <BarChart3 className="h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                      <Link href="/missions" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <Target className="h-4 w-4" />
+                        <span>Missions</span>
+                      </Link>
+                      <Link href="/available-providers" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <Users className="h-4 w-4" />
+                        <span>Prestataires</span>
+                      </Link>
+                      <Link href="/ai-test" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <Brain className="h-4 w-4" />
+                        <span>Test IA</span>
+                      </Link>
+                      <Link href="/ai-dashboard" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <BarChart3 className="h-4 w-4" />
+                        <span>Dashboard IA</span>
+                      </Link>
+                      <Link href="/messages" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Messages</span>
+                      </Link>
+                      <Link href="/profile" className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">
+                        <User className="h-4 w-4" />
+                        <span>Profil</span>
+                      </Link>
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </div>
             </div>
 
@@ -124,7 +161,7 @@ export function Navbar() {
               )}
             </div>
 
-            
+
           </div>
         </div>
 
