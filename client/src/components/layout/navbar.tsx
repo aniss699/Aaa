@@ -54,12 +54,12 @@ export function Navbar() {
           <div className="flex justify-between items-center h-18 py-2">
             <div className="flex items-center space-x-8">
               <Link href="/">
-                <a className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center hover:scale-105 transition-transform duration-200">
+                <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center hover:scale-105 transition-transform duration-200 cursor-pointer">
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
                     <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   AppelsPro
-                </a>
+                </div>
               </Link>
 
               {/* Desktop Navigation - Show burger menu on all sizes */}
@@ -134,18 +134,20 @@ export function Navbar() {
             <div className="h-full overflow-y-auto px-3 pt-4 pb-4">
               <div className="space-y-2 max-h-full">
                 {navigationItems.map((item) => (
-                  <Link key={item.href} href={item.href}>
-                    <div
-                      className={`flex items-center px-3 py-2.5 text-sm font-medium cursor-pointer rounded-lg transition-all duration-200 ${
-                        location === item.href
-                          ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-md'
-                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
-                      onClick={() => setShowMobileMenu(false)}
-                    >
-                      {item.label}
-                    </div>
-                  </Link>
+                  <div
+                    key={item.href}
+                    className={`flex items-center px-3 py-2.5 text-sm font-medium cursor-pointer rounded-lg transition-all duration-200 ${
+                      location === item.href
+                        ? 'text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-md'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      setLocation(item.href);
+                    }}
+                  >
+                    {item.label}
+                  </div>
                 ))}
 
                 <div className="border-t border-gray-200 mt-4 pt-4">
