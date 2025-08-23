@@ -99,11 +99,11 @@ app.post('/api/ai/detect-dumping', (req, res) => {
 // Serve React app for all other routes
 app.get('*', (req, res) => {
   try {
-    const indexPath = path.join(__dirname, '../client/index.html');
+    const indexPath = path.join(__dirname, '../dist/public/index.html');
     res.sendFile(indexPath);
   } catch (error) {
     console.error('Error serving index.html:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).send('<!DOCTYPE html><html><body><h1>AppelsPro Loading...</h1><script>window.location.reload()</script></body></html>');
   }
 });
 

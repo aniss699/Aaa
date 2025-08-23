@@ -17,6 +17,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "./pages/dashboard";
 import AIFeatures from "./pages/ai-features";
 import AITest from "./pages/ai-test";
+import AIDashboard from "./pages/ai-dashboard";
 
 function App() {
   return (
@@ -37,7 +38,7 @@ function App() {
               <Route path="/messages" component={Messages} />
               <Route path="/legal" component={Legal} />
               <Route path="/dashboard" component={Dashboard} />
-              <Route path="/ai-dashboard" component={Dashboard} />
+              <Route path="/ai-dashboard" component={AIDashboard} />
               <Route component={NotFound} />
             </Switch>
           </div>
