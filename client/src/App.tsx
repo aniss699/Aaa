@@ -16,7 +16,8 @@ import AvailableProviders from './pages/available-providers';
 import NotFound from "@/pages/not-found";
 import Dashboard from "./pages/dashboard";
 import AIFeatures from "./pages/ai-features";
-import { lazy } from "react";
+import AITest from "./pages/ai-test";
+import Features from "./pages/features";
 
 function App() {
   return (
@@ -30,7 +31,8 @@ function App() {
               <Route path="/marketplace" component={Marketplace} />
               <Route path="/available-providers" component={AvailableProviders} />
               <Route path="/ai-features" component={AIFeatures} />
-              <Route path="/ai-test" component={lazy(() => import('./pages/ai-test'))} />
+              <Route path="/ai-test" component={AITest} />
+              <Route path="/features" component={Features} />
               <Route path="/profile" component={Profile} />
               <Route path="/missions" component={Missions} />
               <Route path="/messages" component={Messages} />
