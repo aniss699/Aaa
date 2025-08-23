@@ -1,0 +1,119 @@
+
+version: '3.8'
+
+services:
+  # Base de données principale
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: reverse_marketplace
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis pour les jobs et cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Node.js principale
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/reverse_marketplace
+      - REDIS_URL=redis://redis:6379
+      - OFFLINE_MODE=true
+      - NO_EXTERNAL_CALLS=true
+      - ML_API_URL=http://ml-service:8001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./models:/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service ML Python
+  ml-service:
+    build:
+      context: .
+      dockerfile: apps/ml/Dockerfile
+    environment:
+      - OFFLINE_MODE=true
+      - NO_EXTERNAL_CALLS=true
+      - TRANSFORMERS_OFFLINE=1
+      - HF_HUB_OFFLINE=1
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./models:/models:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Worker pour les jobs asynchrones
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/reverse_marketplace
+      - REDIS_URL=redis://redis:6379
+      - ML_API_URL=http://ml-service:8001
+      - OFFLINE_MODE=true
+      - NO_EXTERNAL_CALLS=true
+    depends_on:
+      - postgres
+      - redis
+      - ml-service
+    volumes:
+      - ./models:/models:ro
+
+  # Interface web (client React)
+  web:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    environment:
+      - REACT_APP_API_URL=http://api:3000
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    driver: bridge
