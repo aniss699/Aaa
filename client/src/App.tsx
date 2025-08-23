@@ -17,7 +17,6 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "./pages/dashboard";
 import AIFeatures from "./pages/ai-features";
 import AITest from "./pages/ai-test";
-import Features from "./pages/features";
 
 function App() {
   return (
