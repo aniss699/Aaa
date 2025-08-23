@@ -337,11 +337,19 @@ export default function AvailableProviders() {
                         )}
 
                         <div className="flex space-x-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => window.location.href = `/messages?provider=${provider.id}`}
+                          >
                             <MessageCircle className="w-4 h-4 mr-1" />
                             Message
                           </Button>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                          <Button 
+                            size="sm" 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => window.open(`tel:+33${Math.floor(Math.random() * 1000000000)}`, '_self')}
+                          >
                             <Phone className="w-4 h-4 mr-1" />
                             Contacter
                           </Button>

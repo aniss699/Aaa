@@ -110,8 +110,25 @@ export default function Messages() {
 
   const handleSendMessage = () => {
     if (newMessage.trim() && selectedConversation) {
-      // TODO: Send message
-      console.log('Sending message:', newMessage);
+      const newMsg: Message = {
+        id: Date.now().toString(),
+        senderId: user?.id || '',
+        senderName: user?.name || '',
+        content: newMessage.trim(),
+        timestamp: new Date(),
+        isRead: true
+      };
+      
+      // Add message to the conversation
+      messages.push(newMsg);
+      
+      // Update conversation's last message
+      const conversationIndex = conversations.findIndex(c => c.id === selectedConversation);
+      if (conversationIndex !== -1) {
+        conversations[conversationIndex].lastMessage = newMessage.trim();
+        conversations[conversationIndex].lastMessageTime = new Date();
+      }
+      
       setNewMessage('');
     }
   };

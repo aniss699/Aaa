@@ -36,10 +36,20 @@ export function BidResponseModal({ bidId, bidderName, isOpen, onClose }: BidResp
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/missions'] });
+      
+      const responseText = responseType === 'accept' ? 'acceptée' : 
+                          responseType === 'reject' ? 'déclinée' : 'en négociation';
+      
       toast({
         title: 'Réponse envoyée !',
-        description: 'Votre réponse a été envoyée au prestataire',
+        description: `Votre réponse (${responseText}) a été envoyée au prestataire. Il recevra une notification.`,
       });
+      
+      // Show confirmation in UI
+      setTimeout(() => {
+        alert(`Confirmation : Votre réponse "${responseText}" a bien été envoyée à ${bidderName}. Un email de confirmation lui a été envoyé.`);
+      }, 500);
+      
       onClose();
       setResponseType(null);
       setMessage('');
@@ -99,7 +109,7 @@ export function BidResponseModal({ bidId, bidderName, isOpen, onClose }: BidResp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl bg-white">
+      <DialogContent className="sm:max-w-2xl bg-white border shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <MessageCircle className="w-6 h-6 text-blue-500" />

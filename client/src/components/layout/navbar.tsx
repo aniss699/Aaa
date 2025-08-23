@@ -63,8 +63,8 @@ export function Navbar() {
                 {desktopItems.map((item) => (
                   <Link key={item.href} href={item.href}>
                     <span className={`text-sm font-medium transition-colors cursor-pointer px-3 py-2 rounded-lg ${
-                      location === item.href 
-                        ? 'text-blue-600 bg-blue-50 font-semibold' 
+                      location === item.href
+                        ? 'text-blue-600 bg-blue-50 font-semibold'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                     }`}>
                       {item.label}
@@ -105,15 +105,15 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="flex items-center space-x-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setShowAuthModal(true)}
                     className="font-semibold border-blue-300 text-blue-600 hover:bg-blue-50 shadow-sm hover:shadow-md transition-all duration-200"
                   >
                     <User className="w-4 h-4 mr-2" />
                     Se connecter
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => setShowAuthModal(true)}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                   >
