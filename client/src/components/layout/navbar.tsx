@@ -119,7 +119,7 @@ export function Navbar() {
                     <div className="flex flex-col">
                       <span className="text-sm font-medium text-gray-900 leading-tight">{user.name}</span>
                       {userTypeInfo && (
-                        <Badge variant="premium" className="text-xs font-bold mt-1">
+                        <Badge variant="secondary" className="text-xs font-bold mt-1">
                           {userTypeInfo.label}
                         </Badge>
                       )}

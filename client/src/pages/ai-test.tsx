@@ -35,80 +35,23 @@ export default function AITest() {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const runAnalysis = () => {
+  const runProfileAnalysis = () => {
     setIsAnalyzing(true);
     
-    // Simulation de l'analyse IA
+    // Simulation d'analyse IA
     setTimeout(() => {
-      const result = {
-        matchScore: 87,
-        winProbability: 73,
-        recommendedPrice: 4200,
-        confidence: 91,
-        factors: {
-          skillsMatch: 95,
-          experienceMatch: 80,
-          priceCompetitiveness: 85,
-          locationMatch: 100
-        },
+      setAnalysisResult({
+        overallScore: 78,
+        strengths: ['React Expert', 'Bonne Note', 'Réactif'],
+        improvements: ['Plus de projets', 'Portfolio', 'Spécialisation'],
         recommendations: [
-          "Mettez en avant votre expertise React dans votre proposition",
-          "Votre prix est compétitif, vous pouvez l'augmenter de 5%",
-          "Ajoutez des exemples de projets e-commerce similaires",
-          "Proposez un délai de livraison serré pour vous démarquer"
-        ],
-        strengths: [
-          "Compétences parfaitement alignées",
-          "Excellent taux de succès",
-          "Localisation favorable",
-          "Prix attractif"
-        ],
-        improvements: [
-          "Temps de réponse à améliorer",
-          "Portfolio à enrichir",
-          "Certifications à ajouter"
+          'Augmenter le taux horaire à 55€',
+          'Créer un portfolio en ligne',
+          'Se spécialiser en e-commerce'
         ]
-      };
-      
-      setAnalysisResult(result);
+      });
       setIsAnalyzing(false);
     }, 2000);
-  };
-
-  const generateOptimizedDescription = () => {
-    const optimized = `
-**Projet : ${testMission.title}**
-
-**Contexte :**
-${testMission.description}
-
-**Livrables attendus :**
-• Interface utilisateur moderne et responsive
-• Système de paiement sécurisé (Stripe/PayPal)
-• Panel d'administration complet
-• Gestion des stocks et commandes
-• Tests unitaires et documentation
-
-**Compétences requises :**
-• React.js / TypeScript
-• Node.js / Express
-• Base de données (MongoDB/PostgreSQL)
-• Intégration API de paiement
-• Déploiement cloud
-
-**Budget et délais :**
-• Budget : ${testMission.budget}€
-• Délai : 8-10 semaines
-• Paiement en 3 tranches
-
-**Critères de sélection :**
-• Portfolio de projets similaires
-• Méthode de travail agile
-• Disponibilité et réactivité
-• Références clients vérifiées
-    `.trim();
-
-    return optimized;
   };
 
   return (
@@ -119,89 +62,189 @@ ${testMission.description}
             <TestTube className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Laboratoire IA</h1>
-            <p className="text-lg text-gray-600">Testez et optimisez vos algorithmes d'intelligence artificielle</p>
+            <h1 className="text-3xl font-bold text-gray-900">Laboratoire de Test IA</h1>
+            <p className="text-lg text-gray-600">Testez et expérimentez avec nos algorithmes d'intelligence artificielle</p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Brain className="w-6 h-6 text-green-600" />
+                <div>
+                  <h3 className="font-semibold text-green-900 text-sm">Recommandations</h3>
+                  <p className="text-xs text-green-700">Suggestions IA personnalisées</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-6 h-6 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-blue-900 text-sm">Standardisation</h3>
+                  <p className="text-xs text-blue-700">Optimisation d'annonces</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-purple-200 bg-purple-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Target className="w-6 h-6 text-purple-600" />
+                <div>
+                  <h3 className="font-semibold text-purple-900 text-sm">Analyse Profil</h3>
+                  <p className="text-xs text-purple-700">Évaluation de performance</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Settings className="w-6 h-6 text-orange-600" />
+                <div>
+                  <h3 className="font-semibold text-orange-900 text-sm">Environnement Test</h3>
+                  <p className="text-xs text-orange-700">Mode bac à sable</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      <Tabs defaultValue="recommendation-test" className="space-y-6">
+      <Tabs defaultValue="recommendations" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="recommendation-test">Test Recommandations</TabsTrigger>
-          <TabsTrigger value="mission-optimizer">Optimiseur d'Annonces</TabsTrigger>
-          <TabsTrigger value="live-engine">Moteur en Direct</TabsTrigger>
+          <TabsTrigger value="recommendations" className="flex items-center space-x-2">
+            <Brain className="w-4 h-4" />
+            <span>Recommandations IA</span>
+          </TabsTrigger>
+          <TabsTrigger value="mission-optimizer" className="flex items-center space-x-2">
+            <FileText className="w-4 h-4" />
+            <span>Optimiseur d'Annonces</span>
+          </TabsTrigger>
+          <TabsTrigger value="profile-analysis" className="flex items-center space-x-2">
+            <Target className="w-4 h-4" />
+            <span>Analyse de Profil</span>
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="recommendation-test" className="space-y-6">
+        <TabsContent value="recommendations" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Brain className="w-6 h-6 text-green-600" />
+                <span>Moteur de Recommandations IA</span>
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  <Settings className="w-3 h-3 mr-1" />
+                  Mode Test
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <RecommendationEngine 
+                userProfile={{
+                  id: 'test-user',
+                  type: 'provider',
+                  skills: testProfile.skills.split(', '),
+                  rating: parseFloat(testProfile.rating),
+                  completedProjects: parseInt(testProfile.completedProjects),
+                  location: testProfile.location,
+                  hourlyRate: parseInt(testProfile.hourlyRate)
+                }}
+                onRecommendationAction={(recommendation) => {
+                  console.log('Action recommandation:', recommendation);
+                }}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="mission-optimizer" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="w-6 h-6 text-blue-600" />
+                <span>Optimiseur d'Annonces IA</span>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                  <Settings className="w-3 h-3 mr-1" />
+                  Mode Test
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MissionStandardizer 
+                initialText={testMission.description}
+                onOptimizedTextGenerated={(optimized) => {
+                  console.log('Texte optimisé:', optimized);
+                }}
+                showApplyButton={true}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="profile-analysis" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Configuration du test */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  Configuration du Test
+                <CardTitle className="flex items-center space-x-2">
+                  <Target className="w-6 h-6 text-purple-600" />
+                  <span>Profil à Analyser</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Profil Prestataire</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="skills">Compétences</Label>
                     <Input
-                      placeholder="Compétences"
+                      id="skills"
                       value={testProfile.skills}
                       onChange={(e) => setTestProfile({...testProfile, skills: e.target.value})}
+                      placeholder="React, Node.js..."
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rating">Note moyenne</Label>
                     <Input
-                      placeholder="Note (/5)"
+                      id="rating"
+                      type="number"
+                      step="0.1"
+                      max="5"
                       value={testProfile.rating}
                       onChange={(e) => setTestProfile({...testProfile, rating: e.target.value})}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="projects">Projets terminés</Label>
                     <Input
-                      placeholder="Projets terminés"
+                      id="projects"
+                      type="number"
                       value={testProfile.completedProjects}
                       onChange={(e) => setTestProfile({...testProfile, completedProjects: e.target.value})}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rate">Taux horaire (€)</Label>
                     <Input
-                      placeholder="Taux horaire"
+                      id="rate"
+                      type="number"
                       value={testProfile.hourlyRate}
                       onChange={(e) => setTestProfile({...testProfile, hourlyRate: e.target.value})}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Mission Test</Label>
-                  <Input
-                    placeholder="Titre de la mission"
-                    value={testMission.title}
-                    onChange={(e) => setTestMission({...testMission, title: e.target.value})}
-                  />
-                  <Textarea
-                    placeholder="Description"
-                    value={testMission.description}
-                    onChange={(e) => setTestMission({...testMission, description: e.target.value})}
-                    rows={3}
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input
-                      placeholder="Budget"
-                      value={testMission.budget}
-                      onChange={(e) => setTestMission({...testMission, budget: e.target.value})}
-                    />
-                    <Select value={testMission.urgency} onValueChange={(value) => setTestMission({...testMission, urgency: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Urgence" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Faible</SelectItem>
-                        <SelectItem value="medium">Moyenne</SelectItem>
-                        <SelectItem value="high">Élevée</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Button onClick={runAnalysis} className="w-full" disabled={isAnalyzing}>
+                <Button 
+                  onClick={runProfileAnalysis} 
+                  disabled={isAnalyzing}
+                  className="w-full"
+                >
                   {isAnalyzing ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -210,57 +253,34 @@ ${testMission.description}
                   ) : (
                     <div className="flex items-center gap-2">
                       <Play className="w-4 h-4" />
-                      Lancer l'Analyse IA
+                      Analyser le Profil
                     </div>
                   )}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Résultats de l'analyse */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="w-5 h-5" />
-                  Résultats de l'Analyse
-                </CardTitle>
+                <CardTitle>Résultats de l'Analyse IA</CardTitle>
               </CardHeader>
               <CardContent>
-                {!analysisResult ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Lancez une analyse pour voir les résultats</p>
-                  </div>
-                ) : (
+                {analysisResult ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{analysisResult.matchScore}%</div>
-                        <div className="text-sm text-blue-700">Score de Match</div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-purple-600 mb-2">
+                        {analysisResult.overallScore}/100
                       </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{analysisResult.winProbability}%</div>
-                        <div className="text-sm text-green-700">Prob. de Gagner</div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Confiance de l'IA</span>
-                        <span>{analysisResult.confidence}%</span>
-                      </div>
-                      <Progress value={analysisResult.confidence} className="h-2" />
+                      <Progress value={analysisResult.overallScore} className="h-3" />
+                      <p className="text-sm text-gray-500 mt-2">Score global du profil</p>
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <Target className="w-4 h-4" />
-                        Recommandations
-                      </h4>
+                      <h4 className="font-medium text-purple-700 mb-2">Recommandations IA</h4>
                       {analysisResult.recommendations.map((rec: string, index: number) => (
-                        <div key={index} className="flex items-start gap-2 text-sm">
-                          <div className="w-1 h-1 bg-blue-500 rounded-full mt-2"></div>
-                          <span>{rec}</span>
+                        <div key={index} className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
+                          <Zap className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm">{rec}</span>
                         </div>
                       ))}
                     </div>
@@ -284,28 +304,15 @@ ${testMission.description}
                       </div>
                     </div>
                   </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Brain className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>Lancez une analyse pour voir les résultats</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="mission-optimizer" className="space-y-6">
-          <MissionStandardizer />
-        </TabsContent>
-
-        <TabsContent value="live-engine" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Moteur de Recommandation en Direct
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RecommendationEngine userId="test-user" context="dashboard" />
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
