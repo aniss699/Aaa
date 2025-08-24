@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,6 +16,13 @@ import pickle
 import json
 from datetime import datetime, timedelta
 import logging
+
+# Import for market intelligence integration
+from services.brief_quality import brief_quality_service
+from services.smart_brief import smart_brief_service
+from services.taxonomizer import taxonomizer_service
+from services.text_normalizer import text_normalizer_service
+from services.market_intelligence import get_market_suggestions
 
 # Configuration offline obligatoire
 os.environ['OFFLINE_MODE'] = 'true'
@@ -86,7 +92,7 @@ class ModelStorage:
         self.fraud_detector = None
         self.keyword_embeddings = {}
         self.load_models()
-    
+
     def load_models(self):
         """Charge tous les modèles depuis le stockage local"""
         try:
@@ -96,13 +102,13 @@ class ModelStorage:
                 stop_words=['le', 'la', 'les', 'un', 'une', 'des', 'et', 'ou', 'mais'],
                 ngram_range=(1, 2)
             )
-            
+
             # Modèle de prix par régression quantile
             self.price_model = QuantileRegressor(quantile=0.5, alpha=0.1)
-            
+
             # Détecteur de fraude/abus
             self.fraud_detector = IsolationForest(contamination=0.1, random_state=42)
-            
+
             logging.info("Modèles ML chargés avec succès")
         except Exception as e:
             logging.error(f"Erreur chargement modèles: {e}")
@@ -120,28 +126,28 @@ class MultiObjectiveScorer:
             'risk': 0.10,
             'loc': 0.10  # Likelihood of Completion
         }
-    
+
     def calculate_comprehensive_score(self, mission: MissionData, provider: ProviderData, bid: BidData = None) -> Dict[str, Any]:
         """Calcule le score multi-objectif explicable"""
-        
+
         # Score de prix (compétitivité)
         price_score = self._calculate_price_score(mission, provider, bid)
-        
+
         # Score de qualité (expérience/rating)
         quality_score = self._calculate_quality_score(provider)
-        
+
         # Score de correspondance (fit)
         fit_score = self._calculate_fit_score(mission, provider)
-        
+
         # Score de délai (rapidité)
         delay_score = self._calculate_delay_score(provider, bid)
-        
+
         # Score de risque (fiabilité)
         risk_score = self._calculate_risk_score(provider)
-        
+
         # Probabilité d'aboutissement (LOC)
         loc_score = self._calculate_completion_probability(mission, provider, bid)
-        
+
         # Score global pondéré
         total_score = (
             price_score * self.weights['price'] +
@@ -151,7 +157,7 @@ class MultiObjectiveScorer:
             risk_score * self.weights['risk'] +
             loc_score * self.weights['loc']
         )
-        
+
         return {
             'total_score': round(total_score, 2),
             'breakdown': {
@@ -164,15 +170,15 @@ class MultiObjectiveScorer:
             },
             'explanations': self._generate_explanations(price_score, quality_score, fit_score, delay_score, risk_score, loc_score)
         }
-    
+
     def _calculate_price_score(self, mission: MissionData, provider: ProviderData, bid: BidData = None) -> float:
         """Score basé sur la compétitivité du prix"""
         if not bid:
             return 70.0  # Score neutre sans offre
-        
+
         expected_price = provider.hourly_rate * mission.duration_weeks * 40  # 40h/semaine
         price_ratio = bid.price / expected_price
-        
+
         if price_ratio < 0.5:  # Suspicieusement bas
             return 20.0
         elif price_ratio < 0.8:  # Très compétitif
@@ -183,33 +189,33 @@ class MultiObjectiveScorer:
             return 70.0
         else:  # Cher
             return max(30.0, 70.0 - (price_ratio - 1.2) * 100)
-    
+
     def _calculate_quality_score(self, provider: ProviderData) -> float:
         """Score basé sur la qualité/expérience"""
         rating_score = (provider.rating / 5.0) * 40
         experience_score = min(30.0, provider.completed_projects * 0.5)
         success_rate_score = provider.success_rate * 30
-        
+
         return rating_score + experience_score + success_rate_score
-    
+
     def _calculate_fit_score(self, mission: MissionData, provider: ProviderData) -> float:
         """Score de correspondance compétences/mission"""
         # Matching des compétences
         mission_skills = set(skill.lower() for skill in mission.skills_required)
         provider_skills = set(skill.lower() for skill in provider.skills)
-        
+
         skill_match = len(mission_skills.intersection(provider_skills)) / max(len(mission_skills), 1)
-        
+
         # Matching des catégories
         category_match = 1.0 if mission.category in provider.categories else 0.3
-        
+
         # Score combiné
         return (skill_match * 70 + category_match * 30)
-    
+
     def _calculate_delay_score(self, provider: ProviderData, bid: BidData = None) -> float:
         """Score basé sur la rapidité de livraison"""
         base_score = max(50.0, 100.0 - provider.response_time * 10)  # Temps de réponse
-        
+
         if bid:
             timeline_weeks = self._extract_timeline_weeks(bid.timeline)
             if timeline_weeks <= 2:
@@ -218,33 +224,33 @@ class MultiObjectiveScorer:
                 base_score += 10
             elif timeline_weeks > 12:
                 base_score -= 20
-        
+
         return min(100.0, base_score)
-    
+
     def _calculate_risk_score(self, provider: ProviderData) -> float:
         """Score de risque (inverse du risque)"""
         rating_factor = provider.rating / 5.0
         experience_factor = min(1.0, provider.completed_projects / 20.0)
         success_factor = provider.success_rate
-        
+
         risk_score = (rating_factor * 40 + experience_factor * 30 + success_factor * 30)
         return risk_score
-    
+
     def _calculate_completion_probability(self, mission: MissionData, provider: ProviderData, bid: BidData = None) -> float:
         """Probabilité d'aboutissement du projet"""
         base_probability = provider.success_rate * 60
-        
+
         # Facteurs d'ajustement
         if provider.rating >= 4.5:
             base_probability += 15
         if provider.completed_projects >= 20:
             base_probability += 10
-        
+
         complexity_penalty = {'low': 0, 'medium': -5, 'high': -10}.get(mission.complexity, -5)
         urgency_penalty = {'low': 5, 'medium': 0, 'high': -10}.get(mission.urgency, 0)
-        
+
         return min(95.0, max(10.0, base_probability + complexity_penalty + urgency_penalty))
-    
+
     def _extract_timeline_weeks(self, timeline: str) -> int:
         """Extrait le nombre de semaines depuis une timeline"""
         timeline_lower = timeline.lower()
@@ -252,31 +258,31 @@ class MultiObjectiveScorer:
             numbers = [int(s) for s in timeline_lower.split() if s.isdigit()]
             return numbers[0] if numbers else 4
         return 4  # Default
-    
+
     def _generate_explanations(self, price: float, quality: float, fit: float, delay: float, risk: float, loc: float) -> List[str]:
         """Génère des explications pour le scoring"""
         explanations = []
-        
+
         if price >= 85:
             explanations.append("Prix très compétitif")
         elif price <= 40:
             explanations.append("Prix potentiellement problématique")
-        
+
         if quality >= 80:
             explanations.append("Profil prestataire excellent")
         elif quality <= 50:
             explanations.append("Expérience limitée du prestataire")
-        
+
         if fit >= 80:
             explanations.append("Parfaite correspondance des compétences")
         elif fit <= 50:
             explanations.append("Correspondance partielle des compétences")
-        
+
         if loc >= 80:
             explanations.append("Forte probabilité de succès")
         elif loc <= 50:
             explanations.append("Risques de non-aboutissement")
-        
+
         return explanations
 
 scorer = MultiObjectiveScorer()
@@ -286,20 +292,20 @@ class PriceRecommendationEngine:
     def __init__(self):
         self.market_data = {}
         self.quantile_models = {}
-    
+
     def recommend_price(self, mission: MissionData, competition_level: str, provider_skill_level: str = "medium") -> Dict[str, Any]:
         """Recommande un prix basé sur la régression quantile et les règles métier"""
-        
+
         # Calcul du prix de base
         base_price = self._calculate_base_price(mission)
-        
+
         # Ajustements selon la concurrence
         competition_multiplier = {
             'low': 1.1,    # Peut se permettre +10%
             'medium': 0.95,  # Légèrement agressif
             'high': 0.85    # Très agressif
         }.get(competition_level, 0.95)
-        
+
         # Ajustements selon le niveau de compétence
         skill_multiplier = {
             'junior': 0.8,
@@ -307,24 +313,24 @@ class PriceRecommendationEngine:
             'senior': 1.2,
             'expert': 1.4
         }.get(provider_skill_level, 1.0)
-        
+
         # Prix recommandé
         recommended_price = base_price * competition_multiplier * skill_multiplier
-        
+
         # Quantiles pour donner une fourchette
         price_range = {
             'min': recommended_price * 0.85,
             'recommended': recommended_price,
             'max': recommended_price * 1.15
         }
-        
+
         return {
             'price_range': price_range,
             'confidence': self._calculate_confidence(mission, competition_level),
             'reasoning': self._generate_price_reasoning(competition_level, skill_multiplier),
             'market_position': self._analyze_market_position(recommended_price, mission)
         }
-    
+
     def _calculate_base_price(self, mission: MissionData) -> float:
         """Calcule le prix de base selon la complexité et durée"""
         complexity_rates = {
@@ -332,43 +338,43 @@ class PriceRecommendationEngine:
             'medium': 50,
             'high': 70
         }
-        
+
         hourly_rate = complexity_rates.get(mission.complexity, 50)
         estimated_hours = mission.duration_weeks * 35  # 35h/semaine en moyenne
-        
+
         return hourly_rate * estimated_hours
-    
+
     def _calculate_confidence(self, mission: MissionData, competition_level: str) -> float:
         """Calcule la confiance dans la recommandation"""
         base_confidence = 75.0
-        
+
         # Ajustements
         if competition_level == 'low':
             base_confidence += 15
         elif competition_level == 'high':
             base_confidence -= 10
-        
+
         if mission.complexity == 'high':
             base_confidence -= 5
-        
+
         return min(95.0, max(50.0, base_confidence))
-    
+
     def _generate_price_reasoning(self, competition_level: str, skill_multiplier: float) -> List[str]:
         """Génère les raisons de la recommandation"""
         reasons = []
-        
+
         if competition_level == 'high':
             reasons.append("Concurrence élevée - prix agressif recommandé")
         elif competition_level == 'low':
             reasons.append("Faible concurrence - possibilité de prix premium")
-        
+
         if skill_multiplier > 1.1:
             reasons.append("Niveau d'expertise élevé - premium justifié")
         elif skill_multiplier < 0.9:
             reasons.append("Positionnement junior - prix attractif")
-        
+
         return reasons
-    
+
     def _analyze_market_position(self, price: float, mission: MissionData) -> str:
         """Analyse la position sur le marché"""
         if price < 2000:
@@ -387,39 +393,39 @@ class AbuseDetector:
     def __init__(self):
         self.bid_graph = nx.Graph()
         self.suspicious_patterns = []
-    
+
     def detect_collusion(self, bids: List[BidData]) -> Dict[str, Any]:
         """Détecte la collusion entre prestataires"""
         collusion_indicators = []
-        
+
         # Analyse des patterns de prix
         prices = [bid.price for bid in bids]
         if len(prices) > 2:
             price_std = np.std(prices)
             price_mean = np.mean(prices)
-            
+
             if price_std / price_mean < 0.05:  # Écart-type très faible
                 collusion_indicators.append("Prices suspiciously similar")
-        
+
         # Analyse temporelle des offres
         timestamps = [datetime.fromisoformat(bid.created_at.replace('Z', '+00:00')) for bid in bids]
         if len(timestamps) > 1:
             time_diffs = [(timestamps[i+1] - timestamps[i]).total_seconds() for i in range(len(timestamps)-1)]
             if any(diff < 60 for diff in time_diffs):  # Offres à moins d'1min d'intervalle
                 collusion_indicators.append("Coordinated timing detected")
-        
+
         return {
             'collusion_detected': len(collusion_indicators) > 0,
             'indicators': collusion_indicators,
             'confidence': min(95.0, len(collusion_indicators) * 40)
         }
-    
+
     def detect_dumping(self, bid: BidData, mission: MissionData, market_avg: float) -> Dict[str, Any]:
         """Détecte le dumping (prix anormalement bas)"""
         dumping_threshold = market_avg * 0.5  # 50% sous le marché
-        
+
         is_dumping = bid.price < dumping_threshold
-        
+
         severity = "none"
         if is_dumping:
             ratio = bid.price / market_avg
@@ -429,7 +435,7 @@ class AbuseDetector:
                 severity = "moderate"
             else:
                 severity = "mild"
-        
+
         return {
             'dumping_detected': is_dumping,
             'severity': severity,
@@ -470,11 +476,11 @@ async def detect_abuse(bids: List[BidData], mission: MissionData):
     """Détecte les abus (collusion, dumping)"""
     try:
         results = {}
-        
+
         # Détection de collusion
         if len(bids) > 1:
             results['collusion'] = abuse_detector.detect_collusion(bids)
-        
+
         # Détection de dumping
         if bids:
             market_avg = np.mean([bid.price for bid in bids])
@@ -482,7 +488,7 @@ async def detect_abuse(bids: List[BidData], mission: MissionData):
                 abuse_detector.detect_dumping(bid, mission, market_avg) 
                 for bid in bids
             ]
-        
+
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -494,11 +500,11 @@ async def semantic_matching(mission_text: str, provider_profiles: List[str]):
         # Vectorisation TF-IDF
         all_texts = [mission_text] + provider_profiles
         tfidf_matrix = model_storage.tfidf_vectorizer.fit_transform(all_texts)
-        
+
         # Calcul de similarité
         mission_vector = tfidf_matrix[0]
         similarities = cosine_similarity(mission_vector, tfidf_matrix[1:]).flatten()
-        
+
         # Résultats triés
         matches = [
             {
@@ -508,7 +514,7 @@ async def semantic_matching(mission_text: str, provider_profiles: List[str]):
             }
             for i in range(len(similarities))
         ]
-        
+
         return sorted(matches, key=lambda x: x['similarity_score'], reverse=True)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

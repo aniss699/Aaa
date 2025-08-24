@@ -72,6 +72,13 @@ interface StandardizationResult {
       expected_applications: 'Nombreuses candidatures' | 'Candidatures modérées' | 'Peu de candidatures';
     };
   };
+  // Added fields for market data
+  marketData?: {
+    suggested_budget?: number;
+    suggested_timeline_days?: number;
+    estimated_providers?: number;
+    market_advice?: string;
+  };
 }
 
 interface MissionStandardizerProps {
@@ -89,82 +96,135 @@ export function MissionStandardizer({
   const [result, setResult] = useState<StandardizationResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const analyzeAndStandardize = () => {
+  const analyzeAndStandardize = async () => { // Made async to use await
     setIsProcessing(true);
 
-    // Simulation de l'analyse IA
-    setTimeout(() => {
-      const mockResult: StandardizationResult = {
-        score: 85,
-        standardizedText: generateStandardizedText(originalText),
-        improvements: [
-          "Structure professionnelle ajoutée",
-          "Livrables clarifiés et détaillés",
-          "Compétences techniques spécifiées",
-          "Budget et délais précisés",
-          "Critères de sélection définis"
-        ],
-        issues: [
-          "Description trop vague dans l'original",
-          "Budget non mentionné",
-          "Délais absents"
-        ],
-        suggestions: [
-          "Ajouter des exemples visuels",
-          "Préciser la méthodologie souhaitée",
-          "Inclure les modalités de paiement"
-        ],
-        structure: {
-          title: extractTitle(originalText),
-          context: extractContext(originalText),
-          deliverables: extractDeliverables(originalText),
-          skills: extractSkills(originalText),
-          budget: extractBudget(originalText),
-          timeline: extractTimeline(originalText),
-          criteria: extractCriteria(originalText)
-        },
-        brief_quality_score: 85,
-        richness_score: 40,
-        missing_info: ["Type de prestation", "Budget indicatif"],
-        price_suggested_min: 1000,
-        price_suggested_med: 1800,
-        price_suggested_max: 2500,
-        delay_suggested_days: 21,
-        market_insights: {
-          category_popularity: 8,
-          competition_level: 'high',
-          estimated_providers_interested: 150,
-          seasonal_demand_factor: 1.2,
-          typical_price_range: { min: 800, max: 15000 },
-          recommended_skills: ['JavaScript', 'React', 'Node.js', 'Python', 'PHP'],
-          urgency_impact: 'Prix +20%, Délai -20%, Moins de candidats',
-          best_posting_advice: 'Soyez très précis dans votre brief et votre budget'
-        },
-        loc_uplift_reco: {
-          current_loc: 0.85,
-          recommended_budget: 1800,
-          recommended_delay: 21,
-          expected_loc_improvement: 0.15,
-          provider_attraction_score: 0.176,
-          competitive_advantage: 'Élevé'
-        },
-        detailed_analysis: {
-          complexity_breakdown: {
-            technical: 7,
-            time_required: 3.0, // en semaines
-            skill_level_needed: 'Expert'
-          },
-          market_positioning: {
-            budget_vs_market: 'Dans la moyenne',
-            timeline_vs_market: 'Délai standard',
-            expected_applications: 'Candidatures modérées'
-          }
-        }
-      };
+    // Dummy data for formData, in a real app this would come from form inputs
+    const formData = {
+      title: extractTitle(originalText) || "Titre par défaut",
+      description: originalText,
+      category: extractCategory(originalText) // Assuming extractCategory is available here
+    };
 
-      setResult(mockResult);
+    try {
+      // Analyse IA + Intelligence de marché
+      const [aiResponse, marketResponse] = await Promise.all([
+        fetch('/api/ai/standardize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            category: formData.category
+          })
+        }),
+        fetch('/api/ml/market-intelligence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.title,
+            description: formData.description,
+            category: formData.category
+          })
+        })
+      ]);
+
+      if (aiResponse.ok && marketResponse.ok) {
+        const [aiAnalysis, marketData] = await Promise.all([
+          aiResponse.json(),
+          marketResponse.json()
+        ]);
+
+        // Fusion des analyses
+        const enhancedAnalysis: StandardizationResult = {
+          ...aiAnalysis,
+          // Ensure all required fields from StandardizationResult are present, even if empty initially
+          score: aiAnalysis.score || 0,
+          standardizedText: aiAnalysis.standardizedText || generateStandardizedText(originalText),
+          improvements: aiAnalysis.improvements || [],
+          issues: aiAnalysis.issues || [],
+          suggestions: aiAnalysis.suggestions || [],
+          structure: aiAnalysis.structure || {
+            title: extractTitle(originalText),
+            context: extractContext(originalText),
+            deliverables: extractDeliverables(originalText),
+            skills: extractSkills(originalText),
+            budget: extractBudget(originalText),
+            timeline: extractTimeline(originalText),
+            criteria: extractCriteria(originalText)
+          },
+          brief_quality_score: aiAnalysis.brief_quality_score || 0,
+          richness_score: aiAnalysis.richness_score || 0,
+          missing_info: aiAnalysis.missing_info || [],
+          price_suggested_min: aiAnalysis.price_suggested_min || null,
+          price_suggested_med: aiAnalysis.price_suggested_med || null,
+          price_suggested_max: aiAnalysis.price_suggested_max || null,
+          delay_suggested_days: aiAnalysis.delay_suggested_days || 0,
+          market_insights: aiAnalysis.market_insights || {
+            category_popularity: 0,
+            competition_level: 'medium',
+            estimated_providers_interested: 0,
+            seasonal_demand_factor: 1,
+            typical_price_range: { min: 0, max: 0 },
+            recommended_skills: [],
+            urgency_impact: '',
+            best_posting_advice: ''
+          },
+          loc_uplift_reco: aiAnalysis.loc_uplift_reco || {
+            current_loc: 0,
+            recommended_budget: null,
+            recommended_delay: 0,
+            expected_loc_improvement: 0,
+            provider_attraction_score: 0,
+            competitive_advantage: 'Faible'
+          },
+          detailed_analysis: aiAnalysis.detailed_analysis || {
+            complexity_breakdown: {
+              technical: 0,
+              time_required: 0,
+              skill_level_needed: 'Débutant acceptable'
+            },
+            market_positioning: {
+              budget_vs_market: 'Dans la moyenne',
+              timeline_vs_market: 'Délai standard',
+              expected_applications: 'Candidatures modérées'
+            }
+          },
+          // Merging market data
+          marketData: {
+            suggested_budget: marketData.market_data?.suggested_budget || calculateAdvancedMetrics(originalText).price_suggested_med,
+            suggested_timeline_days: marketData.market_data?.suggested_timeline_days || calculateAdvancedMetrics(originalText).delay_suggested_days,
+            estimated_providers: marketData.market_data?.estimated_providers || calculateAdvancedMetrics(originalText).market_insights.estimated_providers_interested,
+            market_advice: marketData.market_data?.market_advice || calculateAdvancedMetrics(originalText).market_insights.best_posting_advice
+          }
+        };
+
+        // Further enrich with calculated metrics if market data is missing or incomplete
+        if (!enhancedAnalysis.marketData?.suggested_budget) {
+            enhancedAnalysis.marketData.suggested_budget = calculateAdvancedMetrics(originalText).price_suggested_med;
+        }
+        if (!enhancedAnalysis.marketData?.suggested_timeline_days) {
+            enhancedAnalysis.marketData.suggested_timeline_days = calculateAdvancedMetrics(originalText).delay_suggested_days;
+        }
+         if (!enhancedAnalysis.marketData?.estimated_providers) {
+            enhancedAnalysis.marketData.estimated_providers = calculateAdvancedMetrics(originalText).market_insights.estimated_providers_interested;
+        }
+         if (!enhancedAnalysis.marketData?.market_advice) {
+            enhancedAnalysis.marketData.market_advice = calculateAdvancedMetrics(originalText).market_insights.best_posting_advice;
+        }
+
+
+        setResult(enhancedAnalysis);
+      } else {
+        console.error("Failed to fetch AI standardization or market intelligence.");
+        // Handle errors, maybe set an error state or show a message
+      }
+    } catch (error) {
+      console.error("An error occurred during standardization:", error);
+      // Handle network errors or other exceptions
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const generateStandardizedText = (text: string): string => {
@@ -270,171 +330,6 @@ ${context}
       navigator.clipboard.writeText(result.standardizedText);
     }
   };
-
-  const calculateAdvancedMetrics = (originalText: string) => {
-    // Dummy functions for demonstration, these would be replaced by actual AI/NLP logic
-    const extractCategory = (text: string): string => {
-      if (text.toLowerCase().includes('site web') || text.toLowerCase().includes('site internet')) return 'developpement';
-      if (text.toLowerCase().includes('app') || text.toLowerCase().includes('application')) return 'developpement';
-      if (text.toLowerCase().includes('graphisme') || text.toLowerCase().includes('design')) return 'design';
-      if (text.toLowerCase().includes('marketing') || text.toLowerCase().includes('publicité')) return 'marketing';
-      if (text.toLowerCase().includes('plomberie') || text.toLowerCase().includes('électricité')) return 'travaux';
-      if (text.toLowerCase().includes('ménage') || text.toLowerCase().includes('jardin')) return 'services_personne';
-      if (text.toLowerCase().includes('transport') || text.toLowerCase().includes('livraison')) return 'transport';
-      return 'developpement'; // Default category
-    };
-
-    const estimateComplexity = (text: string): number => {
-      let complexity = 5; // Base complexity
-      if (text.length > 200) complexity += 2;
-      if (text.toLowerCase().includes('intégration') || text.toLowerCase().includes('api')) complexity += 1;
-      if (text.toLowerCase().includes('sécurité') || text.toLowerCase().includes('performance')) complexity += 1;
-      return Math.min(10, Math.max(1, complexity));
-    };
-
-    const detectUrgency = (text: string): 'low' | 'medium' | 'high' => {
-      if (text.toLowerCase().includes('urgent') || text.toLowerCase().includes('très rapide')) return 'high';
-      if (text.toLowerCase().includes('rapide') || text.toLowerCase().includes('délai court')) return 'medium';
-      return 'low';
-    };
-
-    const extractProjectData = (text: string) => {
-      const budgetMatch = text.match(/(\d+)\s*([€$£]?)/);
-      const budget = budgetMatch ? parseInt(budgetMatch[1], 10) : null;
-      return { budget };
-    };
-
-    const extractTitle = (text: string): string => {
-      const lines = text.split('\n');
-      for (const line of lines) {
-        if (line.trim().length > 5 && !line.toLowerCase().includes('budget') && !line.toLowerCase().includes('délai')) {
-          return line.trim();
-        }
-      }
-      return "Titre du projet";
-    };
-
-    const extractContext = (text: string): string => {
-      return text;
-    };
-
-    const extractDeliverables = (text: string): string[] => {
-      return ["Livrable 1", "Livrable 2"];
-    };
-
-    const extractSkills = (text: string): string[] => {
-      return ["Compétence 1", "Compétence 2"];
-    };
-
-    const extractBudget = (text: string): string => {
-      const budgetMatch = text.match(/(\d+)\s*€/);
-      return budgetMatch ? `${budgetMatch[1]}€` : "À définir";
-    };
-
-    const extractTimeline = (text: string): string => {
-      if (text.toLowerCase().includes('urgent')) return "Urgent - 2 semaines";
-      if (text.toLowerCase().includes('rapidement')) return "Rapide - 1 mois";
-      return "À convenir";
-    };
-
-    const extractCriteria = (text: string): string[] => {
-      return ["Critère 1", "Critère 2"];
-    };
-
-
-    const category_std = extractCategory(originalText);
-    const complexityScore = estimateComplexity(originalText);
-    const urgency = detectUrgency(originalText);
-    const projectData = extractProjectData(originalText);
-    const description = originalText;
-    const title = extractTitle(originalText);
-
-    const categoryData = getCategoryInsights(category_std);
-
-    // Calcul du score de qualité enrichi
-    const qualityFactors = [
-      title.length > 10 ? 20 : 10,
-      description.length > 100 ? 30 : description.length > 50 ? 20 : 10,
-      category_std ? 25 : 0,
-      projectData.budget ? 25 : 0
-    ];
-
-    const baseQualityScore = qualityFactors.reduce((acc, curr) => acc + curr, 0);
-
-    // Calcul des suggestions de prix intelligentes
-    const suggestedBudget = projectData.budget || categoryData.averageBudget;
-    const adjustedForComplexity = suggestedBudget * (complexityScore / 5);
-    const adjustedForUrgency = adjustedForComplexity * (urgency === 'high' ? categoryData.urgencyMultiplier : 1);
-    const adjustedForSeason = adjustedForUrgency * categoryData.seasonalDemand;
-
-    // Estimation du nombre de prestataires intéressés
-    const estimatedInterestedProviders = Math.round(
-      categoryData.availableProviders *
-      (baseQualityScore / 100) *
-      (adjustedForSeason > categoryData.averageBudget ? 1.2 : 0.8) *
-      (urgency === 'high' ? 0.7 : 1.0) // Moins de prestataires disponibles pour l'urgent
-    );
-
-    // Suggestions de délais basées sur la catégorie et complexité
-    const baseDuration = categoryData.typicalDuration;
-    const complexityAdjustment = (complexityScore - 5) * 2; // +/- 2 jours par point de complexité
-    const urgencyAdjustment = urgency === 'high' ? -3 : urgency === 'medium' ? -1 : 0;
-
-    const suggestedDuration = Math.max(1, baseDuration + complexityAdjustment + urgencyAdjustment);
-
-    const missing_info: string[] = [];
-    if (!projectData.budget) missing_info.push("Budget");
-    if (!title || title === "Titre du projet") missing_info.push("Titre");
-    if (!description || description.length < 50) missing_info.push("Description détaillée");
-    if (!category_std) missing_info.push("Catégorie");
-
-    return {
-      brief_quality_score: Math.round(baseQualityScore),
-      richness_score: Math.min(60, description.split(' ').length * 2),
-      missing_info,
-      price_suggested_min: Math.round(adjustedForSeason * 0.8),
-      price_suggested_med: Math.round(adjustedForSeason),
-      price_suggested_max: Math.round(adjustedForSeason * 1.3),
-      delay_suggested_days: suggestedDuration,
-      market_insights: {
-        category_popularity: categoryData.popularityScore,
-        competition_level: categoryData.competitionLevel,
-        estimated_providers_interested: estimatedInterestedProviders,
-        seasonal_demand_factor: categoryData.seasonalDemand,
-        typical_price_range: categoryData.priceRange,
-        recommended_skills: categoryData.commonSkills,
-        urgency_impact: urgency === 'high' ? 'Prix +20%, Délai -20%, Moins de candidats' :
-                       urgency === 'medium' ? 'Prix +5%, Délai -5%' : 'Conditions normales',
-        best_posting_advice: categoryData.competitionLevel === 'high' ?
-          'Soyez très précis dans votre brief et votre budget' :
-          'Vous pouvez être flexible sur les conditions'
-      },
-      loc_uplift_reco: {
-        current_loc: baseQualityScore / 100,
-        recommended_budget: Math.round(adjustedForSeason),
-        recommended_delay: suggestedDuration,
-        expected_loc_improvement: Math.min(0.3, (100 - baseQualityScore) / 100),
-        provider_attraction_score: estimatedInterestedProviders / categoryData.availableProviders,
-        competitive_advantage: baseQualityScore > 80 ? 'Élevé' : baseQualityScore > 60 ? 'Moyen' : 'Faible'
-      },
-      detailed_analysis: {
-        complexity_breakdown: {
-          technical: complexityScore,
-          time_required: Math.round(suggestedDuration / 7 * 10) / 10, // en semaines
-          skill_level_needed: complexityScore > 7 ? 'Expert' : complexityScore > 5 ? 'Confirmé' : 'Débutant acceptable'
-        },
-        market_positioning: {
-          budget_vs_market: adjustedForSeason > categoryData.averageBudget * 1.1 ? 'Au-dessus du marché' :
-                           adjustedForSeason < categoryData.averageBudget * 0.9 ? 'En-dessous du marché' : 'Dans la moyenne',
-          timeline_vs_market: suggestedDuration > categoryData.typicalDuration * 1.1 ? 'Délai généreux' :
-                             suggestedDuration < categoryData.typicalDuration * 0.9 ? 'Délai serré' : 'Délai standard',
-          expected_applications: estimatedInterestedProviders > 10 ? 'Nombreuses candidatures' :
-                                estimatedInterestedProviders > 5 ? 'Candidatures modérées' : 'Peu de candidatures'
-        }
-      }
-    };
-  };
-
 
   // Dummy function to get category insights, would be replaced by data retrieval
   const getCategoryInsights = (category: string): CategoryInsights => {
@@ -598,6 +493,186 @@ ${context}
       urgencyMultiplier: 1.0
     };
   };
+
+
+  const calculateAdvancedMetrics = (originalText: string): StandardizationResult => {
+    // Dummy functions for demonstration, these would be replaced by actual AI/NLP logic
+    const extractCategory = (text: string): string => {
+      if (text.toLowerCase().includes('site web') || text.toLowerCase().includes('site internet')) return 'developpement';
+      if (text.toLowerCase().includes('app') || text.toLowerCase().includes('application')) return 'developpement';
+      if (text.toLowerCase().includes('graphisme') || text.toLowerCase().includes('design')) return 'design';
+      if (text.toLowerCase().includes('marketing') || text.toLowerCase().includes('publicité')) return 'marketing';
+      if (text.toLowerCase().includes('plomberie') || text.toLowerCase().includes('électricité')) return 'travaux';
+      if (text.toLowerCase().includes('ménage') || text.toLowerCase().includes('jardin')) return 'services_personne';
+      if (text.toLowerCase().includes('transport') || text.toLowerCase().includes('livraison')) return 'transport';
+      return 'developpement'; // Default category
+    };
+
+    const estimateComplexity = (text: string): number => {
+      let complexity = 5; // Base complexity
+      if (text.length > 200) complexity += 2;
+      if (text.toLowerCase().includes('intégration') || text.toLowerCase().includes('api')) complexity += 1;
+      if (text.toLowerCase().includes('sécurité') || text.toLowerCase().includes('performance')) complexity += 1;
+      return Math.min(10, Math.max(1, complexity));
+    };
+
+    const detectUrgency = (text: string): 'low' | 'medium' | 'high' => {
+      if (text.toLowerCase().includes('urgent') || text.toLowerCase().includes('très rapide')) return 'high';
+      if (text.toLowerCase().includes('rapide') || text.toLowerCase().includes('délai court')) return 'medium';
+      return 'low';
+    };
+
+    const extractProjectData = (text: string) => {
+      const budgetMatch = text.match(/(\d+)\s*([€$£]?)/);
+      const budget = budgetMatch ? parseInt(budgetMatch[1], 10) : null;
+      return { budget };
+    };
+
+    const extractTitle = (text: string): string => {
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (line.trim().length > 5 && !line.toLowerCase().includes('budget') && !line.toLowerCase().includes('délai')) {
+          return line.trim();
+        }
+      }
+      return "Titre du projet";
+    };
+
+    const extractContext = (text: string): string => {
+      return text;
+    };
+
+    const extractDeliverables = (text: string): string[] => {
+      return ["Livrable 1", "Livrable 2"];
+    };
+
+    const extractSkills = (text: string): string[] => {
+      return ["Compétence 1", "Compétence 2"];
+    };
+
+    const extractBudget = (text: string): string => {
+      const budgetMatch = text.match(/(\d+)\s*€/);
+      return budgetMatch ? `${budgetMatch[1]}€` : "À définir";
+    };
+
+    const extractTimeline = (text: string): string => {
+      if (text.toLowerCase().includes('urgent')) return "Urgent - 2 semaines";
+      if (text.toLowerCase().includes('rapidement')) return "Rapide - 1 mois";
+      return "À convenir";
+    };
+
+    const extractCriteria = (text: string): string[] => {
+      return ["Critère 1", "Critère 2"];
+    };
+
+
+    const category_std = extractCategory(originalText);
+    const complexityScore = estimateComplexity(originalText);
+    const urgency = detectUrgency(originalText);
+    const projectData = extractProjectData(originalText);
+    const description = originalText;
+    const title = extractTitle(originalText);
+
+    const categoryData = getCategoryInsights(category_std);
+
+    // Calcul du score de qualité enrichi
+    const qualityFactors = [
+      title.length > 10 ? 20 : 10,
+      description.length > 100 ? 30 : description.length > 50 ? 20 : 10,
+      category_std ? 25 : 0,
+      projectData.budget ? 25 : 0
+    ];
+
+    const baseQualityScore = qualityFactors.reduce((acc, curr) => acc + curr, 0);
+
+    // Calcul des suggestions de prix intelligentes
+    const suggestedBudget = projectData.budget || categoryData.averageBudget;
+    const adjustedForComplexity = suggestedBudget * (complexityScore / 5);
+    const adjustedForUrgency = adjustedForComplexity * (urgency === 'high' ? categoryData.urgencyMultiplier : 1);
+    const adjustedForSeason = adjustedForUrgency * categoryData.seasonalDemand;
+
+    // Estimation du nombre de prestataires intéressés
+    const estimatedInterestedProviders = Math.round(
+      categoryData.availableProviders *
+      (baseQualityScore / 100) *
+      (adjustedForSeason > categoryData.averageBudget ? 1.2 : 0.8) *
+      (urgency === 'high' ? 0.7 : 1.0) // Moins de prestataires disponibles pour l'urgent
+    );
+
+    // Suggestions de délais basées sur la catégorie et complexité
+    const baseDuration = categoryData.typicalDuration;
+    const complexityAdjustment = (complexityScore - 5) * 2; // +/- 2 jours par point de complexité
+    const urgencyAdjustment = urgency === 'high' ? -3 : urgency === 'medium' ? -1 : 0;
+
+    const suggestedDuration = Math.max(1, baseDuration + complexityAdjustment + urgencyAdjustment);
+
+    const missing_info: string[] = [];
+    if (!projectData.budget) missing_info.push("Budget");
+    if (!title || title === "Titre du projet") missing_info.push("Titre");
+    if (!description || description.length < 50) missing_info.push("Description détaillée");
+    if (!category_std) missing_info.push("Catégorie");
+
+    return {
+      score: Math.round(baseQualityScore),
+      standardizedText: generateStandardizedText(originalText), // Placeholder for actual standardized text
+      improvements: ["Amélioration suggérée 1", "Amélioration suggérée 2"], // Placeholder
+      issues: ["Problème détecté 1", "Problème détecté 2"], // Placeholder
+      suggestions: ["Suggestion 1", "Suggestion 2"], // Placeholder
+      structure: {
+        title: extractTitle(originalText),
+        context: extractContext(originalText),
+        deliverables: extractDeliverables(originalText),
+        skills: extractSkills(originalText),
+        budget: extractBudget(originalText),
+        timeline: extractTimeline(originalText),
+        criteria: extractCriteria(originalText)
+      },
+      brief_quality_score: Math.round(baseQualityScore),
+      richness_score: Math.min(60, description.split(' ').length * 2),
+      missing_info,
+      price_suggested_min: Math.round(adjustedForSeason * 0.8),
+      price_suggested_med: Math.round(adjustedForSeason),
+      price_suggested_max: Math.round(adjustedForSeason * 1.3),
+      delay_suggested_days: suggestedDuration,
+      market_insights: {
+        category_popularity: categoryData.popularityScore,
+        competition_level: categoryData.competitionLevel,
+        estimated_providers_interested: estimatedInterestedProviders,
+        seasonal_demand_factor: categoryData.seasonalDemand,
+        typical_price_range: categoryData.priceRange,
+        recommended_skills: categoryData.commonSkills,
+        urgency_impact: urgency === 'high' ? 'Prix +20%, Délai -20%, Moins de candidats' :
+                       urgency === 'medium' ? 'Prix +5%, Délai -5%' : 'Conditions normales',
+        best_posting_advice: categoryData.competitionLevel === 'high' ?
+          'Soyez très précis dans votre brief et votre budget' :
+          'Vous pouvez être flexible sur les conditions'
+      },
+      loc_uplift_reco: {
+        current_loc: baseQualityScore / 100,
+        recommended_budget: Math.round(adjustedForSeason),
+        recommended_delay: suggestedDuration,
+        expected_loc_improvement: Math.min(0.3, (100 - baseQualityScore) / 100),
+        provider_attraction_score: estimatedInterestedProviders / categoryData.availableProviders,
+        competitive_advantage: baseQualityScore > 80 ? 'Élevé' : baseQualityScore > 60 ? 'Moyen' : 'Faible'
+      },
+      detailed_analysis: {
+        complexity_breakdown: {
+          technical: complexityScore,
+          time_required: Math.round(suggestedDuration / 7 * 10) / 10, // en semaines
+          skill_level_needed: complexityScore > 7 ? 'Expert' : complexityScore > 5 ? 'Confirmé' : 'Débutant acceptable'
+        },
+        market_positioning: {
+          budget_vs_market: adjustedForSeason > categoryData.averageBudget * 1.1 ? 'Au-dessus du marché' :
+                           adjustedForSeason < categoryData.averageBudget * 0.9 ? 'En-dessous du marché' : 'Dans la moyenne',
+          timeline_vs_market: suggestedDuration > categoryData.typicalDuration * 1.1 ? 'Délai généreux' :
+                             suggestedDuration < categoryData.typicalDuration * 0.9 ? 'Délai serré' : 'Délai standard',
+          expected_applications: estimatedInterestedProviders > 10 ? 'Nombreuses candidatures' :
+                                estimatedInterestedProviders > 5 ? 'Candidatures modérées' : 'Peu de candidatures'
+        }
+      }
+    };
+  };
+
 
   return (
     <div className="space-y-6">
@@ -766,6 +841,40 @@ ${context}
               </div>
             </CardContent>
           </Card>
+
+          {/* Displaying Market Insights */}
+          {result.marketData && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-purple-600" />
+                  Intelligence de Marché
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p><span className="font-semibold">Budget suggéré:</span> {result.marketData.suggested_budget ? `${result.marketData.suggested_budget} €` : 'Non disponible'}</p>
+                    <p><span className="font-semibold">Délai suggéré:</span> {result.marketData.suggested_timeline_days ? `${result.marketData.suggested_timeline_days} jours` : 'Non disponible'}</p>
+                    <p><span className="font-semibold">Prestataires intéressés estimés:</span> {result.marketData.estimated_providers ?? 'Non disponible'}</p>
+                  </div>
+                  <div>
+                    <p><span className="font-semibold">Conseil marché:</span> {result.marketData.market_advice || 'Aucun conseil spécifique disponible'}</p>
+                    <p><span className="font-semibold">Popularité catégorie:</span> {result.market_insights.category_popularity}/10</p>
+                    <p><span className="font-semibold">Niveau de concurrence:</span> {result.market_insights.competition_level}</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <p className="font-semibold">Compétences recommandées:</p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {result.market_insights.recommended_skills.map((skill, index) => (
+                      <Badge key={index} variant="outline">{skill}</Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>
