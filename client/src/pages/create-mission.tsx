@@ -449,6 +449,64 @@ export default function CreateMission() {
                     </div>
                   )}
 
+                  {/* Dynamic Fields */}
+                  {aiOptimization.suggestedFields?.length > 0 && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <h4 className="font-medium text-purple-800 mb-3">Champs suggérés pour améliorer votre annonce :</h4>
+                      <div className="space-y-3">
+                        {aiOptimization.suggestedFields.map((field, index) => (
+                          <div key={index} className="space-y-2">
+                            <Label className="text-sm font-medium text-purple-700">{field.label}</Label>
+                            {field.type === 'select' && (
+                              <Select>
+                                <SelectTrigger className="bg-white border-purple-200">
+                                  <SelectValue placeholder={`Sélectionner ${field.label.toLowerCase()}`} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {field.options.map((option, optIndex) => (
+                                    <SelectItem key={optIndex} value={option}>{option}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                            {field.type === 'multiselect' && (
+                              <div className="flex flex-wrap gap-2">
+                                {field.options.map((option, optIndex) => (
+                                  <Badge
+                                    key={optIndex}
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-purple-100 border-purple-300"
+                                  >
+                                    {option}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            {field.type === 'text' && (
+                              <Input
+                                placeholder={field.placeholder}
+                                className="bg-white border-purple-200"
+                              />
+                            )}
+                            {field.type === 'number' && (
+                              <Input
+                                type="number"
+                                placeholder={field.placeholder}
+                                className="bg-white border-purple-200"
+                              />
+                            )}
+                            {field.type === 'boolean' && (
+                              <div className="flex items-center space-x-2">
+                                <input type="checkbox" className="rounded border-purple-300" />
+                                <span className="text-sm text-purple-700">Oui</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="flex flex-wrap gap-2 pt-2">
                     <Button
@@ -588,7 +646,10 @@ export default function CreateMission() {
                 {/* Market Heat Indicator */}
                 {formData.category && (
                   <div className="mt-4">
-                    <MarketHeatIndicator category={formData.category} />
+                    <MarketHeatIndicator
+                      category={formData.category}
+                      location={formData.location}
+                    />
                   </div>
                 )}
               </CardContent>
@@ -731,6 +792,64 @@ export default function CreateMission() {
                           <li key={index} className="text-blue-800">{improvement}</li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* Dynamic Fields */}
+                  {aiOptimization.suggestedFields?.length > 0 && (
+                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <h4 className="font-medium text-purple-800 mb-3">Champs suggérés pour améliorer votre annonce :</h4>
+                      <div className="space-y-3">
+                        {aiOptimization.suggestedFields.map((field, index) => (
+                          <div key={index} className="space-y-2">
+                            <Label className="text-sm font-medium text-purple-700">{field.label}</Label>
+                            {field.type === 'select' && (
+                              <Select>
+                                <SelectTrigger className="bg-white border-purple-200">
+                                  <SelectValue placeholder={`Sélectionner ${field.label.toLowerCase()}`} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {field.options.map((option, optIndex) => (
+                                    <SelectItem key={optIndex} value={option}>{option}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                            {field.type === 'multiselect' && (
+                              <div className="flex flex-wrap gap-2">
+                                {field.options.map((option, optIndex) => (
+                                  <Badge
+                                    key={optIndex}
+                                    variant="outline"
+                                    className="cursor-pointer hover:bg-purple-100 border-purple-300"
+                                  >
+                                    {option}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            {field.type === 'text' && (
+                              <Input
+                                placeholder={field.placeholder}
+                                className="bg-white border-purple-200"
+                              />
+                            )}
+                            {field.type === 'number' && (
+                              <Input
+                                type="number"
+                                placeholder={field.placeholder}
+                                className="bg-white border-purple-200"
+                              />
+                            )}
+                            {field.type === 'boolean' && (
+                              <div className="flex items-center space-x-2">
+                                <input type="checkbox" className="rounded border-purple-300" />
+                                <span className="text-sm text-purple-700">Oui</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

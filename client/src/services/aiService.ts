@@ -183,190 +183,11 @@ class AIService {
     const lowerDesc = description.toLowerCase();
     const detectedSkills = categorySkills.filter(skill => lowerDesc.includes(skill));
 
+    // Génération d'une description optimisée intelligente
+    const optimizedDescription = this.generateSmartOptimizedDescription(description, category, detectedSkills);
+
     // Recommandations contextuelles par catégorie
-    const recommendationsByCategory = {
-      // Informatique & Tech
-      development: [
-        'Préciser les technologies souhaitées (React, PHP, etc.)',
-        'Détailler l\'architecture technique et intégrations',
-        'Spécifier les délais et phases de développement'
-      ],
-      mobile: [
-        'Préciser les plateformes cibles (iOS/Android)',
-        'Détailler les fonctionnalités et intégrations',
-        'Indiquer si publication sur stores nécessaire'
-      ],
-      design: [
-        'Préciser le style graphique et charte existante',
-        'Détailler les supports et formats de livraison',
-        'Mentionner les préférences visuelles'
-      ],
-      marketing: [
-        'Définir les objectifs mesurables (leads, ventes)',
-        'Préciser les canaux de diffusion souhaités',
-        'Détailler la cible et budget publicité'
-      ],
-      ai: [
-        'Préciser les données disponibles et objectifs',
-        'Définir les métriques de performance attendues',
-        'Spécifier l\'environnement technique de déploiement'
-      ],
-
-      // Travaux & Construction
-      construction: [
-        'Préciser la surface en m² et type de travaux',
-        'Décrire l\'état actuel et résultat souhaité',
-        'Mentionner les contraintes d\'accès et planning'
-      ],
-      plomberie: [
-        'Décrire précisément le problème ou installation',
-        'Indiquer l\'urgence et accessibilité des canalisations',
-        'Préciser si intervention garantie nécessaire'
-      ],
-      electricite: [
-        'Détailler l\'installation existante et besoins',
-        'Préciser si mise aux normes requise',
-        'Indiquer si certificat Consuel nécessaire'
-      ],
-      peinture: [
-        'Préciser les surfaces en m² et type de support',
-        'Indiquer les couleurs et finitions souhaitées',
-        'Mentionner si préparation des murs incluse'
-      ],
-      renovation: [
-        'Détailler l\'étendue des travaux par pièce',
-        'Préciser si logement occupé pendant travaux',
-        'Indiquer le budget global et échelonnement'
-      ],
-
-      // Services à la personne
-      menage: [
-        'Préciser la surface du logement en m²',
-        'Détailler la fréquence souhaitée (hebdo, bi-mensuel)',
-        'Indiquer les tâches spécifiques incluses'
-      ],
-      garde_enfants: [
-        'Préciser l\'âge des enfants et nombre',
-        'Détailler les horaires et jours souhaités',
-        'Mentionner les activités et contraintes spéciales'
-      ],
-      aide_personne: [
-        'Décrire les besoins spécifiques d\'assistance',
-        'Préciser la fréquence et durée des interventions',
-        'Indiquer si diplômes/agréments requis'
-      ],
-      jardinage: [
-        'Préciser la surface du jardin et type d\'espace',
-        'Détailler les travaux souhaités (tonte, taille, etc.)',
-        'Indiquer la fréquence d\'intervention'
-      ],
-      bricolage: [
-        'Décrire précisément les travaux à réaliser',
-        'Préciser si fournitures incluses ou à prévoir',
-        'Indiquer les contraintes d\'accès et horaires'
-      ],
-
-      // Transport & Logistique
-      transport: [
-        'Préciser les lieux de départ et arrivée',
-        'Détailler le volume/poids à transporter',
-        'Indiquer les contraintes horaires et manutention'
-      ],
-      chauffeur: [
-        'Préciser les trajets et horaires souhaités',
-        'Indiquer si véhicule fourni ou à prévoir',
-        'Mentionner les exigences (permis, expérience)'
-      ],
-
-      // Beauté & Bien-être
-      coiffure: [
-        'Préciser le type de prestation souhaité',
-        'Indiquer si déplacement à domicile requis',
-        'Mentionner les préférences et contraintes'
-      ],
-      esthetique: [
-        'Détailler les soins esthétiques souhaités',
-        'Préciser si institut ou domicile',
-        'Indiquer les contraintes et préférences'
-      ],
-      fitness: [
-        'Préciser les objectifs fitness et niveau actuel',
-        'Détailler la fréquence et durée des séances',
-        'Indiquer si matériel fourni ou lieu d\'entraînement'
-      ],
-
-      // Services professionnels
-      comptabilite: [
-        'Préciser le type d\'entreprise et activité',
-        'Détailler les prestations comptables souhaitées',
-        'Indiquer la périodicité et urgence'
-      ],
-      juridique: [
-        'Décrire la problématique juridique précise',
-        'Préciser le type de conseil ou procédure',
-        'Indiquer l\'urgence et budget envisagé'
-      ],
-      traduction: [
-        'Préciser les langues source et cible',
-        'Détailler le type et volume de documents',
-        'Indiquer les délais et spécialisations requises'
-      ],
-
-      // Arts & Créatif
-      photographie: [
-        'Préciser le type d\'événement ou séance',
-        'Détailler le nombre de photos et retouches',
-        'Indiquer les lieux et contraintes timing'
-      ],
-      musique: [
-        'Préciser l\'instrument et niveau souhaité',
-        'Détailler la fréquence et durée des cours',
-        'Indiquer si matériel fourni ou lieu de cours'
-      ],
-      artisanat: [
-        'Décrire précisément l\'objet à créer',
-        'Préciser les matériaux et techniques souhaités',
-        'Indiquer les délais et budget'
-      ],
-
-      // Événementiel
-      evenementiel: [
-        'Préciser le type d\'événement et nombre d\'invités',
-        'Détailler les prestations souhaitées',
-        'Indiquer le lieu, date et budget'
-      ],
-      traiteur: [
-        'Préciser le nombre de convives et type de repas',
-        'Détailler les préférences culinaires',
-        'Indiquer si service complet ou livraison'
-      ],
-
-      // Enseignement
-      cours_particuliers: [
-        'Préciser la matière et niveau de l\'élève',
-        'Détailler les objectifs pédagogiques',
-        'Indiquer la fréquence et lieu des cours'
-      ],
-      formation: [
-        'Préciser le domaine et niveau de formation',
-        'Détailler les objectifs et certifications',
-        'Indiquer le format (présentiel/distanciel)'
-      ],
-
-      // Animaux
-      veterinaire: [
-        'Préciser l\'espèce et problème de l\'animal',
-        'Indiquer l\'urgence de la consultation',
-        'Mentionner si déplacement ou urgence'
-      ],
-      garde_animaux: [
-        'Préciser l\'espèce, taille et caractère de l\'animal',
-        'Détailler la durée et type de garde',
-        'Indiquer les soins particuliers nécessaires'
-      ]
-    };
-
-    const recommendations = recommendationsByCategory[category] || recommendationsByCategory.development;
+    const recommendations = this.getSmartRecommendations(description, category, detectedSkills);
 
     return {
       score: qualityScore,
@@ -375,7 +196,7 @@ class AIService {
       recommendations,
       insights: [`Catégorie ${category || 'développement'} détectée`, `${detectedSkills.length} compétences identifiées`],
       confidence: 0.8,
-      optimizedDescription: description + `\n\n[Suggestions IA pour ${category}]: ${recommendations[0]}`,
+      optimizedDescription,
       estimatedComplexity: Math.min(10, Math.max(3, Math.floor(words.length / 10))),
       marketInsights: {
         competitionLevel: 'medium',
@@ -383,6 +204,334 @@ class AIService {
         priceRange: this.getCategoryBudgetRange(category)
       }
     };
+  }
+
+  private generateSmartOptimizedDescription(description: string, category?: string, detectedSkills: string[] = []): string {
+    const lowerDesc = description.toLowerCase();
+    
+    // Templates intelligents par catégorie
+    const categoryTemplates = {
+      // Informatique & Tech
+      development: {
+        intro: `🚀 **Projet de Développement Web/Logiciel**`,
+        context: this.extractAndEnhanceContext(description, 'development'),
+        specifics: [
+          '**Technologies souhaitées :** ' + (detectedSkills.length > 0 ? detectedSkills.join(', ') : 'React, Node.js, TypeScript, PostgreSQL'),
+          '**Fonctionnalités clés :** Interface utilisateur intuitive, API RESTful, authentification sécurisée',
+          '**Livrables :** Code source documenté, tests unitaires, déploiement, formation'
+        ],
+        requirements: [
+          '✅ Expérience prouvée en développement web',
+          '✅ Portfolio de projets similaires',
+          '✅ Maîtrise des bonnes pratiques de sécurité',
+          '✅ Communication régulière et transparente'
+        ]
+      },
+
+      mobile: {
+        intro: `📱 **Développement d'Application Mobile**`,
+        context: this.extractAndEnhanceContext(description, 'mobile'),
+        specifics: [
+          '**Plateformes :** ' + (lowerDesc.includes('ios') ? 'iOS' : lowerDesc.includes('android') ? 'Android' : 'iOS et Android (cross-platform)'),
+          '**Technologies :** ' + (detectedSkills.length > 0 ? detectedSkills.join(', ') : 'React Native ou Flutter'),
+          '**Fonctionnalités :** Design responsive, notifications push, intégrations API',
+          '**Publication :** Accompagnement pour la mise en ligne sur les stores'
+        ],
+        requirements: [
+          '✅ Expérience en développement mobile natif/cross-platform',
+          '✅ Connaissance des guidelines iOS/Android',
+          '✅ Portfolio d\'applications publiées',
+          '✅ Capacité à gérer la publication sur les stores'
+        ]
+      },
+
+      design: {
+        intro: `🎨 **Projet de Design Graphique/UI-UX**`,
+        context: this.extractAndEnhanceContext(description, 'design'),
+        specifics: [
+          '**Style recherché :** Moderne, épuré, adapté à votre secteur d\'activité',
+          '**Livrables :** Maquettes haute fidélité, fichiers sources, charte graphique',
+          '**Formats :** Web, print, réseaux sociaux selon besoins',
+          '**Révisions :** Jusqu\'à 3 révisions incluses'
+        ],
+        requirements: [
+          '✅ Portfolio créatif et professionnel',
+          '✅ Maîtrise des outils de design (Figma, Adobe Creative Suite)',
+          '✅ Compréhension UX et ergonomie',
+          '✅ Respect des délais et feedback constructif'
+        ]
+      },
+
+      marketing: {
+        intro: `📈 **Stratégie Marketing Digital**`,
+        context: this.extractAndEnhanceContext(description, 'marketing'),
+        specifics: [
+          '**Objectifs :** Augmentation de la visibilité, génération de leads qualifiés',
+          '**Canaux :** Réseaux sociaux, SEO, publicité payante, content marketing',
+          '**Cibles :** Définition et analyse de votre audience',
+          '**ROI :** Suivi des performances et optimisation continue'
+        ],
+        requirements: [
+          '✅ Expertise en marketing digital et réseaux sociaux',
+          '✅ Maîtrise des outils analytics',
+          '✅ Capacité à créer du contenu engageant',
+          '✅ Résultats mesurables sur projets précédents'
+        ]
+      },
+
+      // Travaux & Construction
+      construction: {
+        intro: `🏗️ **Travaux de Construction/Rénovation**`,
+        context: this.extractAndEnhanceContext(description, 'construction'),
+        specifics: [
+          '**Surface concernée :** ' + this.extractSurface(description),
+          '**Type de travaux :** Gros œuvre, second œuvre, finitions',
+          '**Normes :** Respect des règlementations en vigueur (RT2012, RE2020)',
+          '**Garanties :** Assurance décennale et garantie parfait achèvement'
+        ],
+        requirements: [
+          '✅ Qualifications professionnelles certifiées',
+          '✅ Assurance responsabilité civile et décennale',
+          '✅ Portfolio de réalisations similaires',
+          '✅ Devis détaillé et transparent'
+        ]
+      },
+
+      plomberie: {
+        intro: `🔧 **Intervention Plomberie**`,
+        context: this.extractAndEnhanceContext(description, 'plomberie'),
+        specifics: [
+          '**Urgence :** ' + (lowerDesc.includes('urgent') || lowerDesc.includes('fuite') ? 'Intervention rapide nécessaire' : 'Planification flexible'),
+          '**Type d\'intervention :** ' + this.extractPlumbingType(description),
+          '**Garantie :** Pièces et main d\'œuvre garanties',
+          '**Normes :** Installation conforme DTU plomberie'
+        ],
+        requirements: [
+          '✅ Plombier qualifié et certifié',
+          '✅ Disponibilité pour dépannages urgents',
+          '✅ Devis gratuit et détaillé',
+          '✅ Assurance responsabilité civile'
+        ]
+      },
+
+      electricite: {
+        intro: `⚡ **Travaux d'Électricité**`,
+        context: this.extractAndEnhanceContext(description, 'electricite'),
+        specifics: [
+          '**Installation :** Mise aux normes NF C 15-100',
+          '**Sécurité :** Tests et vérifications réglementaires',
+          '**Certification :** Attestation Consuel si nécessaire',
+          '**Domotique :** Intégration d\'objets connectés possible'
+        ],
+        requirements: [
+          '✅ Électricien habilité B1V/B2V/BR',
+          '✅ Certification Qualifelec appréciée',
+          '✅ Assurance décennale électricité',
+          '✅ Respect strict des normes de sécurité'
+        ]
+      },
+
+      // Services à la personne
+      menage: {
+        intro: `🏠 **Service de Ménage à Domicile**`,
+        context: this.extractAndEnhanceContext(description, 'menage'),
+        specifics: [
+          '**Surface :** ' + this.extractSurface(description),
+          '**Fréquence :** ' + (lowerDesc.includes('hebdomadaire') ? 'Hebdomadaire' : lowerDesc.includes('mensuel') ? 'Mensuelle' : 'À définir selon vos besoins'),
+          '**Tâches incluses :** Aspirateur, serpillère, dépoussiérage, sanitaires, cuisine',
+          '**Produits :** Fournis ou utilisation de vos produits préférés'
+        ],
+        requirements: [
+          '✅ Expérience en service à domicile',
+          '✅ Assurance responsabilité civile',
+          '✅ Références clients vérifiables',
+          '✅ Ponctualité et discrétion'
+        ]
+      },
+
+      garde_enfants: {
+        intro: `👶 **Garde d'Enfants à Domicile**`,
+        context: this.extractAndEnhanceContext(description, 'garde_enfants'),
+        specifics: [
+          '**Âge des enfants :** ' + this.extractAgeRange(description),
+          '**Horaires :** ' + this.extractSchedule(description),
+          '**Activités :** Jeux éducatifs, aide aux devoirs, sorties parc',
+          '**Sécurité :** Formation premiers secours appréciée'
+        ],
+        requirements: [
+          '✅ Expérience confirmée avec les enfants',
+          '✅ Formation petite enfance ou équivalent',
+          '✅ Casier judiciaire vierge',
+          '✅ Références de familles précédentes'
+        ]
+      },
+
+      jardinage: {
+        intro: `🌱 **Entretien d'Espaces Verts**`,
+        context: this.extractAndEnhanceContext(description, 'jardinage'),
+        specifics: [
+          '**Surface jardin :** ' + this.extractSurface(description),
+          '**Prestations :** Tonte, taille, débroussaillage, plantation',
+          '**Fréquence :** ' + this.extractFrequency(description),
+          '**Matériel :** Professionnel et entretenu régulièrement'
+        ],
+        requirements: [
+          '✅ Expérience en espaces verts',
+          '✅ Matériel professionnel fourni',
+          '✅ Connaissance des végétaux et saisons',
+          '✅ Assurance responsabilité civile'
+        ]
+      },
+
+      // Services professionnels
+      comptabilite: {
+        intro: `📊 **Services Comptables et Fiscaux**`,
+        context: this.extractAndEnhanceContext(description, 'comptabilite'),
+        specifics: [
+          '**Type d\'entreprise :** ' + this.extractBusinessType(description),
+          '**Prestations :** Tenue comptable, déclarations fiscales, conseils',
+          '**Périodicité :** Mensuelle, trimestrielle ou annuelle',
+          '**Outils :** Logiciels comptables certifiés'
+        ],
+        requirements: [
+          '✅ Expert-comptable diplômé ou comptable expérimenté',
+          '✅ Maîtrise de la fiscalité française',
+          '✅ Logiciels comptables à jour',
+          '✅ Disponibilité pour conseils réguliers'
+        ]
+      }
+    };
+
+    const template = categoryTemplates[category] || categoryTemplates['development'];
+    
+    return `${template.intro}
+
+${template.context}
+
+${template.specifics.join('\n')}
+
+**Ce que nous recherchons :**
+${template.requirements.join('\n')}
+
+**Budget et modalités :**
+• Budget à définir selon proposition détaillée
+• Devis gratuit et sans engagement
+• Paiement sécurisé selon avancement
+
+**Pour postuler :**
+Merci de nous faire parvenir votre proposition avec :
+• Présentation de votre approche
+• Exemples de réalisations similaires
+• Planning prévisionnel détaillé
+• Tarification transparente`;
+  }
+
+  private extractAndEnhanceContext(description: string, category: string): string {
+    if (description.length < 50) {
+      const defaultContexts = {
+        development: "Nous souhaitons développer une solution digitale innovante pour répondre à nos besoins spécifiques.",
+        mobile: "Nous recherchons un développeur mobile expérimenté pour créer une application moderne et intuitive.",
+        design: "Nous avons besoin d'un designer créatif pour donner vie à notre vision graphique.",
+        marketing: "Notre entreprise souhaite développer sa présence digitale et atteindre de nouveaux clients.",
+        construction: "Nous planifions des travaux de qualité et recherchons un professionnel de confiance.",
+        plomberie: "Nous avons besoin d'une intervention de plomberie professionnelle et rapide.",
+        electricite: "Nous souhaitons réaliser des travaux électriques conformes aux normes en vigueur.",
+        menage: "Nous recherchons une personne de confiance pour l'entretien régulier de notre domicile.",
+        garde_enfants: "Nous cherchons une nounou expérimentée pour la garde de nos enfants à domicile.",
+        jardinage: "Nous souhaitons confier l'entretien de nos espaces verts à un professionnel compétent.",
+        comptabilite: "Notre entreprise a besoin d'un accompagnement comptable et fiscal professionnel."
+      };
+      return defaultContexts[category] || defaultContexts['development'];
+    }
+    return description;
+  }
+
+  private extractSurface(description: string): string {
+    const surfaceMatch = description.match(/(\d+)\s*m[²2]/i);
+    return surfaceMatch ? `${surfaceMatch[1]}m²` : 'À préciser';
+  }
+
+  private extractPlumbingType(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    if (lowerDesc.includes('fuite')) return 'Réparation de fuite';
+    if (lowerDesc.includes('installation')) return 'Nouvelle installation';
+    if (lowerDesc.includes('chaudière')) return 'Chauffage/Chaudière';
+    if (lowerDesc.includes('robinet')) return 'Robinetterie';
+    return 'Intervention générale plomberie';
+  }
+
+  private extractAgeRange(description: string): string {
+    const ageMatch = description.match(/(\d+)\s*(?:ans?|années?)/i);
+    return ageMatch ? `${ageMatch[1]} ans` : 'À préciser';
+  }
+
+  private extractSchedule(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    if (lowerDesc.includes('matin')) return 'Matinée';
+    if (lowerDesc.includes('après-midi')) return 'Après-midi';
+    if (lowerDesc.includes('soir')) return 'Soirée';
+    if (lowerDesc.includes('weekend')) return 'Weekend';
+    return 'À définir selon vos besoins';
+  }
+
+  private extractFrequency(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    if (lowerDesc.includes('hebdomadaire') || lowerDesc.includes('semaine')) return 'Hebdomadaire';
+    if (lowerDesc.includes('mensuel') || lowerDesc.includes('mois')) return 'Mensuelle';
+    if (lowerDesc.includes('ponctuel')) return 'Intervention ponctuelle';
+    return 'Selon vos besoins';
+  }
+
+  private extractBusinessType(description: string): string {
+    const lowerDesc = description.toLowerCase();
+    if (lowerDesc.includes('auto-entrepreneur') || lowerDesc.includes('micro')) return 'Auto-entrepreneur/Micro-entreprise';
+    if (lowerDesc.includes('sarl') || lowerDesc.includes('eurl')) return 'SARL/EURL';
+    if (lowerDesc.includes('sas') || lowerDesc.includes('sasu')) return 'SAS/SASU';
+    if (lowerDesc.includes('association')) return 'Association';
+    return 'À préciser selon votre statut';
+  }
+
+  private getSmartRecommendations(description: string, category: string, detectedSkills: string[]): string[] {
+    const lowerDesc = description.toLowerCase();
+    const recommendations = [];
+
+    // Recommandations générales selon la longueur
+    if (description.length < 100) {
+      recommendations.push('Développer davantage la description pour plus de clarté');
+    }
+
+    // Recommandations spécifiques par catégorie
+    const categoryRecommendations = {
+      development: [
+        !detectedSkills.length && 'Préciser les technologies souhaitées (React, Vue, PHP, etc.)',
+        !lowerDesc.includes('budget') && 'Mentionner une fourchette budgétaire',
+        !lowerDesc.includes('délai') && 'Indiquer les délais souhaités',
+        !lowerDesc.includes('fonctionnalité') && 'Détailler les fonctionnalités principales'
+      ],
+      mobile: [
+        !lowerDesc.includes('ios') && !lowerDesc.includes('android') && 'Préciser les plateformes (iOS/Android)',
+        !lowerDesc.includes('store') && 'Indiquer si publication sur stores nécessaire',
+        !lowerDesc.includes('design') && 'Mentionner les préférences de design'
+      ],
+      construction: [
+        !this.extractSurface(description).includes('m²') && 'Préciser la surface en m²',
+        !lowerDesc.includes('délai') && 'Indiquer le planning souhaité',
+        !lowerDesc.includes('budget') && 'Mentionner le budget envisagé'
+      ],
+      plomberie: [
+        !lowerDesc.includes('urgent') && !lowerDesc.includes('délai') && 'Préciser l\'urgence de l\'intervention',
+        !lowerDesc.includes('garantie') && 'Mentionner si garantie souhaitée'
+      ],
+      menage: [
+        !this.extractSurface(description).includes('m²') && 'Préciser la surface du logement',
+        !lowerDesc.includes('fréquence') && 'Indiquer la fréquence souhaitée'
+      ]
+    };
+
+    const categorySpecific = categoryRecommendations[category] || categoryRecommendations['development'];
+    recommendations.push(...categorySpecific.filter(Boolean));
+
+    return recommendations.slice(0, 3); // Limiter à 3 recommandations principales
   }
 
   private getCategoryBudgetRange(category?: string) {
