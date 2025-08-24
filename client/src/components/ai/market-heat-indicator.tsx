@@ -1,206 +1,253 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, Minus, Flame, Snowflake, Zap, DollarSign, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Flame, Snowflake, Zap, DollarSign, Clock, Activity, Lightbulb } from 'lucide-react';
 
-interface MarketHeatProps {
+interface MarketHeatData {
   category: string;
-  region?: string;
-  onHeatChange?: (heatData: any) => void;
+  heatScore: number;
+  trend: 'up' | 'down';
+  demand: number;
+  supply: number;
+  avgPrice: number;
+  competitionLevel: 'low' | 'medium' | 'high';
+  recommendedAction: string;
+  insights: string[];
+  weeklyStats?: {
+    newProjects: number;
+    avgResponseTime: number;
+    successRate: number;
+    topSkills: string[];
+  };
+  priceAnalysis?: {
+    minPrice: number;
+    maxPrice: number;
+    medianPrice: number;
+    priceVolatility: 'stable' | 'volatile';
+  };
 }
 
-export default function MarketHeatIndicator({ category, region, onHeatChange }: MarketHeatProps) {
-  const [heatData, setHeatData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showDetails, setShowDetails] = useState(false);
+interface MarketHeatIndicatorProps {
+  category: string;
+  region?: string;
+  onHeatChange?: (heatData: MarketHeatData) => void;
+}
+
+export function MarketHeatIndicator({ category, region, onHeatChange }: MarketHeatIndicatorProps) {
+  const [marketData, setMarketData] = useState<MarketHeatData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [detailedView, setDetailedView] = useState(false);
 
   useEffect(() => {
-    loadMarketData();
-    
-    // Actualisation toutes les 5 minutes
-    const interval = setInterval(loadMarketData, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [category, region]);
+    const fetchMarketData = async () => {
+      try {
+        // Simulation des données de marché plus sophistiquées
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-  const loadMarketData = async () => {
-    setIsLoading(true);
-    try {
-      // Simulation d'un appel API (à remplacer par votre service)
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const mockData = {
-        heat_score: Math.floor(Math.random() * 100),
-        tension: ['low', 'medium', 'high', 'extreme'][Math.floor(Math.random() * 4)],
-        price_impact: 0.8 + (Math.random() * 0.6), // 0.8 à 1.4
-        opportunity_level: Math.floor(Math.random() * 100),
-        trend_indicator: ['falling', 'stable', 'rising', 'surging'][Math.floor(Math.random() * 4)],
-        recommendations: [
-          "Marché favorable : augmentez vos tarifs de 10-15%",
-          "Concentrez-vous sur vos projets de prédilection",
-          "Répondez rapidement pour maximiser vos chances"
-        ],
-        insights: [
-          `Forte demande en ${category}`,
-          "Réactivité maximale : réponses en 1.2h en moyenne",
-          "85% de projets menés à terme"
-        ]
-      };
-      
-      setHeatData(mockData);
-      onHeatChange?.(mockData);
-    } catch (error) {
-      console.error('Erreur chargement market heat:', error);
+        const baseHeat = Math.floor(Math.random() * 100);
+        const trendDirection = Math.random() > 0.5 ? 'up' : 'down';
+        const demandLevel = Math.floor(Math.random() * 50) + 20;
+        const supplyLevel = Math.floor(Math.random() * 30) + 10;
+        const competitionIntensity = demandLevel > supplyLevel ? 'high' : demandLevel > supplyLevel * 0.7 ? 'medium' : 'low';
+
+        const insights = [];
+        if (baseHeat > 70) {
+          insights.push('🔥 Marché très actif - Opportunité excellente');
+          insights.push(`📈 Demande élevée: ${demandLevel} projets actifs`);
+        } else if (baseHeat > 40) {
+          insights.push('📊 Activité modérée sur ce secteur');
+          insights.push(`⚖️ Équilibre offre/demande`);
+        } else {
+          insights.push('📉 Marché calme - Moins de concurrence');
+          insights.push(`💡 Bon moment pour se positionner`);
+        }
+
+        if (trendDirection === 'up') {
+          insights.push('📈 Tendance haussière des prix (+12% cette semaine)');
+        } else {
+          insights.push('📉 Baisse des prix (-8% cette semaine)');
+        }
+
+        if (competitionIntensity === 'low') {
+          insights.push('✅ Concurrence faible - Positionnement favorable');
+        } else if (competitionIntensity === 'high') {
+          insights.push('⚠️ Forte concurrence - Différenciation nécessaire');
+        }
+
+        const mockData: MarketHeatData = {
+          category,
+          heatScore: baseHeat,
+          trend: trendDirection,
+          demand: demandLevel,
+          supply: supplyLevel,
+          avgPrice: Math.floor(Math.random() * 2000) + 1000,
+          competitionLevel: competitionIntensity,
+          recommendedAction: baseHeat > 60 ? 'Excellent moment pour publier!' : baseHeat > 30 ? 'Bon moment pour publier' : 'Marché calme, positionnez-vous bien',
+          insights: insights,
+          weeklyStats: {
+            newProjects: Math.floor(Math.random() * 20) + 5,
+            avgResponseTime: Math.floor(Math.random() * 24) + 2,
+            successRate: Math.floor(Math.random() * 30) + 60,
+            topSkills: ['React', 'Node.js', 'TypeScript', 'Python'].slice(0, Math.floor(Math.random() * 3) + 2)
+          },
+          priceAnalysis: {
+            minPrice: Math.floor(Math.random() * 500) + 200,
+            maxPrice: Math.floor(Math.random() * 3000) + 2000,
+            medianPrice: Math.floor(Math.random() * 1500) + 800,
+            priceVolatility: Math.random() > 0.5 ? 'stable' : 'volatile'
+          }
+        };
+
+        setMarketData(mockData);
+        onHeatChange?.(mockData);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données marché:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (category) {
+      fetchMarketData();
     }
-    setIsLoading(false);
-  };
+  }, [category]);
 
-  const getTensionColor = (tension: string) => {
-    switch (tension) {
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-300';
-      case 'extreme': return 'bg-red-100 text-red-800 border-red-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
-    }
-  };
-
-  const getTensionIcon = (tension: string) => {
-    switch (tension) {
-      case 'low': return <Snowflake className="w-4 h-4" />;
-      case 'medium': return <Minus className="w-4 h-4" />;
-      case 'high': return <Zap className="w-4 h-4" />;
-      case 'extreme': return <Flame className="w-4 h-4" />;
-      default: return <Minus className="w-4 h-4" />;
-    }
-  };
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'falling': return <TrendingDown className="w-4 h-4 text-red-500" />;
-      case 'rising': 
-      case 'surging': return <TrendingUp className="w-4 h-4 text-green-500" />;
-      default: return <Minus className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <Card className="border-2 border-dashed border-gray-200">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-gray-600">Analyse du marché en cours...</span>
-          </div>
-        </CardContent>
+      <Card className="p-4">
+        <div className="flex items-center space-x-3">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <span className="text-gray-600">Analyse du marché en cours...</span>
+        </div>
       </Card>
     );
   }
 
-  if (!heatData) return null;
+  if (!marketData) return null;
+
+  const getHeatColor = (score: number) => {
+    if (score >= 70) return 'text-red-600 bg-red-100 border-red-200';
+    if (score >= 40) return 'text-orange-600 bg-orange-100 border-orange-200';
+    return 'text-green-600 bg-green-100 border-green-200';
+  };
+
+  const getCompetitionColor = (level: string) => {
+    switch (level) {
+      case 'high': return 'text-red-600 bg-red-100 border-red-200';
+      case 'medium': return 'text-orange-600 bg-orange-100 border-orange-200';
+      case 'low': return 'text-green-600 bg-green-100 border-green-200';
+      default: return 'text-gray-600 bg-gray-100 border-gray-200';
+    }
+  };
+
+  const getTrendIcon = () => {
+    return marketData.trend === 'up' ?
+      <TrendingUp className="w-4 h-4 text-green-500" /> :
+      <TrendingDown className="w-4 h-4 text-red-500" />;
+  };
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+    <Card className="border-l-4 border-l-purple-500 shadow-md">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-lg">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-              {getTensionIcon(heatData.tension)}
-            </div>
-            <span>Market Heat - {category}</span>
-            {region && <span className="text-sm text-gray-500">({region})</span>}
-          </div>
-          <div className="flex items-center space-x-2">
-            {getTrendIcon(heatData.trend_indicator)}
-            <Badge variant="outline" className={getTensionColor(heatData.tension)}>
-              {heatData.tension.toUpperCase()}
+        <CardTitle className="flex items-center justify-between text-base">
+          <span className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-purple-600" />
+            Analyse du Marché - {category} {region && <span className="text-sm text-gray-500">({region})</span>}
+          </span>
+          <div className="flex items-center gap-2">
+            {getTrendIcon()}
+            <Badge className={getHeatColor(marketData.heatScore)}>
+              {marketData.heatScore}/100
             </Badge>
           </div>
         </CardTitle>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        {/* Score principal */}
-        <div className="text-center">
-          <div className="text-3xl font-bold text-purple-600 mb-1">
-            {heatData.heat_score}
-            <span className="text-lg text-gray-500">/100</span>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="text-lg font-bold text-blue-600">{marketData.demand}</div>
+            <div className="text-xs text-blue-500">Demande</div>
           </div>
-          <Progress value={heatData.heat_score} className="h-3 mb-2" />
-          <p className="text-sm text-gray-600">Tension du marché</p>
-        </div>
-
-        {/* Métriques clés */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-white rounded-lg border">
-            <DollarSign className="w-5 h-5 mx-auto mb-1 text-green-600" />
-            <div className="text-xl font-semibold text-green-600">
-              ×{heatData.price_impact.toFixed(2)}
-            </div>
-            <p className="text-xs text-gray-600">Impact Prix</p>
+          <div className="text-center p-3 bg-purple-50 rounded-lg border border-purple-200">
+            <div className="text-lg font-bold text-purple-600">{marketData.supply}</div>
+            <div className="text-xs text-purple-500">Offre</div>
           </div>
-          
-          <div className="text-center p-3 bg-white rounded-lg border">
-            <TrendingUp className="w-5 h-5 mx-auto mb-1 text-blue-600" />
-            <div className="text-xl font-semibold text-blue-600">
-              {heatData.opportunity_level}%
-            </div>
-            <p className="text-xs text-gray-600">Opportunités</p>
+          <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+            <div className="text-lg font-bold text-green-600">{marketData.avgPrice}€</div>
+            <div className="text-xs text-green-500">Prix moy.</div>
           </div>
         </div>
 
-        {/* Insights principaux */}
-        <div className="space-y-2">
-          {heatData.insights.slice(0, 2).map((insight: string, index: number) => (
-            <div key={index} className="flex items-start space-x-2 p-2 bg-white/50 rounded text-sm">
-              <Zap className="w-4 h-4 mt-0.5 text-yellow-500 flex-shrink-0" />
-              <span>{insight}</span>
-            </div>
-          ))}
+        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+          <span className="text-sm font-medium">Niveau de concurrence:</span>
+          <Badge className={getCompetitionColor(marketData.competitionLevel)}>
+            {marketData.competitionLevel === 'high' ? '🔥 Élevée' :
+             marketData.competitionLevel === 'medium' ? '⚖️ Modérée' : '✅ Faible'}
+          </Badge>
         </div>
 
-        {/* Actions */}
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowDetails(!showDetails)}
-            className="flex-1"
-          >
-            {showDetails ? 'Masquer détails' : 'Voir détails'}
-          </Button>
-          <Button 
-            size="sm"
-            onClick={loadMarketData}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            <Clock className="w-4 h-4 mr-1" />
-            Actualiser
-          </Button>
+        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+          <h4 className="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+            <Lightbulb className="w-4 h-4" />
+            Recommandation IA
+          </h4>
+          <p className="text-sm text-purple-700 font-medium">{marketData.recommendedAction}</p>
         </div>
 
-        {/* Détails étendus */}
-        {showDetails && (
-          <div className="mt-4 p-4 bg-white rounded-lg border space-y-3">
-            <h4 className="font-semibold text-gray-800">Recommandations</h4>
-            <div className="space-y-2">
-              {heatData.recommendations.map((rec: string, index: number) => (
-                <div key={index} className="flex items-start space-x-2 text-sm">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
-                  <span>{rec}</span>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-semibold text-gray-800">Insights du marché</h4>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDetailedView(!detailedView)}
+              className="text-xs"
+            >
+              {detailedView ? 'Moins' : 'Plus'} de détails
+            </Button>
+          </div>
+
+          <ul className="space-y-2">
+            {marketData.insights.map((insight, index) => (
+              <li key={index} className="text-sm text-gray-700 flex items-start gap-2 p-2 bg-gray-50 rounded-md">
+                <span className="text-purple-500 mt-0.5">•</span>
+                <span>{insight}</span>
+              </li>
+            ))}
+          </ul>
+
+          {detailedView && marketData.weeklyStats && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h5 className="font-semibold text-blue-800 mb-3">📊 Statistiques hebdomadaires</h5>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-blue-600 font-medium">Nouveaux projets:</span>
+                  <span className="ml-2 font-bold">{marketData.weeklyStats.newProjects}</span>
                 </div>
-              ))}
+                <div>
+                  <span className="text-blue-600 font-medium">Temps de réponse:</span>
+                  <span className="ml-2 font-bold">{marketData.weeklyStats.avgResponseTime}h</span>
+                </div>
+                <div>
+                  <span className="text-blue-600 font-medium">Taux de succès:</span>
+                  <span className="ml-2 font-bold">{marketData.weeklyStats.successRate}%</span>
+                </div>
+                <div>
+                  <span className="text-blue-600 font-medium">Compétences top:</span>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {marketData.weeklyStats.topSkills.map((skill, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div className="pt-2 border-t">
-              <p className="text-xs text-gray-500">
-                Données actualisées il y a {Math.floor(Math.random() * 15 + 1)} minutes
-              </p>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );

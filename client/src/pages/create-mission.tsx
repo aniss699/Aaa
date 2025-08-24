@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2 } from 'lucide-react';
 import { MissionStandardizer } from '@/components/ai/mission-standardizer';
 import { CategorySelector } from '@/components/missions/category-selector';
+import { MarketHeatIndicator } from '@/components/ai/market-heat-indicator';
 
 export default function CreateMission() {
   const { user } = useAuth();
@@ -24,6 +25,9 @@ export default function CreateMission() {
 
   const [showAIStandardizer, setShowAIStandardizer] = useState(false);
   const [aiOptimizedDescription, setAiOptimizedDescription] = useState('');
+  const [missionComplexity, setMissionComplexity] = useState(5);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [priceRecommendation, setPriceRecommendation] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -86,6 +90,7 @@ export default function CreateMission() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setPriceRecommendation(null); // Clear recommendations when relevant fields change
   };
 
   const handleAiOptimizedDescription = (description: string) => {
@@ -94,6 +99,28 @@ export default function CreateMission() {
     setShowAIStandardizer(false);
   };
 
+  const analyzePricing = async () => {
+    setIsAnalyzing(true);
+    setPriceRecommendation(null);
+    try {
+      const response = await apiRequest('POST', '/api/ai/price-analysis', {
+        category: formData.category,
+        description: formData.description,
+        location: formData.location,
+        complexity: missionComplexity,
+      });
+      const data = await response.json();
+      setPriceRecommendation(data);
+    } catch (error: any) {
+      toast({
+        title: 'Erreur d\'analyse',
+        description: error.message || 'Impossible d\'analyser le prix',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -112,8 +139,8 @@ export default function CreateMission() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => setLocation('/missions')}
           className="mb-4"
         >
@@ -223,37 +250,107 @@ export default function CreateMission() {
             </div>
 
             {/* Budget and Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="budget" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  <Euro className="w-4 h-4 text-green-500" />
-                  Budget (€) *
-                </Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="Ex: 5000"
-                  value={formData.budget}
-                  onChange={(e) => handleInputChange('budget', e.target.value)}
-                  className="rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-green-100 px-4 py-3"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-500" />
-                  Localisation
-                </Label>
-                <Input
-                  id="location"
-                  type="text"
-                  placeholder="Ex: Paris, France"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-100 px-4 py-3"
-                />
-              </div>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Euro className="w-5 h-5 text-green-500" />
+                    Budget & Localisation
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={analyzePricing}
+                    disabled={isAnalyzing}
+                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                  >
+                    {isAnalyzing ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                        Analyse...
+                      </div>
+                    ) : (
+                      <>
+                        <Brain className="w-4 h-4 mr-2" />
+                        Analyser Prix IA
+                      </>
+                    )}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="budget" className="text-sm font-semibold text-gray-800">
+                      Budget (€) *
+                    </Label>
+                    <Input
+                      id="budget"
+                      type="number"
+                      placeholder="Ex: 5000"
+                      value={formData.budget}
+                      onChange={(e) => handleInputChange('budget', e.target.value)}
+                      className="rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-green-100 px-4 py-3"
+                      required
+                    />
+
+                    {priceRecommendation && (
+                      <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <h5 className="font-semibold text-green-800 mb-2">💡 Recommandation IA</h5>
+                        <p className="text-sm text-green-700 mb-2">
+                          <strong>Prix suggéré:</strong> {priceRecommendation.suggestedPrice}€
+                        </p>
+                        <p className="text-sm text-green-700 mb-2">
+                          <strong>Fourchette:</strong> {priceRecommendation.priceRange?.min}€ - {priceRecommendation.priceRange?.max}€
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {priceRecommendation.reasoning}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Complexité estimée: {missionComplexity}/10
+                      </Label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={missionComplexity}
+                        onChange={(e) => setMissionComplexity(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Simple</span>
+                        <span>Complexe</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-sm font-semibold text-gray-800">
+                      Localisation
+                    </Label>
+                    <Input
+                      id="location"
+                      type="text"
+                      placeholder="Ex: Paris, France"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className="rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-100 px-4 py-3"
+                    />
+                  </div>
+                </div>
+
+                {/* Market Heat Indicator */}
+                {formData.category && (
+                  <div className="mt-4">
+                    <MarketHeatIndicator category={formData.category} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Submit Button */}
             <div className="pt-6">
@@ -326,37 +423,107 @@ export default function CreateMission() {
             </div>
 
             {/* Budget and Location */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="budget" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  <Euro className="w-4 h-4 text-green-500" />
-                  Budget (€) *
-                </Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="Ex: 5000"
-                  value={formData.budget}
-                  onChange={(e) => handleInputChange('budget', e.target.value)}
-                  className="rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-green-100 px-4 py-3"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-500" />
-                  Localisation
-                </Label>
-                <Input
-                  id="location"
-                  type="text"
-                  placeholder="Ex: Paris, France"
-                  value={formData.location}
-                  onChange={(e) => handleInputChange('location', e.target.value)}
-                  className="rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-100 px-4 py-3"
-                />
-              </div>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Euro className="w-5 h-5 text-green-500" />
+                    Budget & Localisation
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={analyzePricing}
+                    disabled={isAnalyzing}
+                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                  >
+                    {isAnalyzing ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                        Analyse...
+                      </div>
+                    ) : (
+                      <>
+                        <Brain className="w-4 h-4 mr-2" />
+                        Analyser Prix IA
+                      </>
+                    )}
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="budget" className="text-sm font-semibold text-gray-800">
+                      Budget (€) *
+                    </Label>
+                    <Input
+                      id="budget"
+                      type="number"
+                      placeholder="Ex: 5000"
+                      value={formData.budget}
+                      onChange={(e) => handleInputChange('budget', e.target.value)}
+                      className="rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-green-100 px-4 py-3"
+                      required
+                    />
+
+                    {priceRecommendation && (
+                      <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <h5 className="font-semibold text-green-800 mb-2">💡 Recommandation IA</h5>
+                        <p className="text-sm text-green-700 mb-2">
+                          <strong>Prix suggéré:</strong> {priceRecommendation.suggestedPrice}€
+                        </p>
+                        <p className="text-sm text-green-700 mb-2">
+                          <strong>Fourchette:</strong> {priceRecommendation.priceRange?.min}€ - {priceRecommendation.priceRange?.max}€
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {priceRecommendation.reasoning}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">
+                        Complexité estimée: {missionComplexity}/10
+                      </Label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="10"
+                        value={missionComplexity}
+                        onChange={(e) => setMissionComplexity(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Simple</span>
+                        <span>Complexe</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-sm font-semibold text-gray-800">
+                      Localisation
+                    </Label>
+                    <Input
+                      id="location"
+                      type="text"
+                      placeholder="Ex: Paris, France"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className="rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-100 px-4 py-3"
+                    />
+                  </div>
+                </div>
+
+                {/* Market Heat Indicator */}
+                {formData.category && (
+                  <div className="mt-4">
+                    <MarketHeatIndicator category={formData.category} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Submit Button */}
             <div className="pt-6">
