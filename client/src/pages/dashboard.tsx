@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,6 +27,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { QuickMissionCreator } from '@/components/missions/quick-mission-creator';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -97,62 +97,114 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Statistics Cards avec design amélioré */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium opacity-90">Missions publiées</CardTitle>
-              <ClipboardList className="h-5 w-5 opacity-80" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold mb-2">{userMissions.length}</div>
-              <p className="text-xs opacity-80">
-                {activeProjects > 0 ? `${activeProjects} actives` : 'Aucune active'}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Widget création rapide pour les clients */}
+        {user.type === 'client' && (
+          <div className="mb-8">
+            <QuickMissionCreator compact={true} />
+          </div>
+        )}
 
-          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium opacity-90">Candidatures reçues</CardTitle>
-              <Hand className="h-5 w-5 opacity-80" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold mb-2">{totalBids}</div>
-              <p className="text-xs opacity-80">
-                {totalBids > 0 ? 'Nouvelles opportunités' : 'En attente'}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Content based on user type */}
+        {user.type === 'client' ? (
+          <div className="space-y-8">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Missions publiées</CardTitle>
+                  <ClipboardList className="h-5 w-5 opacity-80" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold mb-2">{userMissions.length}</div>
+                  <p className="text-xs opacity-80">
+                    {activeProjects > 0 ? `${activeProjects} actives` : 'Aucune active'}
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium opacity-90">Projets terminés</CardTitle>
-              <Award className="h-5 w-5 opacity-80" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold mb-2">{completedMissions}</div>
-              <p className="text-xs opacity-80">
-                Taux de réussite: 100%
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Candidatures reçues</CardTitle>
+                  <Hand className="h-5 w-5 opacity-80" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold mb-2">{totalBids}</div>
+                  <p className="text-xs opacity-80">
+                    {totalBids > 0 ? 'Nouvelles opportunités' : 'En attente'}
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium opacity-90">Note moyenne</CardTitle>
-              <Star className="h-5 w-5 opacity-80" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold mb-2">4.9</div>
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3 h-3 fill-current opacity-80" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Projets terminés</CardTitle>
+                  <Award className="h-5 w-5 opacity-80" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold mb-2">{completedMissions}</div>
+                  <p className="text-xs opacity-80">
+                    Taux de réussite: 100%
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Note moyenne</CardTitle>
+                  <Star className="h-5 w-5 opacity-80" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold mb-2">4.9</div>
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-current opacity-80" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        ) : (
+          // Stats for providers
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Missions disponibles</CardTitle>
+                <ClipboardList className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2">{userMissions.length}</div>
+                <p className="text-xs opacity-80">
+                  {activeProjects > 0 ? `${activeProjects} actives` : 'Aucune mission'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Candidatures Envoyées</CardTitle>
+                <Hand className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2">{userBids.length}</div>
+                <p className="text-xs opacity-80">
+                  {userBids.length > 0 ? 'Opportunités actives' : 'Aucune candidature'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium opacity-90">Revenu estimé</CardTitle>
+                <DollarSign className="h-5 w-5 opacity-80" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2">€5,200</div>
+                <p className="text-xs opacity-80">Ce mois-ci</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Progress Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -198,7 +250,7 @@ export default function Dashboard() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start hover:bg-blue-50 border-blue-200"
-                onClick={() => setLocation('/')}
+                onClick={() => setLocation('/create-mission')}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Publier une mission
@@ -295,7 +347,7 @@ export default function Dashboard() {
                     Commencez par publier votre première mission et trouvez le prestataire idéal !
                   </p>
                   <Button 
-                    onClick={() => setLocation('/')}
+                    onClick={() => setLocation('/create-mission')}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-xl shadow-lg transform transition hover:scale-105"
                   >
                     <Plus className="w-5 h-5 mr-2" />

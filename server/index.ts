@@ -164,77 +164,150 @@ app.get('/api/missions-demo', (req, res) => {
   res.json(demoMissions);
 });
 
-// Endpoint pour l'analyse IA rapide pendant la saisie
-app.post('/api/ai/quick-analysis', (req, res) => {
-  const { description, title, category } = req.body;
+app.post('/api/ai/quick-analysis', async (req, res) => {
+  try {
+    const { description, title, category } = req.body;
 
-  // Simulation d'analyse rapide
-  const mockQuickAnalysis = {
-    brief_quality_score: Math.max(30, Math.min(95, description.length * 0.8)),
-    category_std: category || (description.toLowerCase().includes('site') ? 'developpement' : 'services'),
-    title_std: title || 'Projet à définir',
-    price_suggested_min: 500,
-    price_suggested_med: 1200,
-    price_suggested_max: 2500,
-    delay_suggested_days: Math.max(7, Math.min(30, Math.ceil(description.length / 20))),
-    market_insights: {
-      category_popularity: Math.floor(Math.random() * 10) + 1,
-      competition_level: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
-      estimated_providers_interested: Math.floor(Math.random() * 50) + 10,
-      best_posting_advice: 'Ajoutez plus de détails techniques pour attirer les meilleurs prestataires'
-    },
-    missing_info: description.length < 100 ? ['Description plus détaillée'] : []
-  };
-
-  res.json(mockQuickAnalysis);
-});
-
-// Mock AI endpoints pour tester
-app.post('/api/ai/analyze-bid', (req, res) => {
-  const { projectData, bidData } = req.body;
-
-  const mockAnalysis = {
-    score: Math.floor(Math.random() * 100),
-    priceAnalysis: {
-      competitiveness: Math.floor(Math.random() * 100),
-      marketPosition: 'competitive'
-    },
-    riskAssessment: {
-      technical: Math.floor(Math.random() * 100),
-      timeline: Math.floor(Math.random() * 100),
-      budget: Math.floor(Math.random() * 100)
-    },
-    recommendations: [
-      'Considérez ajuster le prix de 5-10%',
-      'Mettez en avant votre expérience similaire',
-      'Proposez un délai plus précis'
-    ]
-  };
-
-  res.json(mockAnalysis);
-});
-
-app.post('/api/ai/match-missions', (req, res) => {
-  const { providerProfile } = req.body;
-
-  const mockMatches = [
-    {
-      id: 1,
-      title: 'Développement d\'application mobile',
-      matchScore: 85,
-      reasons: ['Compétences React Native', 'Expérience mobile', 'Localisation proche']
-    },
-    {
-      id: 2,
-      title: 'Site web e-commerce',
-      matchScore: 72,
-      reasons: ['Stack technique compatible', 'Budget aligné']
+    if (!description) {
+      return res.status(400).json({ error: 'Description requise' });
     }
-  ];
 
-  res.json(mockMatches);
+    // Analyse plus sophistiquée avec calcul de prix
+    const words = description.toLowerCase().split(' ');
+    const complexity = Math.min(Math.floor(words.length / 10) + 3, 10);
+    const qualityScore = Math.min(Math.floor(words.length * 2) + 60, 100);
+
+    // Détection de compétences et calcul de prix basé sur les mots-clés
+    const skillPricing = {
+      'développement web': { keywords: ['site', 'web', 'react', 'vue', 'angular', 'javascript', 'typescript', 'node', 'php', 'python', 'django', 'flask'], basePrice: 2000, complexity: 0.8 },
+      'application mobile': { keywords: ['app', 'mobile', 'ios', 'android', 'flutter', 'react native'], basePrice: 3500, complexity: 1.2 },
+      'design graphique': { keywords: ['logo', 'graphique', 'design', 'photoshop', 'illustrator', 'figma', 'ui', 'ux'], basePrice: 800, complexity: 0.6 },
+      'marketing digital': { keywords: ['seo', 'adwords', 'facebook', 'instagram', 'social', 'marketing', 'publicité'], basePrice: 1200, complexity: 0.7 },
+      'rédaction': { keywords: ['article', 'blog', 'contenu', 'copywriting', 'texte'], basePrice: 500, complexity: 0.4 },
+      'e-commerce': { keywords: ['boutique', 'e-commerce', 'vente', 'shop', 'prestashop', 'woocommerce', 'magento'], basePrice: 2500, complexity: 1.0 },
+      'intelligence artificielle': { keywords: ['ia', 'machine learning', 'ai', 'chatbot', 'automation', 'data science'], basePrice: 5000, complexity: 1.5 },
+      'construction': { keywords: ['maison', 'bâtiment', 'travaux', 'construction', 'rénovation', 'plomberie', 'électricité', 'peinture'], basePrice: 3000, complexity: 1.1 },
+      'service à la personne': { keywords: ['aide', 'domicile', 'ménage', 'enfant', 'personne âgée', 'jardinage'], basePrice: 600, complexity: 0.3 },
+      'transport': { keywords: ['livraison', 'déménagement', 'transport', 'colis'], basePrice: 400, complexity: 0.3 },
+      'création de site web': { keywords: ['création site web', 'site vitrine', 'site institutionnel'], basePrice: 1500, complexity: 0.7 }
+    };
+
+    let detectedCategory = 'autre';
+    let basePrice = 1000;
+    let complexityMultiplier = 0.8;
+    const detectedSkills: string[] = [];
+
+    // Analyser le contenu pour détecter la catégorie et calculer le prix
+    Object.entries(skillPricing).forEach(([skill, config]) => {
+      const matches = config.keywords.filter(keyword => 
+        description.toLowerCase().includes(keyword) || 
+        (title && title.toLowerCase().includes(keyword))
+      );
+
+      if (matches.length > 0) {
+        detectedSkills.push(skill);
+        if (matches.length > 1) { // Priorité aux catégories avec plus de matches
+          detectedCategory = skill;
+          basePrice = config.basePrice;
+          complexityMultiplier = config.complexity;
+        } else if (detectedCategory === 'autre') { // Si aucune catégorie prioritaire trouvée
+          detectedCategory = skill;
+          basePrice = config.basePrice;
+          complexityMultiplier = config.complexity;
+        }
+      }
+    });
+
+    // Calcul intelligent du prix basé sur la complexité et le contenu
+    const wordComplexityBonus = Math.min(words.length / 50, 2); // Bonus basé sur la longueur
+    const urgencyDetected = /urgent|rapide|vite|asap|pressé|immédiat/i.test(description);
+    const urgencyMultiplier = urgencyDetected ? 1.3 : 1;
+
+    const estimatedPrice = Math.round(
+      basePrice * complexityMultiplier * (1 + wordComplexityBonus * 0.2) * urgencyMultiplier
+    );
+
+    // Fourchette de prix
+    const priceRange = {
+      min: Math.round(estimatedPrice * 0.7),
+      max: Math.round(estimatedPrice * 1.4)
+    };
+
+    // Estimation du délai basée sur la complexité
+    const estimatedDelay = Math.max(
+      Math.round(complexity * complexityMultiplier * 3 + (urgencyDetected ? -2 : 2)),
+      3
+    );
+
+    // Nombre de prestataires intéressés basé sur la demande
+    const demandFactors = {
+      'développement web': 45,
+      'design graphique': 35,
+      'marketing digital': 25,
+      'rédaction': 20,
+      'application mobile': 30,
+      'e-commerce': 40,
+      'intelligence artificielle': 15,
+      'construction': 30,
+      'service à la personne': 20,
+      'transport': 15,
+      'création de site web': 35
+    };
+
+    const estimatedProviders = demandFactors[detectedCategory] || Math.floor(Math.random() * 30) + 15;
+
+    // Génération d'une description optimisée
+    let optimizedDescription = description;
+    const improvements = [];
+
+    if (!description.toLowerCase().includes('budget') && !description.toLowerCase().includes('€') && !description.toLowerCase().includes('prix')) {
+      improvements.push('Précisez votre budget pour attirer des prestataires qualifiés');
+      optimizedDescription += `\n\nBudget estimé : ${estimatedPrice}€`;
+    }
+
+    if (!description.toLowerCase().includes('délai') && !description.toLowerCase().includes('livraison') && !description.toLowerCase().includes('quand')) {
+      improvements.push('Indiquez vos délais pour une meilleure planification');
+      optimizedDescription += `\nDélai souhaité : ${estimatedDelay} jours`;
+    }
+
+    if (detectedSkills.length > 0 && !description.toLowerCase().includes('compétences') && !description.toLowerCase().includes('technique')) {
+      improvements.push('Listez les compétences techniques requises');
+      optimizedDescription += `\nCompétences requises : ${detectedSkills.slice(0, 3).join(', ')}`;
+    }
+    
+    if (detectedCategory !== 'autre' && !description.toLowerCase().includes('catégorie')) {
+        improvements.push(`Confirmez la catégorie du projet : ${detectedCategory}`);
+    }
+
+    const analysis = {
+      qualityScore,
+      brief_quality_score: qualityScore,
+      detectedSkills,
+      estimatedComplexity: complexity,
+      price_suggested_med: estimatedPrice,
+      price_range_min: priceRange.min,
+      price_range_max: priceRange.max,
+      delay_suggested_days: estimatedDelay,
+      optimizedDescription: optimizedDescription !== description ? optimizedDescription : null,
+      improvements,
+      market_insights: {
+        estimated_providers_interested: estimatedProviders,
+        competition_level: estimatedProviders > 30 ? 'forte' : estimatedProviders > 15 ? 'moyenne' : 'faible',
+        demand_level: detectedCategory !== 'autre' ? 'forte' : 'moyenne',
+        category_detected: detectedCategory,
+        urgency_detected: urgencyDetected,
+        suggested_budget_range: priceRange
+      }
+    };
+
+    res.json(analysis);
+  } catch (error) {
+    console.error('Erreur analyse IA rapide:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'analyse' });
+  }
 });
 
+// Endpoint pour l'analyse IA rapide pendant la saisie
 // Endpoint pour l'analyse de prix IA
 app.post('/api/ai/price-analysis', async (req, res) => {
   try {
@@ -457,12 +530,12 @@ app.post('/api/ai/brief-analysis', (req, res) => {
     missingElements.push('Description trop courte');
   }
 
-  if (!description.toLowerCase().includes('budget') && !description.includes('€')) {
+  if (!description.includes('budget') && !description.includes('€') && !description.includes('prix')) {
     improvements.push('Mentionner une fourchette budgétaire indicative');
     missingElements.push('Budget non précisé');
   }
 
-  if (!description.toLowerCase().includes('délai') && !description.toLowerCase().includes('quand')) {
+  if (!description.includes('délai') && !description.includes('quand')) {
     improvements.push('Préciser les délais souhaités');
     missingElements.push('Délais absents');
   }
@@ -471,7 +544,7 @@ app.post('/api/ai/brief-analysis', (req, res) => {
   improvements.push(...categorySpecificAnalysis.improvements);
   missingElements.push(...categorySpecificAnalysis.missing);
 
-  const optimizedDescription = generateOptimizedDescription(description, title, category, categorySpecificAnalysis);
+  const optimizedDescription = generateOptimizedDescription(description, title, categorySpecificAnalysis);
 
   const mockAnalysis = {
     qualityScore,
@@ -711,7 +784,7 @@ function analyzeCategorySpecific(description, category) {
   return analysis;
 }
 
-function generateOptimizedDescription(description, title, category, analysis) {
+function generateOptimizedDescription(description, title, analysis) {
   const projectTitle = title || generateProjectTitle(description, category);
 
   const categoryTemplates = {
@@ -899,7 +972,7 @@ ${description.length > 50 ? description : 'Création d\'une identité visuelle f
 • Guide d'utilisation détaillé
 • Templates modifiables
 
-**Livrables Attendus :**
+**Livrables :**
 • Logo final avec déclinaisons
 • Charte graphique PDF complète
 • Tous fichiers sources modifiables
@@ -1694,7 +1767,7 @@ function generateGenericOptimizedDescription(description, title, analysis) {
 ${description.length > 50 ? description : 'Nous recherchons un professionnel qualifié pour réaliser ce projet avec succès.'}
 
 **Objectifs :**
-• Livraison d'un résultat de haute qualité
+• Livraison d\'un résultat de haute qualité
 • Respect des délais convenus
 • Communication transparente tout au long du projet
 • ${analysis.hasComplexFeatures ? 'Innovation et créativité' : 'Satisfaction client garantie'}
@@ -1903,9 +1976,9 @@ ${description.length > 50 ? description : 'Accompagnement de votre activité pro
 • Confidentialité et rigueur
 
 **Livrables :**
-• Rapports d'audit, analyses
+• Rapports d\'audit, analyses
 • Documents juridiques et fiscaux
-• Plans d'action et recommandations
+• Plans d\'action et recommandations
 • Formations adaptées
 
 **Modalités :**

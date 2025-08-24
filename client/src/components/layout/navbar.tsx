@@ -1,14 +1,15 @@
-
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '@/hooks/use-auth';
-import { User, LogOut, Menu, X, Briefcase, Users, BarChart3, Target, Brain, MessageSquare, Search, Zap, TrendingUp } from 'lucide-react';
+import { User, LogOut, Menu, X, Briefcase, Users, BarChart3, Target, Brain, MessageSquare, Search, Zap, TrendingUp, Plus } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetHeader,
+  SheetTitle
 } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -26,12 +27,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
+import { QuickMissionCreator } from '@/components/missions/quick-mission-creator';
 
 export function Navbar() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [showQuickCreator, setShowQuickCreator] = useState(false);
 
   const handleAuthClick = (mode: 'login' | 'register') => {
     setAuthMode(mode);
@@ -66,6 +69,9 @@ export function Navbar() {
     </button>
   );
 
+  const getLinkClassName = (href: string) => 
+    location === href ? 'text-primary font-medium' : 'text-gray-700 hover:text-primary transition-colors';
+
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,7 +91,7 @@ export function Navbar() {
           <div className="hidden lg:flex items-center space-x-8">
             <NavLink href="/marketplace">Missions</NavLink>
             <NavLink href="/available-providers">Prestataires</NavLink>
-            
+
             {/* AI Features Dropdown */}
             <NavigationMenu>
               <NavigationMenuList>
@@ -150,6 +156,30 @@ export function Navbar() {
 
           {/* User Menu / Auth Buttons */}
           <div className="flex items-center space-x-4">
+            {/* Desktop quick mission creator button */}
+            <Sheet open={showQuickCreator} onOpenChange={setShowQuickCreator}>
+              <SheetTrigger asChild>
+                <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Nouvelle mission</span>
+                  <span className="sm:hidden">Créer</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[400px] sm:w-[500px]">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <Brain className="w-5 h-5 text-blue-600" />
+                    Création rapide avec IA
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="mt-6">
+                  <QuickMissionCreator 
+                    onSuccess={() => setShowQuickCreator(false)}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+
             {user ? (
               <div className="flex items-center space-x-4">
                 {/* Desktop User Menu */}
@@ -260,7 +290,7 @@ export function Navbar() {
                   <div className="px-6 pb-4 border-b">
                     <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
                   </div>
-                  
+
                   <div className="py-4">
                     <MobileNavLink href="/marketplace" icon={Target}>
                       Missions
@@ -280,6 +310,31 @@ export function Navbar() {
                     <MobileNavLink href="/features" icon={BarChart3}>
                       Fonctionnalités
                     </MobileNavLink>
+
+                    {/* Mobile quick mission creator button */}
+                    <div className="mt-4 px-4">
+                      <Sheet open={showQuickCreator} onOpenChange={setShowQuickCreator}>
+                        <SheetTrigger asChild className="w-full">
+                          <Button size="sm" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Nouvelle mission
+                          </Button>
+                        </SheetTrigger>
+                        <SheetContent className="w-[400px] sm:w-[500px]">
+                          <SheetHeader>
+                            <SheetTitle className="flex items-center gap-2">
+                              <Brain className="w-5 h-5 text-blue-600" />
+                              Création rapide avec IA
+                            </SheetTitle>
+                          </SheetHeader>
+                          <div className="mt-6">
+                            <QuickMissionCreator 
+                              onSuccess={() => setShowQuickCreator(false)}
+                            />
+                          </div>
+                        </SheetContent>
+                      </Sheet>
+                    </div>
 
                     {!user && (
                       <div className="px-4 py-4 border-t border-gray-200 mt-4">
