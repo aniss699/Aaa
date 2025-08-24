@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,30 @@ export default function CreateMission() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+
+  // Récupérer les paramètres URL pour pré-remplir le formulaire
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get('title');
+    const description = params.get('description');
+    const budget = params.get('budget');
+
+    if (title || description || budget) {
+      setFormData(prev => ({
+        ...prev,
+        title: title || prev.title,
+        description: description || prev.description,
+        budget: budget || prev.budget
+      }));
+
+      // Si on a une description, lancer automatiquement l'analyse IA
+      if (description) {
+        setTimeout(() => {
+          analyzeBriefWithAI();
+        }, 500);
+      }
+    }
+  }, []);
 
   const [showAIStandardizer, setShowAIStandardizer] = useState(false);
   const [aiOptimizedDescription, setAiOptimizedDescription] = useState('');

@@ -12,8 +12,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLocation } from 'wouter';
 import { Link } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
-import { Card } from '@/components/ui/card';
-import { Megaphone, Zap, Clock, Users, Search, Star } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { ArrowRight, Star, Users, CheckCircle, Zap, Globe, Shield, TrendingUp, Search, PlusCircle, Brain, Wand2 } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
@@ -30,6 +32,18 @@ export default function Home() {
   });
   const [selectedService, setSelectedService] = useState<'reverse-bidding' | 'direct-connection' | null>('reverse-bidding');
   const [showMissionForm, setShowMissionForm] = useState(false);
+
+  // States for AI analysis
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showOptimizedVersion, setShowOptimizedVersion] = useState(false);
+
+  // State for quick mission creation form
+  const [quickMission, setQuickMission] = useState({
+    title: '',
+    description: '',
+    budget: ''
+  });
 
 
   const { data: missions = [] } = useQuery<MissionWithBids[]>({
@@ -99,6 +113,98 @@ export default function Home() {
   };
 
   const recentMissions = missions.slice(0, 6);
+
+  // AI Analysis function
+  const analyzeWithAI = async () => {
+    if (!quickMission.description) {
+      toast({
+        title: 'Description manquante',
+        description: 'Veuillez fournir une description pour l\'analyse IA',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const response = await fetch('/api/ai/brief-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: quickMission.description,
+          title: quickMission.title,
+        }),
+      });
+
+      if (response.ok) {
+        const analysis = await response.json();
+        setAiAnalysis(analysis);
+
+        toast({
+          title: 'Analyse IA terminée !',
+          description: `Qualité détectée: ${analysis.qualityScore}/100`,
+        });
+      } else {
+        throw new Error('Erreur lors de l\'analyse');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erreur IA',
+        description: error.message || 'Impossible d\'analyser votre annonce',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Function to apply optimized version
+  const applyOptimizedVersion = () => {
+    if (aiAnalysis?.optimizedDescription) {
+      setQuickMission(prev => ({
+        ...prev,
+        description: aiAnalysis.optimizedDescription
+      }));
+      setShowOptimizedVersion(false);
+
+      toast({
+        title: 'Description optimisée appliquée !',
+        description: 'Votre annonce a été améliorée par l\'IA',
+      });
+    }
+  };
+
+  // Handler for the quick mission submission
+  const handleQuickSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        title: 'Connexion requise',
+        description: 'Veuillez vous connecter pour créer une mission',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!quickMission.title || !quickMission.description) {
+      toast({
+        title: 'Champs requis',
+        description: 'Veuillez remplir le titre et la description',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Rediriger vers la page de création avec les données préremplies
+    const params = new URLSearchParams({
+      title: quickMission.title,
+      description: quickMission.description,
+      budget: quickMission.budget
+    });
+    setLocation(`/create-mission?${params.toString()}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -300,12 +406,127 @@ export default function Home() {
 
                 {/* Formulaire de description */}
                 <div className="space-y-4 max-w-4xl mx-auto">
-                  <Textarea
-                    placeholder="Décrivez votre besoin en détail... (ex: Je recherche un développeur pour créer une application mobile de e-commerce)"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    className="h-32 resize-none text-sm sm:text-base"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <label className="text-sm font-medium text-gray-700">Description du projet</label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={analyzeWithAI}
+                        disabled={isAnalyzing}
+                        className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                      >
+                        {isAnalyzing ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                            Analyse...
+                          </div>
+                        ) : (
+                          <>
+                            <Brain className="w-4 h-4 mr-2" />
+                            Analyser avec l'IA
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <Textarea
+                      placeholder="Décrivez votre projet en détail..."
+                      value={quickMission.description}
+                      onChange={(e) => setQuickMission({...quickMission, description: e.target.value})}
+                      className="min-h-[100px] text-base border-2 border-gray-200 focus:border-blue-400 rounded-xl"
+                    />
+                  </div>
+
+                  {/* Résultats de l'analyse IA */}
+                  {aiAnalysis && (
+                    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center justify-between text-blue-900 text-lg">
+                          <div className="flex items-center gap-2">
+                            <Brain className="w-5 h-5" />
+                            Analyse IA
+                          </div>
+                          <Badge variant={aiAnalysis.qualityScore > 80 ? "default" : "secondary"}>
+                            {aiAnalysis.qualityScore}/100
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span>Qualité de l'annonce</span>
+                            <span>{aiAnalysis.qualityScore}%</span>
+                          </div>
+                          <Progress value={aiAnalysis.qualityScore} className="h-2" />
+                        </div>
+
+                        {aiAnalysis.detectedSkills && aiAnalysis.detectedSkills.length > 0 && (
+                          <div>
+                            <strong className="text-sm text-blue-900">🎯 Compétences détectées:</strong>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {aiAnalysis.detectedSkills.map((skill: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {skill}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {aiAnalysis.improvements && aiAnalysis.improvements.length > 0 && (
+                          <div>
+                            <strong className="text-sm text-blue-900">💡 Améliorations suggérées:</strong>
+                            <ul className="list-disc list-inside mt-1 text-sm space-y-1">
+                              {aiAnalysis.improvements.slice(0, 3).map((improvement: string, index: number) => (
+                                <li key={index} className="text-blue-800">{improvement}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {aiAnalysis.optimizedDescription && (
+                          <div className="flex flex-wrap gap-2 pt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowOptimizedVersion(!showOptimizedVersion)}
+                              className="bg-white/80"
+                            >
+                              <Wand2 className="w-4 h-4 mr-2" />
+                              {showOptimizedVersion ? 'Masquer' : 'Voir'} la version optimisée
+                            </Button>
+
+                            {showOptimizedVersion && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={applyOptimizedVersion}
+                                className="bg-green-50 text-green-700 border-green-200"
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Appliquer l'amélioration
+                              </Button>
+                            )}
+                          </div>
+                        )}
+
+                        {showOptimizedVersion && aiAnalysis.optimizedDescription && (
+                          <div className="mt-3 p-3 bg-white/80 rounded-lg border border-blue-200">
+                            <strong className="text-sm text-blue-900">✨ Version optimisée par l'IA:</strong>
+                            <div className="mt-2 text-sm max-h-32 overflow-y-auto">
+                              <pre className="whitespace-pre-wrap font-sans">
+                                {aiAnalysis.optimizedDescription.substring(0, 300)}
+                                {aiAnalysis.optimizedDescription.length > 300 && '...'}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
 
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Input
@@ -319,26 +540,21 @@ export default function Home() {
                       type="number"
                       placeholder="Budget estimé (€)"
                       value={formData.budget}
-                      onChange={(e) => handleInputChange('budget', e.target.value)}
+                      onChange={(e) => setQuickMission({...quickMission, budget: e.target.value})}
                       className="flex-1 text-sm sm:text-base"
                     />
                   </div>
 
-                  <Button
-                    onClick={handleCreateMission}
-                    disabled={createMissionMutation.isPending}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-lg transition-all"
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
                   >
-                    {createMissionMutation.isPending ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Publication...
-                      </>
-                    ) : (
-                      <>
-                        <Megaphone className="w-5 h-5 mr-2" />
-                        Publier mon appel d'offres
-                      </>
+                    <PlusCircle className="w-5 h-5 mr-2" />
+                    Publier ma mission
+                    {aiAnalysis && (
+                      <Badge className="ml-2 bg-green-500">
+                        IA ✓
+                      </Badge>
                     )}
                   </Button>
                 </div>
