@@ -633,5 +633,182 @@ class AIService {
   }
 }
 
+/**
+   * Standardise et structure automatiquement un brief client
+   */
+  async standardizeProject(projectData: {
+    title: string;
+    description: string;
+    category?: string;
+    budget?: number;
+  }): Promise<{
+    title_std: string;
+    summary_std: string;
+    acceptance_criteria: string[];
+    category_std: string;
+    sub_category_std: string;
+    tags_std: string[];
+    skills_std: string[];
+    constraints_std: string[];
+    brief_quality_score: number;
+    richness_score: number;
+    missing_info: any[];
+    price_suggested_min?: number;
+    price_suggested_med?: number;
+    price_suggested_max?: number;
+    delay_suggested_days?: number;
+    loc_uplift_reco?: any;
+  }> {
+    const cacheKey = `standardize_${JSON.stringify(projectData)}`;
+    
+    return this.getCachedOrFetch(cacheKey, async () => {
+      try {
+        if (this.isOfflineMode) {
+          throw new Error('Standardization requires ML service');
+        }
+
+        const response = await fetch(`${this.baseUrl}/standardize`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(projectData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Standardization failed: ${response.statusText}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('Project standardization failed, using fallback:', error);
+        return this.standardizeProjectFallback(projectData);
+      }
+    }, 1800000); // Cache 30 minutes pour standardisation
+  }
+
+  /**
+   * Recalcule la standardisation après ajout d'informations manquantes
+   */
+  async recomputeStandardization(projectId: string, updatedData: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/brief/recompute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: projectId, ...updatedData })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Recomputation failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Standardization recomputation failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Obtient un aperçu du scoring basé sur la standardisation
+   */
+  async getPreviewScoring(projectId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/projects/${projectId}/preview-scoring`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Preview scoring failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Preview scoring failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Fallback pour standardisation (mode dégradé)
+   */
+  private standardizeProjectFallback(projectData: any) {
+    const { title, description, category } = projectData;
+    
+    // Standardisation basique
+    const title_std = title.trim();
+    const summary_std = description.length > 200 ? 
+      description.substring(0, 200) + '...' : description;
+    
+    // Extraction basique de compétences
+    const commonSkills = ['JavaScript', 'Python', 'React', 'Node.js', 'Design', 'Marketing'];
+    const skills_std = commonSkills.filter(skill => 
+      description.toLowerCase().includes(skill.toLowerCase())
+    );
+    
+    // Catégorie basique
+    let category_std = category || 'other';
+    if (description.toLowerCase().includes('web') || description.toLowerCase().includes('site')) {
+      category_std = 'web-development';
+    } else if (description.toLowerCase().includes('design')) {
+      category_std = 'design';
+    } else if (description.toLowerCase().includes('marketing')) {
+      category_std = 'marketing';
+    }
+    
+    // Score de qualité basique
+    const brief_quality_score = Math.min(85, 
+      (description.split(' ').length / 50) * 100 + 
+      (projectData.budget ? 20 : 0)
+    );
+    
+    // Informations manquantes basiques
+    const missing_info = [];
+    if (!projectData.budget) {
+      missing_info.push({
+        type: 'budget_range',
+        description: 'Budget ou fourchette budgétaire',
+        priority: 'high',
+        suggestion: 'Précisez votre budget pour recevoir des propositions adaptées'
+      });
+    }
+    
+    if (!description.includes('délai') && !description.includes('urgent')) {
+      missing_info.push({
+        type: 'timeline',
+        description: 'Délai ou échéance',
+        priority: 'high', 
+        suggestion: 'Indiquez vos contraintes de délai'
+      });
+    }
+
+    return {
+      title_std,
+      summary_std,
+      acceptance_criteria: [
+        'Livrable conforme à la description',
+        'Respect des délais convenus',
+        'Communication régulière'
+      ],
+      category_std,
+      sub_category_std: 'general',
+      tags_std: [category_std, ...skills_std.map(s => s.toLowerCase())],
+      skills_std,
+      constraints_std: [],
+      brief_quality_score: Math.round(brief_quality_score),
+      richness_score: Math.min(60, description.split(' ').length * 2),
+      missing_info,
+      price_suggested_min: projectData.budget ? Math.round(projectData.budget * 0.8) : null,
+      price_suggested_med: projectData.budget ? projectData.budget : null,
+      price_suggested_max: projectData.budget ? Math.round(projectData.budget * 1.2) : null,
+      delay_suggested_days: 14, // Délai par défaut
+      loc_uplift_reco: {
+        current_loc: 0.7,
+        recommended_budget: projectData.budget ? Math.round(projectData.budget * 1.1) : null,
+        recommended_delay: 21,
+        expected_loc_improvement: 0.15
+      }
+    };
+  }
+
 export const aiService = new AIService();
 export type { AIScoreRequest, AIScoreResponse, PriceRecommendationRequest, PriceRecommendationResponse };

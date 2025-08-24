@@ -4,11 +4,44 @@ import { storage } from "./storage";
 import { insertUserSchema, insertMissionSchema, insertBidSchema } from "@shared/schema";
 import { z } from "zod";
 import { Router } from "express";
+import crypto from 'crypto'; // Import crypto for UUID generation
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
+
+// Mock AI Service (replace with your actual AI service implementation)
+const aiService = {
+  standardizeProject: async (projectData: any) => {
+    console.log('Standardizing project:', projectData);
+    // Simulate standardization logic
+    return {
+      standardized_title: `Standardized: ${projectData.title}`,
+      standardized_description: `Standardized Description: ${projectData.description}`,
+      standardized_category: `Standardized: ${projectData.category}`,
+      suggested_budget: projectData.budget * 1.1, // Example: Suggest 10% more
+    };
+  },
+  recomputeStandardization: async (projectId: string, updatedData: any) => {
+    console.log(`Recomputing standardization for project ${projectId} with data:`, updatedData);
+    // Simulate recomputation
+    return {
+      project_id: projectId,
+      ...updatedData,
+      recomputed_at: new Date(),
+    };
+  },
+  getPreviewScoring: async (projectId: string) => {
+    console.log(`Getting preview scoring for project ${projectId}`);
+    // Simulate scoring logic
+    return {
+      project_id: projectId,
+      score: Math.random(),
+      recommendation: Math.random() > 0.5 ? 'approve' : 'review',
+    };
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const router = Router();
@@ -251,6 +284,206 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     res.json(profile);
   });
+
+  // Standardisation d'annonces (NOUVEAU)
+  app.post('/api/ai/projects/:id/standardize', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const projectData = request.body;
+
+      // Appel au service de standardisation
+      const standardizationResult = await aiService.standardizeProject({
+        title: projectData.title,
+        description: projectData.description,
+        category: projectData.category,
+        budget: projectData.budget
+      });
+
+      // Sauvegarde en base (simulé)
+      const projectStandardization = {
+        id: crypto.randomUUID(),
+        project_id: id,
+        ...standardizationResult,
+        rewrite_version: '1.0',
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      reply.send(projectStandardization);
+    } catch (error) {
+      // Using Express's res.status and res.send for consistency
+      (reply as any).status(500).send({ error: 'Standardization failed' });
+    }
+  });
+
+  app.get('/api/projects/:id/standardized', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      // Récupération de la standardisation (simulé)
+      (reply as any).send({
+        standardized: true,
+        project_id: id,
+        last_updated: new Date()
+      });
+    } catch (error) {
+      (reply as any).status(404).send({ error: 'Standardization not found' });
+    }
+  });
+
+  app.post('/api/ai/projects/:id/brief/complete', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const updatedData = request.body;
+
+      const recomputedResult = await aiService.recomputeStandardization(id, updatedData);
+      reply.send(recomputedResult);
+    } catch (error) {
+      (reply as any).status(500).send({ error: 'Brief completion failed' });
+    }
+  });
+
+  app.get('/api/ai/projects/:id/preview-scoring', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const previewScoring = await aiService.getPreviewScoring(id);
+      reply.send(previewScoring);
+    } catch (error) {
+      (reply as any).status(500).send({ error: 'Preview scoring failed' });
+    }
+  });
+
+  // Sourcing Web (NOUVEAU)
+  app.post('/api/sourcing/discover', async (request, reply) => {
+    try {
+      const { project_id, strategy = 'sitemap', max = 50 } = request.body;
+
+      // Simulation du pipeline de découverte
+      const discoveryResult = {
+        project_id,
+        strategy,
+        discovered_companies: Math.floor(Math.random() * max),
+        pages_crawled: Math.floor(Math.random() * 200),
+        processing_time_ms: Math.floor(Math.random() * 5000) + 1000,
+        status: 'completed'
+      };
+
+      reply.send(discoveryResult);
+    } catch (error) {
+      (reply as any).status(500).send({ error: 'Sourcing discovery failed' });
+    }
+  });
+
+  app.get('/api/sourcing/project/:id/candidates', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { min_score = 0.4, limit = 20 } = request.query as any;
+
+      // Simulation de candidats externes
+      const mockCandidates = Array.from({ length: parseInt(limit) }, (_, index) => ({
+        id: `ext_company_${index + 1}`,
+        name: `Entreprise ${index + 1}`,
+        lead_score: Math.random() * 0.6 + 0.4, // Score entre 0.4 et 1.0
+        reasons: [
+          'Compétences correspondantes détectées',
+          'Localisation géographique favorable',
+          'Signaux de prix cohérents'
+        ],
+        website: `https://exemple-${index + 1}.fr`,
+        city: 'Paris',
+        skills: ['React', 'Node.js', 'Design'],
+        confidence: Math.random() * 0.4 + 0.6
+      })).filter(candidate => candidate.lead_score >= parseFloat(min_score));
+
+      reply.send({
+        candidates: mockCandidates,
+        total_found: mockCandidates.length,
+        search_criteria: { min_score, limit }
+      });
+    } catch (error) {
+      (reply as any).status(500).send({ error: 'Candidate retrieval failed' });
+    }
+  });
+
+  app.get('/api/sourcing/status', async (request, reply) => {
+    try {
+      const status = {
+        pages_crawled_today: Math.floor(Math.random() * 1000),
+        valid_docs_extracted: Math.floor(Math.random() * 500),
+        companies_indexed: Math.floor(Math.random() * 200),
+        avg_processing_time_ms: Math.floor(Math.random() * 2000) + 500,
+        blocked_domains: Math.floor(Math.random() * 10),
+        last_updated: new Date()
+      };
+
+      reply.send(status);
+    } catch (error) {
+      (reply as any).status(500).send({ error: 'Status retrieval failed' });
+    }
+  });
+
+  // Fusion candidats internes + externes (NOUVEAU)
+  app.get('/api/ai/projects/:id/candidates', async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      const { diversity = false, limit = 20 } = request.query as any;
+
+      // Simulation fusion candidats internes + externes
+      const internalCandidates = Array.from({ length: 5 }, (_, index) => ({
+        id: `internal_${index + 1}`,
+        type: 'internal',
+        name: `Prestataire ${index + 1}`,
+        score: Math.random() * 30 + 70, // Score GlobalScore 70-100
+        score_type: 'GlobalScore',
+        rating: 4.0 + Math.random(),
+        completed_projects: Math.floor(Math.random() * 50) + 10,
+        skills: ['React', 'Vue.js', 'PHP'],
+        location: 'Lyon'
+      }));
+
+      const externalCandidates = Array.from({ length: 8 }, (_, index) => ({
+        id: `external_${index + 1}`,
+        type: 'external',
+        name: `Entreprise externe ${index + 1}`,
+        score: Math.random() * 40 + 40, // Score SupplierLeadScore 40-80 (normalisé)
+        score_type: 'SupplierLeadScore',
+        website: `https://externe-${index + 1}.fr`,
+        skills: ['JavaScript', 'Design', 'SEO'],
+        location: 'Paris',
+        confidence: Math.random() * 0.4 + 0.6
+      }));
+
+      // Fusion et tri
+      let allCandidates = [...internalCandidates, ...externalCandidates]
+        .sort((a, b) => b.score - a.score);
+
+      // Application de MMR si diversity=true
+      if (diversity === 'true') {
+        // Simulation de diversification MMR
+        allCandidates = allCandidates.map((candidate, index) => ({
+          ...candidate,
+          diversity_boost: index < 3 ? 0 : Math.random() * 5 // Boost pour diversité
+        }));
+      }
+
+      reply.send({
+        candidates: allCandidates.slice(0, parseInt(limit)),
+        internal_count: internalCandidates.length,
+        external_count: externalCandidates.length,
+        diversity_applied: diversity === 'true',
+        total_available: allCandidates.length
+      });
+    } catch (error) {
+      (reply as any).status(500).send({ error: 'Candidate fusion failed' });
+    }
+  });
+
+  // AI endpoints
+  app.post('/api/ai/score', async (request, reply) => {
+    // Original AI scoring logic would go here.
+    // For demonstration, we'll just return a placeholder.
+    reply.send({ message: "AI scoring endpoint reached." });
+  });
+
 
   app.use(router); // Mount the router
 

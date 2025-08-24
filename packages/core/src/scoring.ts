@@ -42,12 +42,21 @@ export class UnifiedScoringEngine {
   };
 
   /**
-   * Calcule un score unifié selon les critères métier
+   * Calcule un score unifié selon les critères métier avec ajustements standardisation
    */
-  calculateScore(factors: ScoringFactors, weights?: Partial<ScoringWeights>, marketContext?: any): ScoringResult {
+  calculateScore(
+    factors: ScoringFactors, 
+    weights?: Partial<ScoringWeights>, 
+    marketContext?: any,
+    standardizationData?: {
+      brief_quality_score?: number;
+      richness_score?: number;
+      missing_info_count?: number;
+    }
+  ): ScoringResult {
     const finalWeights = this.getAdaptiveWeights(factors, weights, marketContext);
     
-    const scores = {
+    let scores = {
       price: this.calculatePriceScore(factors.priceRatio, marketContext),
       quality: this.calculateQualityScore(factors.providerRating, factors.experienceMatch),
       fit: this.calculateFitScore(factors.skillsMatch),
@@ -55,6 +64,11 @@ export class UnifiedScoringEngine {
       risk: this.calculateRiskScore(factors.successRate, factors.providerRating),
       completion_probability: this.calculateCompletionScore(factors)
     };
+
+    // Ajustements standardisation si disponibles
+    if (standardizationData) {
+      scores = this.applyStandardizationAdjustments(scores, standardizationData);
+    }
 
     // Ajustements dynamiques basés sur l'apprentissage
     const adjustedScores = this.applyMLAdjustments(scores, factors, marketContext);
@@ -183,6 +197,46 @@ export class UnifiedScoringEngine {
     // Bonus pour expérience élevée
     if (factors.experienceMatch > 20) confidence += 15;
     if (factors.providerRating >= 4.5) confidence += 10;
+
+  /**
+   * Applique les ajustements basés sur la standardisation du brief
+   */
+  private applyStandardizationAdjustments(
+    scores: Record<string, number>, 
+    standardizationData: {
+      brief_quality_score?: number;
+      richness_score?: number;
+      missing_info_count?: number;
+    }
+  ): Record<string, number> {
+    const adjustedScores = { ...scores };
+    
+    // Paramètres d'ajustement
+    const λq = 0.20; // Impact brief quality
+    const λr = 0.15; // Impact richness
+    
+    // Ajustement Quality Score
+    if (standardizationData.brief_quality_score !== undefined) {
+      const qualityAdjustment = 1 + λq * ((standardizationData.brief_quality_score / 100) - 0.5);
+      adjustedScores.quality = Math.min(100, adjustedScores.quality * qualityAdjustment);
+    }
+    
+    // Ajustement Fit Score
+    if (standardizationData.richness_score !== undefined) {
+      const richnessAdjustment = 1 + λr * ((standardizationData.richness_score / 100) - 0.5);
+      adjustedScores.fit = Math.min(100, adjustedScores.fit * richnessAdjustment);
+    }
+    
+    // Pénalités pour informations manquantes
+    if (standardizationData.missing_info_count && standardizationData.missing_info_count > 0) {
+      const missingInfoPenalty = standardizationData.missing_info_count * 0.05;
+      adjustedScores.risk = Math.max(0, adjustedScores.risk - (missingInfoPenalty * 100));
+      adjustedScores.delay = Math.max(0, adjustedScores.delay - 3);
+    }
+    
+    return adjustedScores;
+  }
+
     
     // Malus pour anomalies
     confidence -= anomalies.length * 10;
@@ -263,7 +317,51 @@ export class UnifiedScoringEngine {
     return Math.max(10, Math.min(95, score));
   }
 
-  private generateExplanations(scores: Record<string, number>, factors: ScoringFactors): string[] {
+  private generateSmartRecommendations(scores: Record<string, number>, factors: ScoringFactors, marketContext?: any): string[] {
+    const recommendations: string[] = [];
+
+    if (scores.price < 60) {
+      if (factors.priceRatio < 0.4) {
+        recommendations.push("Prix potentiellement trop bas - vérifiez la faisabilité");
+      } else {
+        recommendations.push("Négocier le prix en mettant en avant la qualité");
+      }
+    }
+
+    if (scores.quality < 70) {
+      recommendations.push("Demander des références supplémentaires au prestataire");
+    }
+
+    if (scores.fit < 70) {
+      recommendations.push("Organiser un entretien technique pour valider les compétences");
+    }
+
+    if (scores.completion_probability < 60) {
+      recommendations.push("Prévoir un accompagnement renforcé et des jalons fréquents");
+    }
+
+    // Recommandations contextuelles
+    if (marketContext?.tension === 'high') {
+      recommendations.push("Marché tendu - Prioriser la rapidité de décision");
+    }
+
+    if (factors.urgencyLevel === 'high' && scores.delay < 80) {
+      recommendations.push("Projet urgent - Confirmer la disponibilité immédiate");
+    }
+
+    return recommendations.slice(0, 4); // Max 4 recommandations
+  }
+
+  private calculateVariance(values: number[]): number {
+    if (values.length === 0) return 0;
+    
+    const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    
+    return variance;
+  }
+
+  private generateExplanations(scores: Record<string, number>, factors: ScoringFactors, anomalies?: string[]): string[] {
     const explanations: string[] = [];
 
     if (scores.price >= 85) {
