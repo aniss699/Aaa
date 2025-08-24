@@ -600,7 +600,7 @@ ${description.length > 50 ? description : 'Nous cherchons à développer une sol
 ${features.length > 0 ? features.map(f => `• ${f}`).join('\n') : `• Interface utilisateur intuitive et responsive
 • Backend robuste et sécurisé
 • Base de données optimisée
-• Panel d\'administration complet`}
+• Panel d'administration complet`}
 
 **Stack Technique Souhaitée :**
 ${techStack.length > 0 ? techStack.map(t => `• ${t}`).join('\n') : `• Frontend moderne (React, Vue.js ou Angular)
@@ -665,8 +665,8 @@ ${description.length > 50 ? description : 'Développement d\'une application mob
 • Formation équipe technique
 
 **Profil Recherché :**
-• 3+ ans d'expérience développement mobile
-• Portfolio d'applications publiées sur stores
+• 3+ ans d\'expérience développement mobile
+• Portfolio d\'applications publiées sur stores
 • Maîtrise React Native, Flutter ou développement natif
 • Connaissance UX/UI mobile
 • Capacité à gérer publication sur stores
@@ -729,7 +729,7 @@ ${description.length > 50 ? description : 'Création d\'une identité visuelle f
 
 **Délais et Budget :**
 • Délai souhaité : ${analysis.isUrgent ? '1-2 semaines' : '3-4 semaines'}
-• Budget : Merci d'indiquer vos tarifs selon éléments
+• Budget : Merci d\'indiquer vos tarifs selon éléments
 • Paiement : 50% à la commande, 50% à la livraison`;
 }
 
@@ -765,22 +765,22 @@ ${description.length > 50 ? description : 'Nous cherchons à développer notre v
 **Compétences Requises :**
 • Expertise Google Ads et Facebook Business
 • Maîtrise des outils analytics
-• Connaissance du secteur d'activité
+• Connaissance du secteur d\'activité
 • Capacités rédactionnelles
-• Sens de l'analyse et optimisation
+• Sens de l\'analyse et optimisation
 
 **Livrables Mensuels :**
 • Stratégie marketing documentée
 • Campagnes publicitaires opérationnelles
 • Contenus créatifs (visuels, textes)
 • Rapports de performance détaillés
-• Recommandations d'optimisation
+• Recommandations d\'optimisation
 
 **Budget et Durée :**
 • Mission sur ${analysis.isUrgent ? '3-6 mois' : '6-12 mois'}
 • Budget publicitaire : À définir séparément
 • Honoraires : Forfait mensuel ou commission résultats
-• ROI cible : Définition d'objectifs mesurables
+• ROI cible : Définition d\'objectifs mesurables
 
 **Modalités de Collaboration :**
 • Réunions hebdomadaires de suivi
@@ -816,14 +816,14 @@ ${description.length > 50 ? description : 'Création de contenus de qualité pro
 • Intégration mots-clés stratégiques
 • Structure H1, H2, H3 optimisée
 • Méta-descriptions et titres SEO
-• Appels à l'action pertinents
+• Appels à l\'action pertinents
 
 **Secteur et Ton :**
 • Adaptation parfaite à notre secteur
 • Ton professionnel mais accessible
 • Expertise technique démontrée
 • Style cohérent sur tous contenus
-• Respect de l'image de marque
+• Respect de l\'image de marque
 
 **Livrables :**
 • Contenus finalisés et relus
@@ -873,9 +873,9 @@ ${description.length > 50 ? description : 'Traduction professionnelle de haute q
 • Relecture et correction incluses
 
 **Spécialisations :**
-• Domaine d'expertise requis
+• Domaine d\'expertise requis
 • Maîtrise vocabulaire technique
-• Connaissance secteur d'activité
+• Connaissance secteur d\'activité
 • Normes de qualité ISO 17100
 • Confidentialité garantie
 
@@ -914,12 +914,12 @@ ${description.length > 50 ? description : 'Nous recherchons un consultant expert
 
 **Objectifs de Consultation :**
 • Diagnostic complet de la situation
-• Identification des axes d'amélioration
+• Identification des axes d\'amélioration
 • Recommandations stratégiques
-• Plan d'action opérationnel
+• Plan d\'action opérationnel
 • ${analysis.hasComplexFeatures ? 'Conduite du changement' : 'Formation des équipes'}
 
-**Domaines d'Expertise :**
+**Domaines d\'Expertise :**
 • Stratégie et organisation
 • Processus et efficacité opérationnelle
 • Transformation digitale
@@ -936,7 +936,7 @@ ${description.length > 50 ? description : 'Nous recherchons un consultant expert
 **Livrables Consultants :**
 • Rapport de diagnostic détaillé
 • Présentation des recommandations
-• Plan d'action priorisé et chiffré
+• Plan d\'action priorisé et chiffré
 • Outils et méthodologies
 • Formation équipes si nécessaire
 
@@ -945,12 +945,12 @@ ${description.length > 50 ? description : 'Nous recherchons un consultant expert
 • Expertise sectorielle démontrée
 • Portfolio de missions similaires
 • Références clients vérifiables
-• Capacité d'analyse et synthèse
+• Capacité d\'analyse et synthèse
 
-**Modalités d'Intervention :**
+**Modalités d\'Intervention :**
 • Mission sur ${analysis.isUrgent ? '2-4 semaines' : '1-3 mois'}
 • Interventions sur site et distanciel
-• Points d'avancement réguliers
+• Points d\'avancement réguliers
 • Flexibilité selon contraintes terrain
 
 **Budget et Conditions :**
@@ -982,7 +982,7 @@ ${description.length > 50 ? description : 'Création d\'une boutique en ligne pe
 
 **Intégrations Requises :**
 • Passerelles de paiement (Stripe, PayPal)
-• Solutions d'expédition (Colissimo, Chronopost)
+• Solutions d\'expédition (Colissimo, Chronopost)
 • Outils marketing (MailChimp, Google Analytics)
 • ERP/CRM si existant
 • Réseaux sociaux et comparateurs
@@ -1136,7 +1136,7 @@ function generatePlomberieOptimizedDescription(description, title, analysis) {
 **Besoin Urgent/Planifié :**
 ${analysis.isUrgent ? 'Intervention plomberie urgente nécessaire.' : 'Demande d\'intervention plomberie pour installation ou réparation.'}
 
-**Nature de l'Intervention :**
+**Nature de l\'Intervention :**
 • Dépannage (fuite, robinet, WC...)
 • Installation (sanitaire, chauffage...)
 • Rénovation (réseau, salle de bain...)
@@ -1145,7 +1145,7 @@ ${analysis.isUrgent ? 'Intervention plomberie urgente nécessaire.' : 'Demande d
 • ${analysis.hasComplexFeatures ? 'Mise aux normes installation gaz' : 'Entretien chaudière'}
 
 **Informations Complémentaires :**
-• Lieu de l'intervention : ${description.match(/(\d+\s*(?:rue|avenue|boulevard)\s*[\w\s-]+)/i)?.[1] || 'Adresse à préciser'}
+• Lieu de l\'intervention : ${description.match(/(\d+\s*(?:rue|avenue|boulevard)\s*[\w\s-]+)/i)?.[1] || 'Adresse à préciser'}
 • Étage : ${analysis.missing.includes("Étage non spécifié") ? 'À préciser' : description.match(/(?:au|au\s)(\d+)(?:er|ème)\sétage/i)?.[1] || 'Rez-de-chaussée'}
 • Accessibilité : Facile / Difficile
 • Contexte : Maison / Appartement / Local commercial
@@ -1159,7 +1159,7 @@ ${analysis.isUrgent ? 'Intervention plomberie urgente nécessaire.' : 'Demande d
 
 **Livrables :**
 • Réparation ou installation fonctionnelle
-• Nettoyage de la zone d'intervention
+• Nettoyage de la zone d\'intervention
 • Explication des travaux réalisés
 • Facture détaillée avec garantie
 
@@ -1173,7 +1173,7 @@ ${analysis.isUrgent ? 'Intervention plomberie urgente nécessaire.' : 'Demande d
 function generateElectriciteOptimizedDescription(description, title, analysis) {
   return `**${title}**
 
-**Nature de l'Intervention :**
+**Nature de l\'Intervention :**
 ${description.length > 50 ? description : 'Installation, modification ou dépannage électrique dans le respect des normes de sécurité.'}
 
 **Type de Prestation :**
@@ -1186,7 +1186,7 @@ ${description.length > 50 ? description : 'Installation, modification ou dépann
 
 **Contexte Technique :**
 • Type de bâtiment : Maison / Appartement / Bureau / Local
-• Age de l'installation : Ancienne / Rénovée / Neuve
+• Age de l\'installation : Ancienne / Rénovée / Neuve
 • Normes à respecter : NF C 15-100 / Consuel
 • Complexité : Faible / Moyenne / Élevée
 
@@ -1200,7 +1200,7 @@ ${description.length > 50 ? description : 'Installation, modification ou dépann
 **Livrables :**
 • Installation électrique conforme et fonctionnelle
 • Attestation Consuel si nécessaire
-• Nettoyage de la zone d'intervention
+• Nettoyage de la zone d\'intervention
 • Explication des travaux réalisés
 • Facture détaillée
 
@@ -1234,7 +1234,7 @@ ${description.length > 50 ? description : 'Application de peinture de qualité p
 **Exigences Professionnelles :**
 • Peintre qualifié et expérimenté
 • Utilisation de peintures de qualité et adaptées
-• Respect des techniques d'application
+• Respect des techniques d\'application
 • Soin apporté aux finitions
 • Protection du mobilier et des sols
 • Nettoyage après travaux
@@ -1261,7 +1261,7 @@ ${description.length > 50 ? description : 'Service personnalisé pour répondre 
 • Aide à domicile (ménage, courses, repas)
 • Assistance aux personnes âgées ou handicapées
 • Soutien scolaire / Aide aux devoirs
-• Garde d'enfants / Baby-sitting
+• Garde d\'enfants / Baby-sitting
 • Jardinage / Petit bricolage
 • ${analysis.hasComplexFeatures ? 'Accompagnement administratif' : 'Tâches ménagères'}
 
@@ -1296,7 +1296,7 @@ function generateAIOptimizedDescription(description, title, analysis) {
 **Besoin en Intelligence Artificielle :**
 ${description.length > 50 ? description : 'Développement et intégration de solutions basées sur l\'IA pour optimiser vos processus et vos prises de décision.'}
 
-**Domaine d'Application :**
+**Domaine d\'Application :**
 • Analyse prédictive
 • Traitement du langage naturel (NLP)
 • Vision par ordinateur
@@ -1307,11 +1307,11 @@ ${description.length > 50 ? description : 'Développement et intégration de sol
 
 **Objectifs Spécifiques :**
 • Améliorer la performance
-• Personnaliser l'expérience client
+• Personnaliser l\'expérience client
 • Automatiser des tâches répétitives
 • Extraire des insights des données
 • Prédire des événements futurs
-• ${analysis.needsDatabase ? 'Gérer de grands volumes de données' : 'Optimiser l'utilisation des ressources'}
+• ${analysis.needsDatabase ? 'Gérer de grands volumes de données' : 'Optimiser l\'utilisation des ressources'}
 
 **Compétences Techniques Requises :**
 • Maîtrise Python et librairies IA (TensorFlow, PyTorch, Scikit-learn)
@@ -1369,13 +1369,13 @@ ${description.length > 50 ? description : 'Nettoyage et entretien de votre domic
 **Tarifs :**
 • Forfait horaire ou forfait par prestation
 • Devis gratuit sur demande
-• Possibilité d'intervention rapide`;
+• Possibilité d\'intervention rapide`;
 }
 
 function generateGardeEnfantsOptimizedDescription(description, title, analysis) {
   return `**${title}**
 
-**Besoin de Garde d'Enfants :**
+**Besoin de Garde d\'Enfants :**
 ${description.length > 50 ? description : 'Garde d\'enfants fiable et attentionnée pour assurer leur bien-être et leur épanouissement.'}
 
 **Informations sur les Enfants :**
@@ -1424,14 +1424,14 @@ ${description.length > 50 ? description : 'Entretien et aménagement de votre ja
 
 **Informations sur le Jardin :**
 • Surface approximative : ${analysis.missing.includes("Surface non indiquée") ? 'À préciser' : description.match(/\d+\s*m[²2]/)?.[0] || 'À préciser'}
-• Type d'espace : Jardin / Terrasse / Balcon
+• Type d\'espace : Jardin / Terrasse / Balcon
 • Fréquence souhaitée : Ponctuelle / Régulière (hebdomadaire, mensuelle)
 • Travaux spécifiques : À définir
 
 **Exigences :**
 • Jardinier expérimenté et fiable
 • Utilisation de matériel professionnel adapté
-• Respect de l'environnement
+• Respect de l\'environnement
 • Soin apporté aux végétaux
 • Propreté après intervention
 
@@ -1461,10 +1461,10 @@ ${description.length > 50 ? description : 'Accompagnement professionnel pour la 
 • Conseil fiscal et optimisation
 • ${analysis.hasComplexFeatures ? 'Audit financier' : 'Paie et gestion sociale'}
 
-**Contexte de l'Entreprise :**
-• Type d'entreprise : SA / SARL / SAS / Auto-entrepreneur / Association
-• Secteur d'activité : À préciser
-• Chiffre d'affaires annuel : À définir
+**Contexte de l\'Entreprise :**
+• Type d\'entreprise : SA / SARL / SAS / Auto-entrepreneur / Association
+• Secteur d\'activité : À préciser
+• Chiffre d\'affaires annuel : À définir
 • Périodicité souhaitée : Mensuelle / Trimestrielle / Annuelle
 
 **Attentes du Client :**
@@ -1482,7 +1482,7 @@ ${description.length > 50 ? description : 'Accompagnement professionnel pour la 
 • Conseils stratégiques
 
 **Profil Expert-Comptable :**
-• Diplôme d'expertise comptable
+• Diplôme d\'expertise comptable
 • Expérience dans votre secteur
 • Références clients
 • Proximité géographique ou digitale
@@ -1494,6 +1494,36 @@ ${description.length > 50 ? description : 'Accompagnement professionnel pour la 
 • Accompagnement personnalisé`;
 }
 
+function generateGenericOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Description du Projet :**
+${description.length > 50 ? description : 'Nous recherchons un professionnel qualifié pour réaliser ce projet avec succès.'}
+
+**Objectifs :**
+• Livraison d'un résultat de haute qualité
+• Respect des délais convenus
+• Communication transparente tout au long du projet
+• ${analysis.hasComplexFeatures ? 'Innovation et créativité' : 'Satisfaction client garantie'}
+
+**Exigences :**
+• Expérience prouvée dans le domaine
+• Compréhension approfondie du besoin
+• Proactivité et réactivité
+• Professionnalisme et rigueur
+
+**Livrables Attendus :**
+• Produit fini conforme aux attentes
+• Documentation complète si nécessaire
+• Support post-livraison
+
+**Budget et Délais :**
+• Budget : À définir selon proposition
+• Délai : ${analysis.isUrgent ? 'Court' : 'Moyen'}
+
+**Pour Postuler :**
+Merci de présenter votre expérience et votre approche pour ce projet.`;
+}
 
 function extractTechFromDescription(description) {
   const technologies = [];
