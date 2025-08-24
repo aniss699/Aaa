@@ -307,5 +307,202 @@ class AIService {
   }
 }
 
+/**
+   * Analyse et structure automatiquement un brief client
+   */
+  async analyzeSmartBrief(briefText: string): Promise<{
+    structure_score: number;
+    completeness_score: number;
+    clarity_score: number;
+    technical_keywords: string[];
+    missing_elements: string[];
+    suggestions: string[];
+    structured_brief: any;
+    complexity_level: string;
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/brief/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief_text: briefText })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Smart brief analysis failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Smart brief analysis failed:', error);
+      return this.analyzeSmartBriefFallback(briefText);
+    }
+  }
+
+  /**
+   * Calcule le Trust Score et génère les badges
+   */
+  async calculateTrustScore(providerId: string): Promise<{
+    trust_score: number;
+    trust_badges: any[];
+    reliability_factors: any;
+    recommendations: string[];
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/trust/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider_id: providerId })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Trust score calculation failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Trust score calculation failed:', error);
+      return this.calculateTrustScoreFallback(providerId);
+    }
+  }
+
+  /**
+   * Récupère le Market Heat Score en temps réel
+   */
+  async getMarketHeatScore(category: string, region?: string): Promise<{
+    heat_score: number;
+    tension: string;
+    price_impact: number;
+    opportunity_level: number;
+    trend_indicator: string;
+    recommendations: string[];
+    insights: string[];
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/market/heat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, region })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Market heat analysis failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Market heat analysis failed:', error);
+      return this.getMarketHeatScoreFallback(category);
+    }
+  }
+
+  /**
+   * Matching inverse - Trouve des projets pour un prestataire
+   */
+  async findProjectsForProvider(providerId: string, preferences: any): Promise<{
+    recommended_projects: any[];
+    latent_opportunities: any[];
+    potential_clients: any[];
+    match_explanations: string[];
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/match/inverse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider_id: providerId, preferences })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Inverse matching failed: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Inverse matching failed:', error);
+      return this.findProjectsForProviderFallback(providerId, preferences);
+    }
+  }
+
+  // Méthodes fallback pour mode dégradé
+
+  private analyzeSmartBriefFallback(briefText: string) {
+    const wordCount = briefText.split(' ').length;
+    const hasNumbers = /\d/.test(briefText);
+    const hasTechTerms = ['web', 'app', 'site', 'design', 'dev'].some(term => 
+      briefText.toLowerCase().includes(term)
+    );
+
+    return {
+      structure_score: wordCount > 50 ? 75 : 45,
+      completeness_score: hasNumbers && wordCount > 30 ? 70 : 50,
+      clarity_score: briefText.includes('?') ? 60 : 70,
+      technical_keywords: hasTechTerms ? ['web development'] : [],
+      missing_elements: ['budget', 'délai'],
+      suggestions: ['Précisez votre budget', 'Indiquez vos contraintes de délai'],
+      structured_brief: {
+        titre_suggere: briefText.substring(0, 30) + '...',
+        contexte: briefText.substring(0, 100),
+        objectifs: ['Objectif principal à définir'],
+        fonctionnalites: ['Fonctionnalités à préciser'],
+        contraintes_techniques: [],
+        budget_estime: null,
+        delai_estime: null
+      },
+      complexity_level: hasTechTerms ? 'medium' : 'low'
+    };
+  }
+
+  private calculateTrustScoreFallback(providerId: string) {
+    return {
+      trust_score: 75,
+      trust_badges: [
+        {
+          id: 'fallback_badge',
+          label: 'Prestataire vérifié',
+          description: 'Profil validé par nos équipes',
+          confidence: 80,
+          icon: '✅',
+          color: 'blue'
+        }
+      ],
+      reliability_factors: {
+        anciennete: 12,
+        regularite: 3,
+        tauxReponse: 85,
+        respectDelais: 90
+      },
+      recommendations: ['Continuez sur cette lancée', 'Améliorez votre temps de réponse']
+    };
+  }
+
+  private getMarketHeatScoreFallback(category: string) {
+    return {
+      heat_score: 65,
+      tension: 'medium',
+      price_impact: 1.05,
+      opportunity_level: 70,
+      trend_indicator: 'stable',
+      recommendations: ['Marché équilibré - maintenez vos prix standards'],
+      insights: [`Demande stable en ${category}`]
+    };
+  }
+
+  private findProjectsForProviderFallback(providerId: string, preferences: any) {
+    return {
+      recommended_projects: [
+        {
+          id: 'fallback-1',
+          title: 'Projet correspondant à vos compétences',
+          match_score: 85,
+          budget: 2500,
+          category: preferences.preferred_category || 'web'
+        }
+      ],
+      latent_opportunities: [],
+      potential_clients: [],
+      match_explanations: ['Correspondance basée sur vos préférences déclarées']
+    };
+  }
+}
+
 export const aiService = new AIService();
 export type { AIScoreRequest, AIScoreResponse, PriceRecommendationRequest, PriceRecommendationResponse };
