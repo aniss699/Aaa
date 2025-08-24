@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -12,11 +12,20 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2, Briefcase, MessageSquare, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2, Briefcase, MessageSquare, CheckCircle, AlertCircle, Sparkles, TrendingUp, Users, Target } from 'lucide-react';
 import { MissionStandardizer } from '@/components/ai/mission-standardizer';
 import { CategorySelector } from '@/components/missions/category-selector';
 import { MarketHeatIndicator } from '@/components/ai/market-heat-indicator';
 import { Progress } from '@/components/ui/progress';
+
+// Utility function for debouncing
+function debounce<T extends (...args: any[]) => any>(func: T, delay: number): T {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return ((...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(null, args), delay);
+  }) as T;
+}
 
 export default function CreateMission() {
   const { user } = useAuth();
@@ -25,7 +34,7 @@ export default function CreateMission() {
   const queryClient = useQueryClient();
 
   // Récupérer les paramètres URL pour pré-remplir le formulaire
-  React.useEffect(() => {
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const title = params.get('title');
     const description = params.get('description');
@@ -40,9 +49,9 @@ export default function CreateMission() {
       }));
 
       // Si on a une description, lancer automatiquement l'analyse IA
-      if (description) {
+      if (description && description.length > 50) {
         setTimeout(() => {
-          analyzeBriefWithAI();
+          analyzeDescriptionWithAI(description);
         }, 500);
       }
     }
@@ -54,8 +63,18 @@ export default function CreateMission() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [priceRecommendation, setPriceRecommendation] = useState<any>(null);
   const [aiOptimization, setAiOptimization] = useState<any>(null); // State to hold AI optimization results
+  const [aiSuggestionText, setAiSuggestionText] = useState(''); // State for real-time AI suggestions
+  const [showInlineAI, setShowInlineAI] = useState(false); // State to toggle inline AI analysis display
 
   const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    category: '',
+    budget: '',
+    location: '',
+  });
+
+  const [errors, setErrors] = useState({
     title: '',
     description: '',
     category: '',
@@ -116,14 +135,55 @@ export default function CreateMission() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setPriceRecommendation(null); // Clear recommendations when relevant fields change
-    setAiOptimization(null); // Clear AI optimization when relevant fields change
+    setErrors(prev => ({ ...prev, [field]: '' }));
+
+    // Déclencher l'analyse IA automatique pour la description
+    if (field === 'description' && value.length > 50) {
+      debounceAIAnalysis(value);
+    }
+  };
+
+  // Debounce pour éviter trop d'appels IA
+  const debounceAIAnalysis = useMemo(
+    () => debounce((description: string) => {
+      if (description.length > 50) {
+        analyzeDescriptionWithAI(description);
+      }
+    }, 2000),
+    []
+  );
+
+  const analyzeDescriptionWithAI = async (description: string) => {
+    try {
+      const response = await fetch('/api/ai/quick-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description,
+          title: formData.title,
+          category: formData.category
+        })
+      });
+
+      if (response.ok) {
+        const aiData = await response.json();
+        setAiOptimization(aiData);
+
+        // Suggestion automatique de prix si pas encore défini
+        if (!formData.budget && aiData.price_suggested_med) {
+          setAiSuggestionText(`💡 Budget suggéré par l'IA: ${aiData.price_suggested_med}€`);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur analyse IA:', error);
+    }
   };
 
   const handleAiOptimizedDescription = (description: string) => {
     setAiOptimizedDescription(description);
     setFormData(prev => ({ ...prev, description: description }));
     setShowAIStandardizer(false);
+    analyzeDescriptionWithAI(description); // Analyze after applying optimized description
   };
 
   const analyzePricing = async () => {
@@ -218,6 +278,7 @@ export default function CreateMission() {
 
     if (aiOptimization.optimizedDescription) {
       setFormData(prev => ({ ...prev, description: aiOptimization.optimizedDescription }));
+      setAiOptimizedDescription(aiOptimization.optimizedDescription); // Update optimized description state
     }
     if (aiOptimization.estimatedComplexity) {
       setMissionComplexity(aiOptimization.estimatedComplexity);
@@ -228,6 +289,7 @@ export default function CreateMission() {
       setFormData(prev => ({ ...prev, budget: avgBudget.toString() }));
     }
     // You can add more fields to update based on AI optimization results
+    toast({ title: 'Suggestions appliquées', description: 'Les champs ont été mis à jour avec les recommandations de l\'IA.' });
   };
 
 
@@ -247,19 +309,40 @@ export default function CreateMission() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => setLocation('/missions')}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Retour à mes missions
-        </Button>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Créer une nouvelle mission</h1>
-        <p className="text-lg text-gray-600">
-          Décrivez votre projet pour recevoir des propositions de prestataires qualifiés
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation('/missions')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour à mes missions
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Créer une nouvelle mission</h1>
+            <p className="text-lg text-gray-600">
+              Décrivez votre projet pour recevoir des propositions de prestataires qualifiés
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            <Brain className="w-3 h-3 mr-1" />
+            IA Active
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAIStandardizer(true)}
+            className="flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            Optimiser avec l'IA
+          </Button>
+        </div>
       </div>
 
       {showAIStandardizer && (
@@ -310,22 +393,19 @@ export default function CreateMission() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="description" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-green-500" />
-                      Description détaillée *
-                    </Label>
+                  <Label htmlFor="description" className="text-sm font-medium flex items-center justify-between">
+                    Description détaillée *
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => setShowAIStandardizer(true)}
-                      className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                      onClick={() => setShowInlineAI(!showInlineAI)}
+                      className="text-xs"
                     >
-                      <Wand2 className="w-4 h-4 mr-2" />
-                      Optimiser avec l'IA
+                      <Brain className="w-3 h-3 mr-1" />
+                      IA
                     </Button>
-                  </div>
+                  </Label>
                   <Textarea
                     id="description"
                     placeholder="Décrivez votre projet en détail : objectifs, fonctionnalités souhaitées, contraintes techniques..."
@@ -334,10 +414,83 @@ export default function CreateMission() {
                     className="min-h-[120px] rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-green-100"
                     required
                   />
-                  {aiOptimizedDescription && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-700">
-                      ✨ Optimisé par l'IA
-                    </Badge>
+                  {errors.description && (
+                    <p className="text-sm text-red-600">{errors.description}</p>
+                  )}
+
+                  {/* Suggestions IA en temps réel */}
+                  {aiSuggestionText && (
+                    <div className="bg-blue-50 border-l-4 border-blue-400 p-3 text-sm">
+                      <div className="flex items-center">
+                        <Sparkles className="w-4 h-4 text-blue-600 mr-2" />
+                        <span className="text-blue-800">{aiSuggestionText}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Analyse IA en temps réel */}
+                  {aiOptimization && formData.description.length > 50 && (
+                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border rounded-lg p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-purple-800 flex items-center">
+                          <Brain className="w-4 h-4 mr-1" />
+                          Analyse IA
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          Score: {aiOptimization.brief_quality_score || 0}/100
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        {aiOptimization.price_suggested_med && (
+                          <div className="flex items-center">
+                            <TrendingUp className="w-3 h-3 mr-1 text-green-600" />
+                            <span>Prix suggéré: {aiOptimization.price_suggested_med}€</span>
+                          </div>
+                        )}
+                        {aiOptimization.delay_suggested_days && (
+                          <div className="flex items-center">
+                            <Calendar className="w-3 h-3 mr-1 text-blue-600" />
+                            <span>Délai: {aiOptimization.delay_suggested_days}j</span>
+                          </div>
+                        )}
+                        {aiOptimization.market_insights?.estimated_providers_interested && (
+                          <div className="flex items-center">
+                            <Users className="w-3 h-3 mr-1 text-orange-600" />
+                            <span>{aiOptimization.market_insights.estimated_providers_interested} prestataires</span>
+                          </div>
+                        )}
+                        {aiOptimization.market_insights?.competition_level && (
+                          <div className="flex items-center">
+                            <Target className="w-3 h-3 mr-1 text-purple-600" />
+                            <span>Concurrence: {aiOptimization.market_insights.competition_level}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applySuggestions()}
+                          className="text-xs flex-1"
+                        >
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Appliquer les suggestions
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowAIStandardizer(true)}
+                          className="text-xs flex-1"
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Optimiser avec l'IA
+                        </Button>
+                      </div>
+                    </div>
                   )}
                   <p className="text-sm text-gray-500">
                     Plus votre description est détaillée, plus vous recevrez des propositions pertinentes.
@@ -722,8 +875,8 @@ export default function CreateMission() {
                       <Brain className="w-5 h-5" />
                       Analyse IA de votre annonce
                     </div>
-                    <Badge variant={aiOptimization.qualityScore > 80 ? "default" : "secondary"}>
-                      {aiOptimization.qualityScore}/100
+                    <Badge variant="outline" className="text-xs">
+                      Score: {aiOptimization.brief_quality_score || 0}/100
                     </Badge>
                   </CardTitle>
                 </CardHeader>

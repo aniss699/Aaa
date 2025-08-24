@@ -164,6 +164,31 @@ app.get('/api/missions-demo', (req, res) => {
   res.json(demoMissions);
 });
 
+// Endpoint pour l'analyse IA rapide pendant la saisie
+app.post('/api/ai/quick-analysis', (req, res) => {
+  const { description, title, category } = req.body;
+
+  // Simulation d'analyse rapide
+  const mockQuickAnalysis = {
+    brief_quality_score: Math.max(30, Math.min(95, description.length * 0.8)),
+    category_std: category || (description.toLowerCase().includes('site') ? 'developpement' : 'services'),
+    title_std: title || 'Projet à définir',
+    price_suggested_min: 500,
+    price_suggested_med: 1200,
+    price_suggested_max: 2500,
+    delay_suggested_days: Math.max(7, Math.min(30, Math.ceil(description.length / 20))),
+    market_insights: {
+      category_popularity: Math.floor(Math.random() * 10) + 1,
+      competition_level: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
+      estimated_providers_interested: Math.floor(Math.random() * 50) + 10,
+      best_posting_advice: 'Ajoutez plus de détails techniques pour attirer les meilleurs prestataires'
+    },
+    missing_info: description.length < 100 ? ['Description plus détaillée'] : []
+  };
+
+  res.json(mockQuickAnalysis);
+});
+
 // Mock AI endpoints pour tester
 app.post('/api/ai/analyze-bid', (req, res) => {
   const { projectData, bidData } = req.body;
