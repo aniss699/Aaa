@@ -324,7 +324,7 @@ app.post('/api/ai/brief-analysis', (req, res) => {
 
 function generateOptimizedDescription(description, category, title) {
   const baseDesc = description || "Description du projet";
-  
+
   // Templates spécifiques par catégorie
   const categoryTemplates = {
     'development': {
@@ -571,7 +571,7 @@ ${template.criteres.join('\n')}
 • Possibilité de facturation en régie ou forfait
 
 **Suivi et Communication :**
-• Points d'avancement réguliers
+• Points d\'avancement réguliers
 • Livraison par phases si nécessaire
 • Support post-livraison inclus`;
 }
@@ -749,7 +749,7 @@ function estimateComplexity(description, category) {
   };
 
   const factors = categoryComplexityFactors[category] || categoryComplexityFactors['development'];
-  
+
   factors.forEach(factor => {
     if (factor.keywords.some(keyword => lowerDesc.includes(keyword))) {
       complexity += factor.points;
@@ -873,11 +873,11 @@ function suggestBudgetRange(description, category, complexity) {
 
   const categoryData = baseBudgets[category] || baseBudgets['development'];
   let baseRange = categoryData.ranges;
-  
+
   // Appliquer les facteurs spécifiques trouvés dans la description
   const lowerDesc = description.toLowerCase();
   let multiplier = 1.0;
-  
+
   Object.entries(categoryData.factors).forEach(([key, factor]) => {
     if (lowerDesc.includes(key)) {
       multiplier = Math.max(multiplier, factor);

@@ -8,6 +8,7 @@ export interface Category {
 }
 
 export const categories: Category[] = [
+  // Informatique & Tech
   {
     id: 'development',
     name: 'Développement',
@@ -15,6 +16,14 @@ export const categories: Category[] = [
     color: 'text-blue-500',
     description: 'Applications web, mobile, logiciels',
     popularityScore: 9
+  },
+  {
+    id: 'mobile',
+    name: 'Mobile',
+    icon: 'smartphone',
+    color: 'text-blue-600',
+    description: 'Applications iOS, Android, cross-platform',
+    popularityScore: 8
   },
   {
     id: 'design',
@@ -33,39 +42,145 @@ export const categories: Category[] = [
     popularityScore: 7
   },
   {
-    id: 'construction',
-    name: 'Travaux',
-    icon: 'hammer',
-    color: 'text-green-500',
-    description: 'Rénovation, construction, aménagement',
+    id: 'ai',
+    name: 'Intelligence Artificielle',
+    icon: 'brain',
+    color: 'text-violet-500',
+    description: 'IA, Machine Learning, automatisation',
     popularityScore: 8
   },
+
+  // Travaux & Construction
+  {
+    id: 'construction',
+    name: 'Construction',
+    icon: 'hammer',
+    color: 'text-green-500',
+    description: 'Gros œuvre, maçonnerie, charpente',
+    popularityScore: 9
+  },
+  {
+    id: 'renovation',
+    name: 'Rénovation',
+    icon: 'home',
+    color: 'text-green-600',
+    description: 'Rénovation, aménagement, modernisation',
+    popularityScore: 9
+  },
+  {
+    id: 'plomberie',
+    name: 'Plomberie',
+    icon: 'wrench',
+    color: 'text-blue-600',
+    description: 'Installation, réparation, chauffage',
+    popularityScore: 8
+  },
+  {
+    id: 'electricite',
+    name: 'Électricité',
+    icon: 'zap',
+    color: 'text-yellow-500',
+    description: 'Installation électrique, domotique',
+    popularityScore: 8
+  },
+  {
+    id: 'peinture',
+    name: 'Peinture',
+    icon: 'brush',
+    color: 'text-red-500',
+    description: 'Peinture, décoration, finitions',
+    popularityScore: 7
+  },
+
+  // Services à la personne
+  {
+    id: 'menage',
+    name: 'Ménage',
+    icon: 'spray-can',
+    color: 'text-teal-500',
+    description: 'Ménage, nettoyage, entretien',
+    popularityScore: 9
+  },
+  {
+    id: 'garde_enfants',
+    name: 'Garde d\'enfants',
+    icon: 'baby',
+    color: 'text-pink-500',
+    description: 'Baby-sitting, nounou, crèche',
+    popularityScore: 9
+  },
+  {
+    id: 'aide_personne',
+    name: 'Aide à la personne',
+    icon: 'heart-handshake',
+    color: 'text-red-400',
+    description: 'Assistance, soins, accompagnement',
+    popularityScore: 8
+  },
+  {
+    id: 'jardinage',
+    name: 'Jardinage',
+    icon: 'leaf',
+    color: 'text-green-400',
+    description: 'Entretien jardin, tonte, paysagisme',
+    popularityScore: 7
+  },
+  {
+    id: 'bricolage',
+    name: 'Bricolage',
+    icon: 'tool',
+    color: 'text-gray-600',
+    description: 'Petites réparations, montage',
+    popularityScore: 8
+  },
+
+  // Transport & Logistique
   {
     id: 'transport',
     name: 'Transport',
     icon: 'truck',
     color: 'text-indigo-500',
     description: 'Déménagement, livraison, logistique',
-    popularityScore: 6
-  },
-  {
-    id: 'photography',
-    name: 'Photographie',
-    icon: 'camera',
-    color: 'text-pink-500',
-    description: 'Événements, produits, portraits',
     popularityScore: 7
   },
   {
-    id: 'translation',
-    name: 'Traduction',
-    icon: 'globe',
-    color: 'text-cyan-500',
-    description: 'Documents, sites web, interprétation',
+    id: 'chauffeur',
+    name: 'Chauffeur',
+    icon: 'car',
+    color: 'text-gray-500',
+    description: 'VTC, taxi, transport personnel',
     popularityScore: 6
   },
+
+  // Beauté & Bien-être
   {
-    id: 'accounting',
+    id: 'coiffure',
+    name: 'Coiffure',
+    icon: 'scissors',
+    color: 'text-purple-400',
+    description: 'Coupe, coloration, coiffure',
+    popularityScore: 7
+  },
+  {
+    id: 'esthetique',
+    name: 'Esthétique',
+    icon: 'sparkles',
+    color: 'text-pink-400',
+    description: 'Soins esthétiques, beauté',
+    popularityScore: 7
+  },
+  {
+    id: 'fitness',
+    name: 'Fitness',
+    icon: 'dumbbell',
+    color: 'text-orange-600',
+    description: 'Coach sportif, remise en forme',
+    popularityScore: 7
+  },
+
+  // Services professionnels
+  {
+    id: 'comptabilite',
     name: 'Comptabilité',
     icon: 'calculator',
     color: 'text-emerald-500',
@@ -73,21 +188,103 @@ export const categories: Category[] = [
     popularityScore: 7
   },
   {
-    id: 'legal',
+    id: 'juridique',
     name: 'Juridique',
     icon: 'scale',
     color: 'text-slate-600',
-    description: 'Conseils juridiques, contrats, litiges',
-    popularityScore: 5
+    description: 'Conseils juridiques, contrats',
+    popularityScore: 6
   },
   {
-    id: 'cleaning',
-    name: 'Nettoyage',
-    icon: 'spray-can',
-    color: 'text-teal-500',
-    description: 'Ménage, nettoyage industriel',
+    id: 'traduction',
+    name: 'Traduction',
+    icon: 'globe',
+    color: 'text-cyan-500',
+    description: 'Documents, sites web, interprétation',
+    popularityScore: 6
+  },
+
+  // Arts & Créatif
+  {
+    id: 'photographie',
+    name: 'Photographie',
+    icon: 'camera',
+    color: 'text-purple-600',
+    description: 'Événements, produits, portraits',
+    popularityScore: 7
+  },
+  {
+    id: 'musique',
+    name: 'Musique',
+    icon: 'music',
+    color: 'text-purple-700',
+    description: 'Cours, composition, production',
+    popularityScore: 6
+  },
+  {
+    id: 'artisanat',
+    name: 'Artisanat',
+    icon: 'gem',
+    color: 'text-amber-600',
+    description: 'Création, fait main, personnalisé',
+    popularityScore: 6
+  },
+
+  // Événementiel
+  {
+    id: 'evenementiel',
+    name: 'Événementiel',
+    icon: 'calendar',
+    color: 'text-rose-500',
+    description: 'Organisation événements, mariages',
+    popularityScore: 7
+  },
+  {
+    id: 'traiteur',
+    name: 'Traiteur',
+    icon: 'chef-hat',
+    color: 'text-orange-400',
+    description: 'Restauration, buffets, réceptions',
+    popularityScore: 6
+  },
+
+  // Enseignement
+  {
+    id: 'cours_particuliers',
+    name: 'Cours particuliers',
+    icon: 'graduation-cap',
+    color: 'text-blue-700',
+    description: 'Soutien scolaire, langues',
     popularityScore: 8
   },
+  {
+    id: 'formation',
+    name: 'Formation',
+    icon: 'book-open',
+    color: 'text-indigo-600',
+    description: 'Formation professionnelle, stages',
+    popularityScore: 7
+  },
+
+  // Animaux
+  {
+    id: 'veterinaire',
+    name: 'Vétérinaire',
+    icon: 'heart-pulse',
+    color: 'text-green-700',
+    description: 'Soins vétérinaires, consultations',
+    popularityScore: 6
+  },
+  {
+    id: 'garde_animaux',
+    name: 'Garde d\'animaux',
+    icon: 'dog',
+    color: 'text-amber-500',
+    description: 'Pet-sitting, promenade, pension',
+    popularityScore: 7
+  },
+
+  // Autre
   {
     id: 'other',
     name: 'Autre',
