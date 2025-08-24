@@ -152,6 +152,69 @@ class AIService {
       throw error;
     }
   }
+
+  async optimizeMissionDescription(description: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/optimize-brief`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de l\'optimisation:', error);
+      throw error;
+    }
+  }
+
+  async detectAbusePattern(bidData: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/detect-abuse`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bidData }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors de la détection d\'abus:', error);
+      return { isAbuse: false, confidence: 0, reasons: [] };
+    }
+  }
+
+  async getIntelligentBiddingGuidance(missionData: any, providerData: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/ai/bidding-guidance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ missionData, providerData }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erreur lors du guidage d\'enchère:', error);
+      return { suggestedBid: 0, reasoning: [], confidence: 0 };
+    }
+  }
 }
 
 export const aiService = new AIService();

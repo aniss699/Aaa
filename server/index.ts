@@ -293,6 +293,68 @@ app.post('/api/ai/detect-dumping', (req, res) => {
   res.json(mockDetection);
 });
 
+// Endpoint pour la détection d'abus
+app.post('/api/ai/detect-abuse', (req, res) => {
+  const { bidData } = req.body;
+
+  const mockAbuse = {
+    isAbuse: Math.random() > 0.8,
+    confidence: Math.floor(Math.random() * 40) + 60,
+    reasons: Math.random() > 0.5 ? [
+      'Pattern de soumission suspect',
+      'Prix anormalement bas répété'
+    ] : [],
+    severity: Math.random() > 0.7 ? 'high' : 'medium'
+  };
+
+  res.json(mockAbuse);
+});
+
+// Endpoint pour le guidage d'enchères intelligentes
+app.post('/api/ai/bidding-guidance', (req, res) => {
+  const { missionData, providerData } = req.body;
+
+  const basePrice = missionData.budget || 5000;
+  const suggestedBid = Math.round(basePrice * (0.7 + Math.random() * 0.3));
+
+  const mockGuidance = {
+    suggestedBid,
+    reasoning: [
+      'Basé sur votre profil et l\'historique de prix',
+      'Tient compte de la concurrence actuelle',
+      'Optimisé pour maximiser vos chances de succès'
+    ],
+    confidence: Math.floor(Math.random() * 30) + 70,
+    competitorAnalysis: {
+      averageBid: basePrice * 0.85,
+      yourPosition: 'competitive',
+      winProbability: Math.floor(Math.random() * 40) + 60
+    }
+  };
+
+  res.json(mockGuidance);
+});
+
+// Endpoint pour l'analyse de marché
+app.post('/api/ai/market-analysis', (req, res) => {
+  const { category, location } = req.body;
+
+  const mockAnalysis = {
+    demandLevel: Math.random() > 0.5 ? 'high' : 'medium',
+    competitionLevel: Math.random() > 0.5 ? 'medium' : 'low',
+    averageBudget: Math.floor(Math.random() * 5000) + 2000,
+    trendingSkills: ['React', 'Node.js', 'TypeScript', 'Python'],
+    marketHeat: Math.floor(Math.random() * 100),
+    recommendations: [
+      'Forte demande en développement web',
+      'Les projets IA sont en hausse',
+      'Compétitivité modérée dans votre région'
+    ]
+  };
+
+  res.json(mockAnalysis);
+});
+
 // Mock auth endpoints
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;

@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2, Briefcase } from 'lucide-react';
 import { MissionStandardizer } from '@/components/ai/mission-standardizer';
 import { CategorySelector } from '@/components/missions/category-selector';
 import { MarketHeatIndicator } from '@/components/ai/market-heat-indicator';
+import { Progress } from '@/components/ui/progress';
 
 export default function CreateMission() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export default function CreateMission() {
   const [missionComplexity, setMissionComplexity] = useState(5);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [priceRecommendation, setPriceRecommendation] = useState<any>(null);
+  const [aiOptimization, setAiOptimization] = useState<any>(null); // State to hold AI optimization results
 
   const [formData, setFormData] = useState({
     title: '',
@@ -91,6 +93,7 @@ export default function CreateMission() {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setPriceRecommendation(null); // Clear recommendations when relevant fields change
+    setAiOptimization(null); // Clear AI optimization when relevant fields change
   };
 
   const handleAiOptimizedDescription = (description: string) => {
@@ -141,6 +144,50 @@ export default function CreateMission() {
       setIsAnalyzing(false);
     }
   };
+
+  // Function to trigger AI analysis of the mission brief
+  const analyzeBriefWithAI = async () => {
+    if (!formData.description) {
+      toast({
+        title: 'Description manquante',
+        description: 'Veuillez fournir une description pour l\'analyse IA',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAnalyzing(true); // Reusing isAnalyzing for AI brief analysis as well
+    setAiOptimization(null);
+    try {
+      const response = await fetch('/api/ai/brief-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          description: formData.description,
+          category: formData.category, // Include category if available
+          title: formData.title, // Include title if available
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiOptimization(data);
+      } else {
+        throw new Error('Erreur lors de l\'analyse du brief par l\'IA');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erreur IA',
+        description: error.message || 'Impossible d\'analyser le brief',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
 
   if (!user) {
     return (
@@ -253,9 +300,72 @@ export default function CreateMission() {
                   <p className="text-sm text-gray-500">
                     Plus votre description est détaillée, plus vous recevrez des propositions pertinentes.
                   </p>
+                  {/* Button to trigger AI analysis of the brief */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={analyzeBriefWithAI}
+                    disabled={isAnalyzing}
+                    className="mt-3 text-blue-600 border-blue-200 hover:bg-blue-50"
+                  >
+                    {isAnalyzing ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        Analyse IA...
+                      </div>
+                    ) : (
+                      <>
+                        <Brain className="w-4 h-4 mr-2" />
+                        Analyser mon brief
+                      </>
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
+
+            {/* AI Optimization Results */}
+            {aiOptimization && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                  <Brain className="w-4 h-4 mr-2" />
+                  Analyse IA de votre brief (Score: {aiOptimization.qualityScore}/100)
+                </h4>
+                <div className="text-sm text-blue-800">
+                  <Progress value={aiOptimization.qualityScore} className="mb-3" />
+
+                  {aiOptimization.improvements.length > 0 && (
+                    <div className="mb-3">
+                      <strong>💡 Suggestions d'amélioration:</strong>
+                      <ul className="list-disc list-inside mt-1">
+                        {aiOptimization.improvements.map((improvement: string, index: number) => (
+                          <li key={index}>{improvement}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {aiOptimization.optimizedDescription && (
+                    <div className="mt-3">
+                      <strong>✨ Version optimisée:</strong>
+                      <div className="mt-2 p-3 bg-white rounded border text-gray-700">
+                        {aiOptimization.optimizedDescription}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => setFormData({...formData, description: aiOptimization.optimizedDescription})}
+                      >
+                        Utiliser cette version
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Category */}
             <div className="space-y-2">
@@ -430,6 +540,48 @@ export default function CreateMission() {
               </CardContent>
             </Card>
 
+            {/* AI Optimization Results */}
+            {aiOptimization && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                  <Brain className="w-4 h-4 mr-2" />
+                  Analyse IA de votre brief (Score: {aiOptimization.qualityScore}/100)
+                </h4>
+                <div className="text-sm text-blue-800">
+                  <Progress value={aiOptimization.qualityScore} className="mb-3" />
+
+                  {aiOptimization.improvements.length > 0 && (
+                    <div className="mb-3">
+                      <strong>💡 Suggestions d'amélioration:</strong>
+                      <ul className="list-disc list-inside mt-1">
+                        {aiOptimization.improvements.map((improvement: string, index: number) => (
+                          <li key={index}>{improvement}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {aiOptimization.optimizedDescription && (
+                    <div className="mt-3">
+                      <strong>✨ Version optimisée:</strong>
+                      <div className="mt-2 p-3 bg-white rounded border text-gray-700">
+                        {aiOptimization.optimizedDescription}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => setFormData({...formData, description: aiOptimization.optimizedDescription})}
+                      >
+                        Utiliser cette version
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Category */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
@@ -539,7 +691,10 @@ export default function CreateMission() {
                 {/* Market Heat Indicator */}
                 {formData.category && (
                   <div className="mt-4">
-                    <MarketHeatIndicator category={formData.category} />
+                    <MarketHeatIndicator
+                      category={formData.category}
+                      location={formData.location}
+                    />
                   </div>
                 )}
               </CardContent>
