@@ -44,7 +44,7 @@ app.get('/api/missions', (req, res) => {
 // Endpoint pour créer une nouvelle mission
 app.post('/api/missions', (req, res) => {
   const { title, description, category, budget, location, clientId, clientName } = req.body;
-  
+
   if (!title || !description || !category || !budget || !clientId || !clientName) {
     return res.status(400).json({ error: 'Champs requis manquants' });
   }
@@ -71,11 +71,11 @@ app.post('/api/missions', (req, res) => {
 app.get('/api/missions/:id', (req, res) => {
   const { id } = req.params;
   const mission = missions.find(m => m.id === id);
-  
+
   if (!mission) {
     return res.status(404).json({ error: 'Mission non trouvée' });
   }
-  
+
   res.json(mission);
 });
 
@@ -225,7 +225,7 @@ app.post('/api/ai/price-analysis', (req, res) => {
 
   const complexityMultiplier = complexity / 5; // Normaliser sur 2
   const suggestedPrice = Math.round(basePrice * complexityMultiplier);
-  
+
   const priceRange = {
     min: Math.round(suggestedPrice * 0.8),
     max: Math.round(suggestedPrice * 1.3)
@@ -324,7 +324,7 @@ app.post('/api/ai/brief-analysis', (req, res) => {
 
 function generateOptimizedDescription(description, category, title) {
   const baseDesc = description || "Description du projet";
-  
+
   return `**${title || 'Projet à définir'}**
 
 **Contexte et Objectifs :**
@@ -437,10 +437,10 @@ function suggestBudgetRange(description, category) {
 
   const baseRange = baseBudgets[category] || [2000, 6000];
   const complexity = estimateComplexity(description);
-  
+
   // Ajuster selon la complexité
   const multiplier = 0.5 + (complexity / 10) * 1.5; // 0.5x à 2x selon complexité
-  
+
   return {
     min: Math.round(baseRange[0] * multiplier),
     max: Math.round(baseRange[1] * multiplier)

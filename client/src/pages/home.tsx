@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ArrowRight, Star, Users, CheckCircle, Zap, Globe, Shield, TrendingUp, Search, PlusCircle, Brain, Wand2 } from 'lucide-react';
+import { ArrowRight, Star, Users, CheckCircle, Zap, Globe, Shield, TrendingUp, Search, PlusCircle, Brain, Wand2, MessageSquare, Clock } from 'lucide-react';
 
 export default function Home() {
   const { user } = useAuth();
@@ -110,6 +110,7 @@ export default function Home() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setQuickMission(prev => ({ ...prev, [field]: value }));
   };
 
   const recentMissions = missions.slice(0, 6);
@@ -318,7 +319,7 @@ export default function Home() {
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 rotate-0' 
                   : 'bg-gradient-to-r from-gray-400 to-gray-500 rotate-3 hover:rotate-0'
               }`}>
-                <Megaphone className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
               <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-gray-900">Appels d'offres</h3>
               <p className="text-gray-700 mb-6 sm:mb-8 text-base sm:text-lg leading-relaxed">
@@ -532,21 +533,22 @@ export default function Home() {
                     <Input
                       type="text"
                       placeholder="Localisation (optionnel)"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      value={quickMission.title}
+                      onChange={(e) => setQuickMission({...quickMission, title: e.target.value})}
                       className="flex-1 text-sm sm:text-base"
                     />
                     <Input
                       type="number"
                       placeholder="Budget estimé (€)"
-                      value={formData.budget}
+                      value={quickMission.budget}
                       onChange={(e) => setQuickMission({...quickMission, budget: e.target.value})}
                       className="flex-1 text-sm sm:text-base"
                     />
                   </div>
 
                   <Button 
-                    type="submit" 
+                    onClick={handleQuickSubmit}
+                    type="button"
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
                   >
                     <PlusCircle className="w-5 h-5 mr-2" />
