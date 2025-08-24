@@ -309,13 +309,13 @@ app.post('/api/ai/brief-analysis', (req, res) => {
     improvements,
     missingElements,
     optimizedDescription,
-    detectedSkills: extractSkillsFromDescription(description),
-    estimatedComplexity: estimateComplexity(description),
+    detectedSkills: extractSkillsFromDescription(description, category),
+    estimatedComplexity: estimateComplexity(description, category),
     suggestedCategories: category ? [category] : suggestCategories(description),
     marketInsights: {
       demandLevel: Math.random() > 0.5 ? 'high' : 'medium',
       competitionLevel: Math.random() > 0.5 ? 'medium' : 'low',
-      suggestedBudgetRange: suggestBudgetRange(description, category)
+      suggestedBudgetRange: suggestBudgetRange(description, category, estimateComplexity(description, category))
     }
   };
 
@@ -324,29 +324,158 @@ app.post('/api/ai/brief-analysis', (req, res) => {
 
 function generateOptimizedDescription(description, category, title) {
   const baseDesc = description || "Description du projet";
+  
+  // Templates spécifiques par catégorie
+  const categoryTemplates = {
+    'development': {
+      title: 'Développement Logiciel',
+      livrables: [
+        '• Code source propre et documenté',
+        '• Tests unitaires et d\'intégration',
+        '• Documentation technique complète',
+        '• Déploiement et mise en production',
+        '• Formation utilisateur si nécessaire'
+      ],
+      competences: [
+        '• Maîtrise des technologies modernes (React, Vue.js, Node.js, etc.)',
+        '• Expérience en architecture logicielle',
+        '• Connaissance des bonnes pratiques de sécurité',
+        '• Méthodologies agiles (Scrum, Kanban)'
+      ],
+      criteres: [
+        '• Portfolio de projets similaires',
+        '• Expérience avec les technologies requises',
+        '• Références clients dans le développement',
+        '• Capacité à respecter les délais'
+      ]
+    },
+    'design': {
+      title: 'Projet Design',
+      livrables: [
+        '• Maquettes graphiques haute fidélité',
+        '• Charte graphique complète',
+        '• Fichiers sources (PSD, Figma, etc.)',
+        '• Guide d\'utilisation de la marque',
+        '• Adaptations pour différents supports'
+      ],
+      competences: [
+        '• Maîtrise des outils de design (Photoshop, Illustrator, Figma)',
+        '• Connaissance UX/UI et ergonomie',
+        '• Sens artistique et créativité',
+        '• Compréhension des tendances visuelles'
+      ],
+      criteres: [
+        '• Portfolio créatif et diversifié',
+        '• Style en adéquation avec le projet',
+        '• Expérience dans le secteur d\'activité',
+        '• Capacité d\'adaptation et d\'écoute'
+      ]
+    },
+    'marketing': {
+      title: 'Campagne Marketing',
+      livrables: [
+        '• Stratégie marketing documentée',
+        '• Contenus créatifs (visuels, textes)',
+        '• Calendrier de publication',
+        '• Reporting et analytics détaillés',
+        '• Recommandations d\'optimisation'
+      ],
+      competences: [
+        '• Expertise en marketing digital et réseaux sociaux',
+        '• Maîtrise des outils analytics (Google Analytics, etc.)',
+        '• Connaissance des tendances marketing',
+        '• Capacité de création de contenu engageant'
+      ],
+      criteres: [
+        '• Expérience dans des campagnes similaires',
+        '• Résultats mesurables sur projets précédents',
+        '• Connaissance du secteur d\'activité',
+        '• Créativité et innovation'
+      ]
+    },
+    'mobile': {
+      title: 'Application Mobile',
+      livrables: [
+        '• Application native ou cross-platform',
+        '• Code source et documentation',
+        '• Tests sur différents appareils',
+        '• Publication sur les stores (si demandée)',
+        '• Guide de maintenance'
+      ],
+      competences: [
+        '• Développement mobile (React Native, Flutter, natif)',
+        '• Connaissance des guidelines iOS/Android',
+        '• Expérience UX mobile',
+        '• Intégration API et services backend'
+      ],
+      criteres: [
+        '• Portfolio d\'applications mobiles',
+        '• Expérience avec les technologies requises',
+        '• Applications publiées sur les stores',
+        '• Connaissance des bonnes pratiques mobiles'
+      ]
+    },
+    'ai': {
+      title: 'Projet Intelligence Artificielle',
+      livrables: [
+        '• Modèle IA entraîné et optimisé',
+        '• Documentation technique détaillée',
+        '• API d\'intégration',
+        '• Métriques de performance',
+        '• Guide de déploiement et maintenance'
+      ],
+      competences: [
+        '• Expertise en Machine Learning et Deep Learning',
+        '• Maîtrise Python, TensorFlow, PyTorch',
+        '• Connaissance des algorithmes d\'IA',
+        '• Expérience en déploiement de modèles'
+      ],
+      criteres: [
+        '• Projets IA réalisés avec succès',
+        '• Publications ou certifications en IA',
+        '• Compréhension des enjeux métier',
+        '• Capacité d\'innovation technique'
+      ]
+    },
+    'construction': {
+      title: 'Travaux de Construction',
+      livrables: [
+        '• Réalisation conforme aux plans',
+        '• Respect des normes de sécurité',
+        '• Nettoyage du chantier',
+        '• Garanties sur les travaux',
+        '• Documents de conformité'
+      ],
+      competences: [
+        '• Expertise technique dans le domaine',
+        '• Connaissance des réglementations',
+        '• Matériel professionnel adapté',
+        '• Assurances et certifications'
+      ],
+      criteres: [
+        '• Références de chantiers similaires',
+        '• Certifications professionnelles',
+        '• Assurance décennale',
+        '• Respect des délais d\'intervention'
+      ]
+    }
+  };
 
-  return `**${title || 'Projet à définir'}**
+  const template = categoryTemplates[category] || categoryTemplates['development'];
+
+  return `**${title || template.title}**
 
 **Contexte et Objectifs :**
 ${baseDesc}
 
 **Livrables Attendus :**
-• Solution complète et fonctionnelle
-• Code source documenté et commenté
-• Tests unitaires et documentation technique
-• Formation/support utilisateur inclus
+${template.livrables.join('\n')}
 
-**Compétences Techniques Recherchées :**
-• Maîtrise des technologies modernes du ${category || 'développement'}
-• Expérience en bonnes pratiques de développement
-• Capacité à travailler en méthodologie agile
-• Communication fluide et régulière
+**Compétences Recherchées :**
+${template.competences.join('\n')}
 
 **Critères de Sélection :**
-• Portfolio de projets similaires
-• Références clients vérifiables
-• Méthodologie de travail structurée
-• Disponibilité et réactivité
+${template.criteres.join('\n')}
 
 **Budget et Modalités :**
 • Budget à définir selon proposition détaillée
@@ -359,27 +488,114 @@ ${baseDesc}
 • Support post-livraison inclus`;
 }
 
-function extractSkillsFromDescription(description) {
-  const skillsMap = {
-    'react': 'React.js',
-    'vue': 'Vue.js', 
-    'angular': 'Angular',
-    'php': 'PHP',
-    'python': 'Python',
-    'javascript': 'JavaScript',
-    'typescript': 'TypeScript',
-    'node': 'Node.js',
-    'sql': 'SQL/Database',
-    'mongodb': 'MongoDB',
-    'postgresql': 'PostgreSQL',
-    'docker': 'Docker',
-    'aws': 'AWS Cloud'
+function extractSkillsFromDescription(description, category) {
+  const skillsByCategory = {
+    'development': {
+      'react': 'React.js',
+      'vue': 'Vue.js', 
+      'angular': 'Angular',
+      'php': 'PHP',
+      'python': 'Python',
+      'javascript': 'JavaScript',
+      'typescript': 'TypeScript',
+      'node': 'Node.js',
+      'laravel': 'Laravel',
+      'symfony': 'Symfony',
+      'django': 'Django',
+      'flask': 'Flask',
+      'sql': 'SQL/Database',
+      'mongodb': 'MongoDB',
+      'postgresql': 'PostgreSQL',
+      'mysql': 'MySQL',
+      'docker': 'Docker',
+      'aws': 'AWS Cloud',
+      'git': 'Git/Version Control',
+      'api': 'API Development',
+      'rest': 'REST API',
+      'graphql': 'GraphQL'
+    },
+    'mobile': {
+      'react native': 'React Native',
+      'flutter': 'Flutter',
+      'swift': 'Swift (iOS)',
+      'kotlin': 'Kotlin (Android)',
+      'java': 'Java (Android)',
+      'ionic': 'Ionic',
+      'xamarin': 'Xamarin',
+      'cordova': 'Apache Cordova',
+      'firebase': 'Firebase',
+      'push notification': 'Push Notifications',
+      'app store': 'App Store Publication',
+      'play store': 'Play Store Publication'
+    },
+    'design': {
+      'photoshop': 'Adobe Photoshop',
+      'illustrator': 'Adobe Illustrator',
+      'figma': 'Figma',
+      'sketch': 'Sketch',
+      'xd': 'Adobe XD',
+      'indesign': 'Adobe InDesign',
+      'ui': 'UI Design',
+      'ux': 'UX Design',
+      'wireframe': 'Wireframing',
+      'prototype': 'Prototyping',
+      'branding': 'Branding',
+      'logo': 'Logo Design',
+      'motion': 'Motion Design',
+      'animation': 'Animation'
+    },
+    'marketing': {
+      'seo': 'SEO',
+      'sem': 'SEM',
+      'google ads': 'Google Ads',
+      'facebook ads': 'Facebook Ads',
+      'instagram': 'Instagram Marketing',
+      'linkedin': 'LinkedIn Marketing',
+      'email marketing': 'Email Marketing',
+      'mailchimp': 'Mailchimp',
+      'analytics': 'Google Analytics',
+      'content': 'Content Marketing',
+      'copywriting': 'Copywriting',
+      'social media': 'Social Media Management',
+      'influencer': 'Influencer Marketing'
+    },
+    'ai': {
+      'machine learning': 'Machine Learning',
+      'deep learning': 'Deep Learning',
+      'tensorflow': 'TensorFlow',
+      'pytorch': 'PyTorch',
+      'python': 'Python',
+      'r': 'R',
+      'nlp': 'Natural Language Processing',
+      'computer vision': 'Computer Vision',
+      'neural network': 'Neural Networks',
+      'chatbot': 'Chatbot Development',
+      'data science': 'Data Science',
+      'pandas': 'Pandas',
+      'numpy': 'NumPy',
+      'scikit': 'Scikit-learn'
+    },
+    'construction': {
+      'plomberie': 'Plomberie',
+      'électricité': 'Électricité',
+      'maçonnerie': 'Maçonnerie',
+      'peinture': 'Peinture',
+      'carrelage': 'Carrelage',
+      'parquet': 'Parquet',
+      'isolation': 'Isolation',
+      'charpente': 'Charpente',
+      'toiture': 'Toiture',
+      'cloisons': 'Cloisons',
+      'rénovation': 'Rénovation',
+      'aménagement': 'Aménagement'
+    }
   };
 
+  const categorySkills = skillsByCategory[category] || skillsByCategory['development'];
   const detectedSkills = [];
   const lowerDesc = description.toLowerCase();
 
-  Object.entries(skillsMap).forEach(([key, skill]) => {
+  Object.entries(categorySkills).forEach(([key, skill]) => {
     if (lowerDesc.includes(key)) {
       detectedSkills.push(skill);
     }
@@ -388,17 +604,69 @@ function extractSkillsFromDescription(description) {
   return detectedSkills;
 }
 
-function estimateComplexity(description) {
+function estimateComplexity(description, category) {
   let complexity = 3; // Base complexity
   const lowerDesc = description.toLowerCase();
 
-  // Facteurs qui augmentent la complexité
+  // Facteurs généraux
   if (lowerDesc.includes('api') || lowerDesc.includes('intégration')) complexity += 1;
   if (lowerDesc.includes('paiement') || lowerDesc.includes('payment')) complexity += 2;
-  if (lowerDesc.includes('mobile') && lowerDesc.includes('web')) complexity += 2;
   if (lowerDesc.includes('temps réel') || lowerDesc.includes('real-time')) complexity += 2;
-  if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence artificielle')) complexity += 3;
-  if (lowerDesc.includes('blockchain') || lowerDesc.includes('crypto')) complexity += 3;
+
+  // Facteurs spécifiques par catégorie
+  const categoryComplexityFactors = {
+    'development': [
+      { keywords: ['microservices', 'architecture'], points: 2 },
+      { keywords: ['ia', 'intelligence artificielle', 'ml'], points: 3 },
+      { keywords: ['blockchain', 'crypto'], points: 3 },
+      { keywords: ['mobile', 'web'], points: 2 },
+      { keywords: ['base de données', 'database'], points: 1 },
+      { keywords: ['sécurité', 'authentification'], points: 2 }
+    ],
+    'mobile': [
+      { keywords: ['ios', 'android'], points: 1 },
+      { keywords: ['cross-platform', 'hybride'], points: 2 },
+      { keywords: ['push notification', 'géolocalisation'], points: 1 },
+      { keywords: ['ar', 'réalité augmentée'], points: 3 },
+      { keywords: ['offline', 'synchronisation'], points: 2 }
+    ],
+    'design': [
+      { keywords: ['logo', 'identité visuelle'], points: 1 },
+      { keywords: ['site web', 'interface'], points: 2 },
+      { keywords: ['animation', 'motion'], points: 2 },
+      { keywords: ['3d', 'modélisation'], points: 3 },
+      { keywords: ['print', 'impression'], points: 1 }
+    ],
+    'marketing': [
+      { keywords: ['campagne', 'stratégie'], points: 1 },
+      { keywords: ['multicanal', 'omnicanal'], points: 2 },
+      { keywords: ['automation', 'automatisation'], points: 2 },
+      { keywords: ['influencer', 'partenariat'], points: 2 },
+      { keywords: ['international', 'multilingue'], points: 2 }
+    ],
+    'ai': [
+      { keywords: ['deep learning', 'neural'], points: 3 },
+      { keywords: ['nlp', 'computer vision'], points: 2 },
+      { keywords: ['chatbot', 'assistant'], points: 2 },
+      { keywords: ['big data', 'données massives'], points: 3 },
+      { keywords: ['temps réel', 'streaming'], points: 2 }
+    ],
+    'construction': [
+      { keywords: ['rénovation complète', 'gros œuvre'], points: 3 },
+      { keywords: ['extension', 'agrandissement'], points: 2 },
+      { keywords: ['isolation', 'énergétique'], points: 2 },
+      { keywords: ['plomberie', 'électricité'], points: 2 },
+      { keywords: ['design', 'architecture'], points: 1 }
+    ]
+  };
+
+  const factors = categoryComplexityFactors[category] || categoryComplexityFactors['development'];
+  
+  factors.forEach(factor => {
+    if (factor.keywords.some(keyword => lowerDesc.includes(keyword))) {
+      complexity += factor.points;
+    }
+  });
 
   return Math.min(complexity, 10); // Cap à 10
 }
@@ -426,24 +694,93 @@ function suggestCategories(description) {
   return categories.length > 0 ? categories : ['development'];
 }
 
-function suggestBudgetRange(description, category) {
+function suggestBudgetRange(description, category, complexity) {
   const baseBudgets = {
-    'development': [2000, 8000],
-    'mobile': [3000, 12000],
-    'design': [800, 3000],
-    'marketing': [1000, 5000],
-    'ai': [5000, 20000]
+    'development': {
+      ranges: [2000, 8000],
+      factors: {
+        'frontend': 1.0,
+        'backend': 1.2,
+        'fullstack': 1.4,
+        'mobile': 1.3,
+        'api': 1.1,
+        'e-commerce': 1.5
+      }
+    },
+    'mobile': {
+      ranges: [3000, 12000],
+      factors: {
+        'native': 1.5,
+        'cross-platform': 1.2,
+        'ios': 1.3,
+        'android': 1.3,
+        'publication': 1.1
+      }
+    },
+    'design': {
+      ranges: [800, 3000],
+      factors: {
+        'logo': 0.8,
+        'site web': 1.2,
+        'application': 1.3,
+        'branding': 1.4,
+        'print': 1.0
+      }
+    },
+    'marketing': {
+      ranges: [1000, 5000],
+      factors: {
+        'seo': 1.1,
+        'publicité': 1.3,
+        'réseaux sociaux': 1.0,
+        'content': 1.2,
+        'stratégie': 1.4
+      }
+    },
+    'ai': {
+      ranges: [5000, 20000],
+      factors: {
+        'machine learning': 1.3,
+        'deep learning': 1.6,
+        'chatbot': 1.1,
+        'computer vision': 1.4,
+        'nlp': 1.3
+      }
+    },
+    'construction': {
+      ranges: [1500, 15000],
+      factors: {
+        'peinture': 0.8,
+        'plomberie': 1.2,
+        'électricité': 1.3,
+        'rénovation': 1.5,
+        'extension': 2.0
+      }
+    }
   };
 
-  const baseRange = baseBudgets[category] || [2000, 6000];
-  const complexity = estimateComplexity(description);
+  const categoryData = baseBudgets[category] || baseBudgets['development'];
+  let baseRange = categoryData.ranges;
+  
+  // Appliquer les facteurs spécifiques trouvés dans la description
+  const lowerDesc = description.toLowerCase();
+  let multiplier = 1.0;
+  
+  Object.entries(categoryData.factors).forEach(([key, factor]) => {
+    if (lowerDesc.includes(key)) {
+      multiplier = Math.max(multiplier, factor);
+    }
+  });
 
   // Ajuster selon la complexité
-  const multiplier = 0.5 + (complexity / 10) * 1.5; // 0.5x à 2x selon complexité
+  const complexityMultiplier = 0.7 + (complexity / 10) * 1.3; // 0.7x à 2x selon complexité
+
+  const finalMultiplier = multiplier * complexityMultiplier;
 
   return {
-    min: Math.round(baseRange[0] * multiplier),
-    max: Math.round(baseRange[1] * multiplier)
+    min: Math.round(baseRange[0] * finalMultiplier),
+    max: Math.round(baseRange[1] * finalMultiplier),
+    reasoning: `Basé sur la catégorie ${category}, complexité ${complexity}/10 et mots-clés détectés`
   };
 }
 
