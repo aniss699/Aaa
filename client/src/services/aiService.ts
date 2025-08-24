@@ -1,10 +1,4 @@
-import {
-  SmartBidAnalyzer,
-  MissionMatchingEngine,
-  RevenuePredictor,
-  RecommendationEngine,
-  MissionStandardizer
-} from '@/components/ai';
+// AI Service - use direct API calls instead of component imports
 
 export interface AIAnalysisResult {
   score: number;
