@@ -16,7 +16,7 @@ var missions = [
     id: "mission1",
     title: "D\xE9veloppement d'une application mobile de e-commerce",
     description: "Je recherche un d\xE9veloppeur exp\xE9riment\xE9 pour cr\xE9er une application mobile compl\xE8te de vente en ligne avec syst\xE8me de paiement int\xE9gr\xE9.",
-    category: "development",
+    category: "developpement",
     budget: "5000",
     location: "Paris, France",
     clientId: "client1",
@@ -65,7 +65,7 @@ app.get("/api/missions-demo", (req, res) => {
       id: "mission1",
       title: "D\xE9veloppement d'une application mobile de e-commerce",
       description: "Je recherche un d\xE9veloppeur exp\xE9riment\xE9 pour cr\xE9er une application mobile compl\xE8te de vente en ligne avec syst\xE8me de paiement int\xE9gr\xE9.",
-      category: "development",
+      category: "developpement",
       budget: "5000",
       location: "Paris, France",
       clientId: "client1",
@@ -104,7 +104,7 @@ app.get("/api/missions-demo", (req, res) => {
       id: "mission4",
       title: "D\xE9veloppement d'une plateforme SaaS",
       description: "Cr\xE9ation d'une plateforme SaaS compl\xE8te avec tableau de bord, API, authentification et facturation.",
-      category: "development",
+      category: "developpement",
       budget: "15000",
       location: "Remote",
       clientId: "client4",
@@ -530,7 +530,7 @@ function generateSuggestedFields(description, category) {
 function generateOptimizedDescription(description, category, title) {
   const baseDesc = description || "Description du projet";
   const categoryTemplates = {
-    "development": {
+    development: {
       title: "D\xE9veloppement Logiciel",
       livrables: [
         "\u2022 Code source propre et document\xE9",
@@ -552,7 +552,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Capacit\xE9 \xE0 respecter les d\xE9lais"
       ]
     },
-    "design": {
+    design: {
       title: "Projet Design",
       livrables: [
         "\u2022 Maquettes graphiques haute fid\xE9lit\xE9",
@@ -574,7 +574,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Capacit\xE9 d'adaptation et d'\xE9coute"
       ]
     },
-    "marketing": {
+    marketing: {
       title: "Campagne Marketing",
       livrables: [
         "\u2022 Strat\xE9gie marketing document\xE9e",
@@ -596,7 +596,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Cr\xE9ativit\xE9 et innovation"
       ]
     },
-    "mobile": {
+    mobile: {
       title: "Application Mobile",
       livrables: [
         "\u2022 Application native ou cross-platform",
@@ -618,7 +618,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Connaissance des bonnes pratiques mobiles"
       ]
     },
-    "ai": {
+    ai: {
       title: "Projet Intelligence Artificielle",
       livrables: [
         "\u2022 Mod\xE8le IA entra\xEEn\xE9 et optimis\xE9",
@@ -640,7 +640,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Capacit\xE9 d'innovation technique"
       ]
     },
-    "construction": {
+    construction: {
       title: "Travaux de Construction",
       livrables: [
         "\u2022 R\xE9alisation des travaux selon les r\xE8gles de l'art",
@@ -662,7 +662,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Respect des d\xE9lais et devis transparent"
       ]
     },
-    "renovation": {
+    renovation: {
       title: "Travaux de R\xE9novation",
       livrables: [
         "\u2022 R\xE9novation compl\xE8te selon cahier des charges",
@@ -684,7 +684,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Transparence sur les co\xFBts additionnels"
       ]
     },
-    "plomberie": {
+    plomberie: {
       title: "Travaux de Plomberie",
       livrables: [
         "\u2022 Installation ou r\xE9paration selon normes DTU",
@@ -706,7 +706,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Respect des normes sanitaires"
       ]
     },
-    "electricite": {
+    electricite: {
       title: "Travaux d'\xC9lectricit\xE9",
       livrables: [
         "\u2022 Installation \xE9lectrique aux normes NF C 15-100",
@@ -728,7 +728,7 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Assurance d\xE9cennale \xE9lectricit\xE9"
       ]
     },
-    "peinture": {
+    peinture: {
       title: "Travaux de Peinture",
       livrables: [
         "\u2022 Pr\xE9paration soign\xE9e des supports",
@@ -895,7 +895,7 @@ function estimateComplexity(description, category) {
   if (lowerDesc.includes("paiement") || lowerDesc.includes("payment")) complexity += 2;
   if (lowerDesc.includes("temps r\xE9el") || lowerDesc.includes("real-time")) complexity += 2;
   const categoryComplexityFactors = {
-    "development": [
+    development: [
       { keywords: ["microservices", "architecture"], points: 2 },
       { keywords: ["ia", "intelligence artificielle", "ml"], points: 3 },
       { keywords: ["blockchain", "crypto"], points: 3 },
@@ -903,35 +903,35 @@ function estimateComplexity(description, category) {
       { keywords: ["base de donn\xE9es", "database"], points: 1 },
       { keywords: ["s\xE9curit\xE9", "authentification"], points: 2 }
     ],
-    "mobile": [
+    mobile: [
       { keywords: ["ios", "android"], points: 1 },
       { keywords: ["cross-platform", "hybride"], points: 2 },
       { keywords: ["push notification", "g\xE9olocalisation"], points: 1 },
       { keywords: ["ar", "r\xE9alit\xE9 augment\xE9e"], points: 3 },
       { keywords: ["offline", "synchronisation"], points: 2 }
     ],
-    "design": [
+    design: [
       { keywords: ["logo", "identit\xE9 visuelle"], points: 1 },
       { keywords: ["site web", "interface"], points: 2 },
       { keywords: ["animation", "motion"], points: 2 },
       { keywords: ["3d", "mod\xE9lisation"], points: 3 },
       { keywords: ["print", "impression"], points: 1 }
     ],
-    "marketing": [
+    marketing: [
       { keywords: ["campagne", "strat\xE9gie"], points: 1 },
       { keywords: ["multicanal", "omnicanal"], points: 2 },
       { keywords: ["automation", "automatisation"], points: 2 },
       { keywords: ["influencer", "partenariat"], points: 2 },
       { keywords: ["international", "multilingue"], points: 2 }
     ],
-    "ai": [
+    ai: [
       { keywords: ["deep learning", "neural"], points: 3 },
       { keywords: ["nlp", "computer vision"], points: 2 },
       { keywords: ["chatbot", "assistant"], points: 2 },
       { keywords: ["big data", "donn\xE9es massives"], points: 3 },
       { keywords: ["temps r\xE9el", "streaming"], points: 2 }
     ],
-    "construction": [
+    construction: [
       { keywords: ["r\xE9novation compl\xE8te", "gros \u0153uvre"], points: 3 },
       { keywords: ["extension", "agrandissement"], points: 2 },
       { keywords: ["isolation", "\xE9nerg\xE9tique"], points: 2 },
@@ -990,7 +990,7 @@ function suggestCategories(description) {
 }
 function suggestBudgetRange(description, category, complexity) {
   const baseBudgets = {
-    "development": {
+    development: {
       ranges: [2e3, 8e3],
       factors: {
         "frontend": 1,
@@ -1001,7 +1001,7 @@ function suggestBudgetRange(description, category, complexity) {
         "e-commerce": 1.5
       }
     },
-    "mobile": {
+    mobile: {
       ranges: [3e3, 12e3],
       factors: {
         "native": 1.5,
@@ -1011,7 +1011,7 @@ function suggestBudgetRange(description, category, complexity) {
         "publication": 1.1
       }
     },
-    "design": {
+    design: {
       ranges: [800, 3e3],
       factors: {
         "logo": 0.8,
@@ -1021,7 +1021,7 @@ function suggestBudgetRange(description, category, complexity) {
         "print": 1
       }
     },
-    "marketing": {
+    marketing: {
       ranges: [1e3, 5e3],
       factors: {
         "seo": 1.1,
@@ -1031,7 +1031,7 @@ function suggestBudgetRange(description, category, complexity) {
         "strat\xE9gie": 1.4
       }
     },
-    "ai": {
+    ai: {
       ranges: [5e3, 2e4],
       factors: {
         "machine learning": 1.3,
@@ -1041,7 +1041,7 @@ function suggestBudgetRange(description, category, complexity) {
         "nlp": 1.3
       }
     },
-    "construction": {
+    construction: {
       ranges: [1500, 15e3],
       factors: {
         "peinture": 0.8,
