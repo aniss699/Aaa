@@ -597,10 +597,33 @@ function generateSuggestedFields(description, category) {
         suggested: true,
         priority: "medium"
       }
+    ],
+    services_personne: [
+      {
+        label: "Type de prestation",
+        type: "select",
+        options: ["Aide à domicile", "Soutien scolaire", "Garde d'enfants", "Soins à la personne"],
+        suggested: true,
+        priority: "high"
+      },
+      {
+        label: "Fréquence souhaitée",
+        type: "select",
+        options: ["Quotidienne", "Hebdomadaire", "Ponctuelle", "Urgence"],
+        suggested: !lowerDesc.includes('fréquence') && !lowerDesc.includes('régulier'),
+        priority: "high"
+      },
+      {
+        label: "Disponibilité horaire",
+        type: "text",
+        placeholder: "Ex: Matin, Après-midi, Soir, Week-end",
+        suggested: !lowerDesc.includes('horaire') && !lowerDesc.includes('disponible'),
+        priority: "medium"
+      }
     ]
   };
 
-  const categoryFields = fieldsByCategory[category] || [];
+  const categoryFields = fieldsByCategory[category] || fieldsByCategory['development'];
 
   // Retourner seulement les champs suggérés avec priorité high ou medium
   return categoryFields
@@ -659,25 +682,25 @@ function generateOptimizedDescription(description, category, title) {
       ]
     },
     marketing: {
-      title: 'Campagne Marketing',
+      title: 'Marketing & Communication',
       livrables: [
-        '• Stratégie marketing documentée',
-        '• Contenus créatifs (visuels, textes)',
-        '• Calendrier de publication',
-        '• Reporting et analytics détaillés',
-        '• Recommandations d\'optimisation'
+        '• Stratégie marketing documentée et planifiée',
+        '• Contenus créatifs (visuels, textes, vidéos)',
+        '• Calendrier éditorial et planning publications',
+        '• Tableaux de bord avec KPIs et analytics',
+        '• Recommandations d\'optimisation continue'
       ],
       competences: [
-        '• Expertise en marketing digital et réseaux sociaux',
-        '• Maîtrise des outils analytics (Google Analytics, etc.)',
-        '• Connaissance des tendances marketing',
-        '• Capacité de création de contenu engageant'
+        '• Expertise marketing digital multicanal',
+        '• Maîtrise outils analytics et automation',
+        '• Création de contenu engageant',
+        '• Connaissance des algorithmes réseaux sociaux'
       ],
       criteres: [
-        '• Expérience dans des campagnes similaires',
-        '• Résultats mesurables sur projets précédents',
-        '• Connaissance du secteur d\'activité',
-        '• Créativité et innovation'
+        '• Résultats mesurables sur projets similaires',
+        '• Connaissance de votre secteur d\'activité',
+        '• Créativité et capacité d\'innovation',
+        '• Transparence sur les méthodes utilisées'
       ]
     },
     mobile: {
@@ -833,10 +856,34 @@ function generateOptimizedDescription(description, category, title) {
         '• Respect des délais de séchage',
         '• Devis détaillé par pièce et surface'
       ]
+    },
+    services_personne: {
+      title: 'Services à la personne',
+      livrables: [
+        '• Prestations selon planning convenu',
+        '• Matériel et produits professionnels inclus',
+        '• Compte-rendu après chaque intervention',
+        '• Flexibilité horaires et remplacement si besoin',
+        '• Assurance responsabilité civile professionnelle'
+      ],
+      competences: [
+        '• Expérience confirmée dans le service à domicile',
+        '• Formation aux techniques professionnelles',
+        '• Discrétion, ponctualité et sens du service',
+        '• Connaissance produits écologiques et sécurité'
+      ],
+      criteres: [
+        '• Recommandations clients précédents',
+        '• Disponibilité compatible avec vos besoins',
+        '• Tarifs transparents et sans surprise',
+        '• Possibilité d\'évaluation période d\'essai'
+      ]
     }
   };
 
   const template = categoryTemplates[category] || categoryTemplates['development'];
+  const analysis = analyzeProjectContent(baseDesc, category);
+  const adaptedDeliverables = adaptDeliverablesBasedOnContent(template.livrables, analysis, category);
 
   return `**${title || template.title}**
 
@@ -844,7 +891,7 @@ function generateOptimizedDescription(description, category, title) {
 ${baseDesc}
 
 **Livrables Attendus :**
-${template.livrables.join('\n')}
+${adaptedDeliverables.join('\n')}
 
 **Compétences Recherchées :**
 ${template.competences.join('\n')}
@@ -963,6 +1010,15 @@ function extractSkillsFromDescription(description, category) {
       'cloisons': 'Cloisons',
       'rénovation': 'Rénovation',
       'aménagement': 'Aménagement'
+    },
+    'services_personne': {
+      'aide à domicile': 'Aide à domicile',
+      'soutien scolaire': 'Soutien scolaire',
+      'garde d\'enfants': 'Garde d\'enfants',
+      'soins': 'Soins à la personne',
+      'aides ménagères': 'Aides ménagères',
+      'assistance': 'Assistance',
+      'famille': 'Aide familiale'
     }
   };
 
@@ -1032,6 +1088,13 @@ function estimateComplexity(description, category) {
       { keywords: ['isolation', 'énergétique'], points: 2 },
       { keywords: ['plomberie', 'électricité'], points: 2 },
       { keywords: ['design', 'architecture'], points: 1 }
+    ],
+    services_personne: [
+      { keywords: ['aide à domicile', 'assistance'], points: 2 },
+      { keywords: ['soutien scolaire', 'cours'], points: 1 },
+      { keywords: ['garde d\'enfants', 'baby-sitting'], points: 2 },
+      { keywords: ['soins', 'santé'], points: 3 },
+      { keywords: ['ponctuel', 'urgence'], points: 1 }
     ]
   };
 
@@ -1089,6 +1152,21 @@ function suggestCategories(description) {
   if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence') || lowerDesc.includes('machine learning')) {
     categories.push('ai');
   }
+
+  // Services à la personne
+  if (lowerDesc.includes('aide à domicile') || lowerDesc.includes('assistance') || lowerDesc.includes('ménage') || lowerDesc.includes('courses')) {
+    categories.push('services_personne');
+  }
+  if (lowerDesc.includes('soutien scolaire') || lowerDesc.includes('cours') || lowerDesc.includes('aide aux devoirs')) {
+    categories.push('services_personne');
+  }
+  if (lowerDesc.includes('garde d\'enfants') || lowerDesc.includes('baby-sitting')) {
+    categories.push('services_personne');
+  }
+  if (lowerDesc.includes('soins') || lowerDesc.includes('personne âgée') || lowerDesc.includes('aide médicale')) {
+    categories.push('services_personne');
+  }
+
 
   return categories.length > 0 ? categories : ['construction'];
 }
@@ -1155,6 +1233,16 @@ function suggestBudgetRange(description, category, complexity) {
         'rénovation': 1.5,
         'extension': 2.0
       }
+    },
+    services_personne: {
+      ranges: [500, 2500],
+      factors: {
+        'aide à domicile': 1.0,
+        'soutien scolaire': 0.9,
+        'garde d\'enfants': 1.2,
+        'soins': 1.5,
+        'ponctuel': 0.8
+      }
     }
   };
 
@@ -1181,6 +1269,70 @@ function suggestBudgetRange(description, category, complexity) {
     max: Math.round(baseRange[1] * finalMultiplier),
     reasoning: `Basé sur la catégorie ${category}, complexité ${complexity}/10 et mots-clés détectés`
   };
+}
+
+function analyzeProjectContent(description, category) {
+  const lowerDesc = description.toLowerCase();
+
+  // Détection des spécificités du projet
+  const analysis = {
+    isEcommerce: lowerDesc.includes('e-commerce') || lowerDesc.includes('boutique') || lowerDesc.includes('vente'),
+    isMobile: lowerDesc.includes('mobile') || lowerDesc.includes('app') || lowerDesc.includes('ios') || lowerDesc.includes('android'),
+    needsDatabase: lowerDesc.includes('base de données') || lowerDesc.includes('utilisateurs') || lowerDesc.includes('comptes'),
+    needsPayment: lowerDesc.includes('paiement') || lowerDesc.includes('stripe') || lowerDesc.includes('paypal'),
+    isUrgent: lowerDesc.includes('urgent') || lowerDesc.includes('rapide') || lowerDesc.includes('vite'),
+    hasComplexFeatures: lowerDesc.includes('api') || lowerDesc.includes('intégration') || lowerDesc.includes('avancé'),
+    needsMaintenance: lowerDesc.includes('maintenance') || lowerDesc.includes('support') || lowerDesc.includes('évolution'),
+    isRenovation: lowerDesc.includes('rénovation') || lowerDesc.includes('réhabilitation'),
+    needsCertification: lowerDesc.includes('norme') || lowerDesc.includes('certification') || lowerDesc.includes('conforme'),
+    isRecurring: lowerDesc.includes('régulier') || lowerDesc.includes('hebdomadaire') || lowerDesc.includes('mensuel')
+  };
+
+  return analysis;
+}
+
+function adaptDeliverablesBasedOnContent(baseDeliverables, analysis, category) {
+  let adaptedDeliverables = [...baseDeliverables];
+
+  // Adaptations intelligentes selon l'analyse
+  if (analysis.isEcommerce && category === 'development') {
+    adaptedDeliverables.push('• Configuration système de paiement sécurisé');
+    adaptedDeliverables.push('• Gestion catalogue produits et commandes');
+  }
+
+  if (analysis.isMobile) {
+    adaptedDeliverables = adaptedDeliverables.map(item => 
+      item.includes('responsive') ? '• Application mobile native ou hybride' : item
+    );
+  }
+
+  if (analysis.needsDatabase && category === 'development') {
+    adaptedDeliverables.push('• Base de données optimisée et sécurisée');
+  }
+
+  if (analysis.hasComplexFeatures) {
+    adaptedDeliverables.push('• Documentation API et intégrations tierces');
+  }
+
+  if (analysis.needsMaintenance) {
+    adaptedDeliverables.push('• Plan de maintenance et support technique');
+  }
+
+  if (analysis.isRenovation && category === 'construction') {
+    adaptedDeliverables.push('• Diagnostic initial et conseils optimisation');
+    adaptedDeliverables.push('• Coordination multi-corps de métier si nécessaire');
+  }
+
+  if (analysis.needsCertification && category === 'construction') {
+    adaptedDeliverables.push('• Attestations de conformité et certificats');
+  }
+
+  if (analysis.isRecurring && category === 'services_personne') {
+    adaptedDeliverables.push('• Planning récurrent avec suivi qualité');
+    adaptedDeliverables.push('• Adaptation du service selon vos retours');
+  }
+
+  return adaptedDeliverables;
 }
 
 app.post('/api/ai/predict-revenue', (req, res) => {
