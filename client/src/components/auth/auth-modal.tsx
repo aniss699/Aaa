@@ -153,6 +153,9 @@ export function AuthModal({ isOpen, onClose, mode, onSwitchMode }: AuthModalProp
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-white">
+        <DialogTitle className="sr-only">
+          {mode === 'login' ? 'Connexion' : 'Inscription'}
+        </DialogTitle>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-blue-900 text-center">
             {mode === 'login' ? 'Connexion' : 'Créer un compte'}

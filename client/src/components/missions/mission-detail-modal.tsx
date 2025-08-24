@@ -89,6 +89,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto p-0 bg-white border-0 shadow-2xl rounded-xl">
+        <DialogTitle className="sr-only">Détails de la mission</DialogTitle>
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white rounded-t-xl">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl font-bold pr-8">

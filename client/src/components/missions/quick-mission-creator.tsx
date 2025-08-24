@@ -96,7 +96,11 @@ export function QuickMissionCreator({ className = '', compact = false, onSuccess
     };
 
     // Rediriger vers la page de création complète avec données pré-remplies
-    const params = new URLSearchParams(finalData);
+    const params = new URLSearchParams();
+    if (finalData.title) params.set('title', finalData.title);
+    if (finalData.description) params.set('description', finalData.description);
+    if (finalData.budget) params.set('budget', finalData.budget);
+    
     setLocation(`/create-mission?${params.toString()}`);
     
     if (onSuccess) onSuccess();

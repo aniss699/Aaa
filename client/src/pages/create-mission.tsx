@@ -66,12 +66,15 @@ export default function CreateMission() {
   const [aiSuggestionText, setAiSuggestionText] = useState(''); // State for real-time AI suggestions
   const [showInlineAI, setShowInlineAI] = useState(false); // State to toggle inline AI analysis display
 
+  // Get URL parameters for pre-filled data
+  const urlParams = new URLSearchParams(window.location.search);
+  
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    budget: '',
-    location: '',
+    title: urlParams.get('title') || '',
+    description: urlParams.get('description') || '',
+    category: urlParams.get('category') || '',
+    budget: urlParams.get('budget') || '',
+    location: urlParams.get('location') || '',
   });
 
   const [errors, setErrors] = useState({

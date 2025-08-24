@@ -274,7 +274,7 @@ app.post('/api/ai/quick-analysis', async (req, res) => {
       improvements.push('Listez les compétences techniques requises');
       optimizedDescription += `\nCompétences requises : ${detectedSkills.slice(0, 3).join(', ')}`;
     }
-    
+
     if (detectedCategory !== 'autre' && !description.toLowerCase().includes('catégorie')) {
         improvements.push(`Confirmez la catégorie du projet : ${detectedCategory}`);
     }
@@ -540,11 +540,11 @@ app.post('/api/ai/brief-analysis', (req, res) => {
     missingElements.push('Délais absents');
   }
 
-  const categorySpecificAnalysis = analyzeCategorySpecific(description, category);
+  const categorySpecificAnalysis = analyzeCategorySpecific(description, category || 'autre');
   improvements.push(...categorySpecificAnalysis.improvements);
   missingElements.push(...categorySpecificAnalysis.missing);
 
-  const optimizedDescription = generateOptimizedDescription(description, title, categorySpecificAnalysis);
+  const optimizedDescription = generateOptimizedDescription(description, title, categorySpecificAnalysis, category || 'autre');
 
   const mockAnalysis = {
     qualityScore,
@@ -784,7 +784,7 @@ function analyzeCategorySpecific(description, category) {
   return analysis;
 }
 
-function generateOptimizedDescription(description, title, analysis) {
+function generateOptimizedDescription(description, title, analysis, category) {
   const projectTitle = title || generateProjectTitle(description, category);
 
   const categoryTemplates = {
@@ -2051,16 +2051,16 @@ ${description.length > 50 ? description : 'Accompagnement pédagogique personnal
 • Consolidation des acquis
 • Préparation aux examens
 • Approfondissement des connaissances
-• Développement de l'autonomie
+• Développement de l\'autonomie
 
 **Profil du Formateur :**
 • Pédagogue et patient
 • Diplômé(e) ou expert(e) dans sa matière
-• Expérience dans l'enseignement / soutien scolaire
-• Capacité d'adaptation
+• Expérience dans l\'enseignement / soutien scolaire
+• Capacité d\'adaptation
 
 **Livrables :**
-• Progression mesurable de l'apprenant
+• Progression mesurable de l\'apprenant
 • Meilleure compréhension des matières
 • Confiance en soi renforcée
 
@@ -2084,7 +2084,7 @@ ${description.length > 50 ? description : 'Prestations professionnelles et atten
 • Visite à domicile
 • ${analysis.hasComplexFeatures ? 'Transport d\'animaux' : 'Garde ponctuelle'}
 
-**Informations sur l'Animal :**
+**Informations sur l\'Animal :**
 • Espèce : Chien / Chat / Autre
 • Race : À préciser
 • Âge : À préciser
