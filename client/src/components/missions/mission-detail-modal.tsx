@@ -38,7 +38,7 @@ export function MissionDetailModal({ missionId, isOpen, onClose }: MissionDetail
 
 
   const { data: mission, isLoading } = useQuery<MissionWithBids>({
-    queryKey: ['/api/missions', missionId],
+    queryKey: [`/api/missions/${missionId}`],
     enabled: !!missionId && isOpen,
   });
 

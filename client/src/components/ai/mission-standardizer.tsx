@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,7 +83,7 @@ export function MissionStandardizer({
   const generateStandardizedText = (text: string): string => {
     const title = extractTitle(text) || "Développement de solution digitale";
     const context = extractContext(text) || "Nous recherchons un prestataire qualifié pour développer une solution adaptée à nos besoins.";
-    
+
     return `
 **Projet : ${title}**
 
@@ -247,7 +246,7 @@ ${context}
               <div className="bg-gray-50 p-4 rounded-lg border">
                 <pre className="text-sm whitespace-pre-wrap font-sans">{result.standardizedText}</pre>
               </div>
-              
+
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={copyToClipboard}>
                   <Copy className="w-4 h-4 mr-2" />
@@ -323,7 +322,7 @@ ${context}
                 </div>
                 <Progress value={result.score} className="h-3" />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="font-medium">Structure: 95%</div>

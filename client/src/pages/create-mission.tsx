@@ -100,17 +100,37 @@ export default function CreateMission() {
   };
 
   const analyzePricing = async () => {
+    if (!formData.category || !formData.description) {
+      toast({
+        title: 'Informations manquantes',
+        description: 'Veuillez remplir la catégorie et la description avant l\'analyse',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     setPriceRecommendation(null);
     try {
-      const response = await apiRequest('POST', '/api/ai/price-analysis', {
-        category: formData.category,
-        description: formData.description,
-        location: formData.location,
-        complexity: missionComplexity,
+      const response = await fetch('/api/ai/price-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category: formData.category,
+          description: formData.description,
+          location: formData.location,
+          complexity: missionComplexity,
+        }),
       });
-      const data = await response.json();
-      setPriceRecommendation(data);
+
+      if (response.ok) {
+        const data = await response.json();
+        setPriceRecommendation(data);
+      } else {
+        throw new Error('Erreur lors de l\'analyse de prix');
+      }
     } catch (error: any) {
       toast({
         title: 'Erreur d\'analyse',

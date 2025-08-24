@@ -18,7 +18,68 @@ app.get('/api/health', (req, res) => {
 });
 
 // Demo missions endpoint
+// Stockage temporaire des missions
+let missions = [
+  {
+    id: "mission1",
+    title: "Développement d'une application mobile de e-commerce",
+    description: "Je recherche un développeur expérimenté pour créer une application mobile complète de vente en ligne avec système de paiement intégré.",
+    category: "development",
+    budget: "5000",
+    location: "Paris, France",
+    clientId: "client1",
+    clientName: "Marie Dubois",
+    status: "open",
+    createdAt: new Date("2024-01-15").toISOString(),
+    bids: []
+  },
+  // ... autres missions
+];
+
+// Endpoint pour récupérer les missions
 app.get('/api/missions', (req, res) => {
+  res.json(missions);
+});
+
+// Endpoint pour créer une nouvelle mission
+app.post('/api/missions', (req, res) => {
+  const { title, description, category, budget, location, clientId, clientName } = req.body;
+  
+  if (!title || !description || !category || !budget || !clientId || !clientName) {
+    return res.status(400).json({ error: 'Champs requis manquants' });
+  }
+
+  const newMission = {
+    id: `mission_${Date.now()}`,
+    title,
+    description,
+    category,
+    budget,
+    location: location || 'Non spécifié',
+    clientId,
+    clientName,
+    status: 'open',
+    createdAt: new Date().toISOString(),
+    bids: []
+  };
+
+  missions.push(newMission);
+  res.status(201).json(newMission);
+});
+
+// Endpoint pour récupérer une mission spécifique
+app.get('/api/missions/:id', (req, res) => {
+  const { id } = req.params;
+  const mission = missions.find(m => m.id === id);
+  
+  if (!mission) {
+    return res.status(404).json({ error: 'Mission non trouvée' });
+  }
+  
+  res.json(mission);
+});
+
+app.get('/api/missions-demo', (req, res) => {
   const demoMissions = [
     {
       id: "mission1",
@@ -147,6 +208,57 @@ app.post('/api/ai/match-missions', (req, res) => {
   ];
 
   res.json(mockMatches);
+});
+
+// Endpoint pour l'analyse de prix IA
+app.post('/api/ai/price-analysis', (req, res) => {
+  const { category, description, location, complexity } = req.body;
+
+  // Simulation d'analyse de prix basée sur la complexité et la catégorie
+  const basePrice = {
+    'development': 5000,
+    'design': 2000,
+    'marketing': 1500,
+    'mobile': 8000,
+    'ai': 12000
+  }[category] || 3000;
+
+  const complexityMultiplier = complexity / 5; // Normaliser sur 2
+  const suggestedPrice = Math.round(basePrice * complexityMultiplier);
+  
+  const priceRange = {
+    min: Math.round(suggestedPrice * 0.8),
+    max: Math.round(suggestedPrice * 1.3)
+  };
+
+  const mockAnalysis = {
+    suggestedPrice,
+    priceRange,
+    reasoning: `Basé sur la catégorie ${category}, complexité ${complexity}/10 et analyse du marché`,
+    marketContext: {
+      demandLevel: Math.random() > 0.5 ? 'high' : 'medium',
+      competitionLevel: Math.random() > 0.5 ? 'medium' : 'low'
+    }
+  };
+
+  res.json(mockAnalysis);
+});
+
+// Endpoint pour l'optimisation de brief IA
+app.post('/api/ai/optimize-brief', (req, res) => {
+  const { description } = req.body;
+
+  const optimizedBrief = {
+    optimizedDescription: `${description}\n\n[Optimisé par IA] Objectifs clairs, fonctionnalités détaillées, contraintes techniques spécifiées.`,
+    improvements: [
+      'Structure améliorée',
+      'Détails techniques ajoutés',
+      'Critères de succès définis'
+    ],
+    qualityScore: Math.floor(Math.random() * 30) + 70
+  };
+
+  res.json(optimizedBrief);
 });
 
 app.post('/api/ai/predict-revenue', (req, res) => {
