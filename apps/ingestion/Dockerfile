@@ -1,3 +1,4 @@
+
 FROM node:20-alpine
 
 WORKDIR /app
@@ -12,8 +13,5 @@ RUN npm ci --only=production
 # Copier le code source
 COPY . .
 
-# Exposer le port
-EXPOSE 5000
-
 # Commande de démarrage
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "ingestion"]
