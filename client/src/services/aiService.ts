@@ -131,7 +131,11 @@ class AIService {
       design: ['photoshop', 'illustrator', 'figma', 'ui', 'ux', 'design'],
       marketing: ['seo', 'google ads', 'facebook', 'instagram', 'marketing'],
       ai: ['machine learning', 'python', 'tensorflow', 'pytorch', 'ia'],
-      construction: ['plomberie', 'électricité', 'peinture', 'rénovation']
+      construction: ['maçonnerie', 'gros œuvre', 'second œuvre', 'charpente', 'toiture', 'isolation'],
+      plomberie: ['plomberie', 'sanitaire', 'chauffage', 'canalisation', 'robinetterie'],
+      electricite: ['électricité', 'électricien', 'tableau électrique', 'domotique', 'éclairage'],
+      peinture: ['peinture', 'décoration', 'enduit', 'papier peint', 'lasure'],
+      renovation: ['rénovation', 'réhabilitation', 'restauration', 'aménagement', 'modernisation']
     };
 
     const categorySkills = skillsByCategory[category] || skillsByCategory.development;
@@ -166,9 +170,29 @@ class AIService {
         'Spécifier l\'environnement de déploiement'
       ],
       construction: [
-        'Préciser les matériaux souhaités',
-        'Détailler les contraintes techniques',
-        'Spécifier les normes à respecter'
+        'Préciser la surface ou métrage des travaux',
+        'Indiquer l\'état actuel et le résultat souhaité',
+        'Mentionner les contraintes d\'accès au chantier'
+      ],
+      plomberie: [
+        'Décrire précisément le problème ou l\'installation',
+        'Indiquer l\'urgence de l\'intervention',
+        'Préciser l\'accessibilité des canalisations'
+      ],
+      electricite: [
+        'Détailler l\'installation électrique existante',
+        'Préciser les normes à respecter',
+        'Indiquer si un certificat Consuel est requis'
+      ],
+      peinture: [
+        'Préciser les surfaces à peindre (m²)',
+        'Indiquer le type de support (placo, bois, métal)',
+        'Mentionner si préparation des murs nécessaire'
+      ],
+      renovation: [
+        'Détailler l\'étendue des travaux par pièce',
+        'Préciser le budget global envisagé',
+        'Indiquer si logement occupé pendant travaux'
       ]
     };
 
@@ -198,10 +222,14 @@ class AIService {
       design: { min: 800, max: 3000 },
       marketing: { min: 1000, max: 5000 },
       ai: { min: 5000, max: 20000 },
-      construction: { min: 1500, max: 15000 }
+      construction: { min: 1500, max: 15000 },
+      plomberie: { min: 150, max: 3000 },
+      electricite: { min: 200, max: 5000 },
+      peinture: { min: 300, max: 2000 },
+      renovation: { min: 2000, max: 50000 }
     };
     
-    return ranges[category] || ranges.development;
+    return ranges[category] || ranges.construction;
   }
 
   private fallbackPriceAnalysis(data: any) {

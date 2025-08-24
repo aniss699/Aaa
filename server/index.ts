@@ -440,23 +440,111 @@ function generateOptimizedDescription(description, category, title) {
     'construction': {
       title: 'Travaux de Construction',
       livrables: [
-        '• Réalisation conforme aux plans',
-        '• Respect des normes de sécurité',
-        '• Nettoyage du chantier',
-        '• Garanties sur les travaux',
-        '• Documents de conformité'
+        '• Réalisation des travaux selon les règles de l\'art',
+        '• Fourniture des matériaux conformes aux normes',
+        '• Nettoyage et évacuation des déchets de chantier',
+        '• Garantie décennale sur les travaux réalisés',
+        '• Attestation de conformité et factures détaillées'
       ],
       competences: [
-        '• Expertise technique dans le domaine',
-        '• Connaissance des réglementations',
-        '• Matériel professionnel adapté',
-        '• Assurances et certifications'
+        '• Qualification professionnelle dans le corps de métier',
+        '• Connaissance des normes du bâtiment (RT2012, RE2020)',
+        '• Matériel et outillage professionnel certifié',
+        '• Assurance responsabilité civile et décennale'
       ],
       criteres: [
-        '• Références de chantiers similaires',
-        '• Certifications professionnelles',
-        '• Assurance décennale',
-        '• Respect des délais d\'intervention'
+        '• Photos de réalisations similaires',
+        '• Certifications RGE si applicable',
+        '• Assurance décennale valide',
+        '• Respect des délais et devis transparent'
+      ]
+    },
+    'renovation': {
+      title: 'Travaux de Rénovation',
+      livrables: [
+        '• Rénovation complète selon cahier des charges',
+        '• Mise aux normes électriques et plomberie si nécessaire',
+        '• Finitions soignées (peinture, revêtements)',
+        '• Nettoyage approfondi post-travaux',
+        '• Garantie sur l\'ensemble des prestations'
+      ],
+      competences: [
+        '• Multi-compétences en second œuvre',
+        '• Expérience en rénovation d\'anciens bâtiments',
+        '• Connaissance des matériaux écologiques',
+        '• Coordination avec différents corps de métier'
+      ],
+      criteres: [
+        '• Portfolio de rénovations réussies',
+        '• Avis clients vérifiés',
+        '• Capacité d\'adaptation aux imprévus',
+        '• Transparence sur les coûts additionnels'
+      ]
+    },
+    'plomberie': {
+      title: 'Travaux de Plomberie',
+      livrables: [
+        '• Installation ou réparation selon normes DTU',
+        '• Test d\'étanchéité et mise en pression',
+        '• Remise en état des surfaces (carrelage, cloisons)',
+        '• Nettoyage et évacuation des déchets',
+        '• Garantie pièces et main d\'œuvre'
+      ],
+      competences: [
+        '• Qualification plombier certifié',
+        '• Connaissance installations gaz et eau',
+        '• Diagnostic et dépannage rapide',
+        '• Outillage professionnel de détection'
+      ],
+      criteres: [
+        '• Interventions d\'urgence disponibles',
+        '• Devis gratuit et détaillé',
+        '• Assurance décennale plomberie',
+        '• Respect des normes sanitaires'
+      ]
+    },
+    'electricite': {
+      title: 'Travaux d\'Électricité',
+      livrables: [
+        '• Installation électrique aux normes NF C 15-100',
+        '• Attestation de conformité Consuel',
+        '• Schémas électriques mis à jour',
+        '• Test de bon fonctionnement des circuits',
+        '• Garantie décennale sur l\'installation'
+      ],
+      competences: [
+        '• Habilitation électrique BR/B2V',
+        '• Connaissance domotique et objets connectés',
+        '• Installation bornes de recharge véhicules',
+        '• Mise aux normes tableaux électriques'
+      ],
+      criteres: [
+        '• Certification Qualifelec',
+        '• Interventions urgentes 24h/24',
+        '• Devis gratuit avec plan d\'installation',
+        '• Assurance décennale électricité'
+      ]
+    },
+    'peinture': {
+      title: 'Travaux de Peinture',
+      livrables: [
+        '• Préparation soignée des supports',
+        '• Application peinture selon techniques appropriées',
+        '• Finitions et protection des surfaces',
+        '• Nettoyage et remise en état des lieux',
+        '• Garantie sur la tenue de la peinture'
+      ],
+      competences: [
+        '• Maîtrise techniques de peinture décorative',
+        '• Connaissance peintures écologiques',
+        '• Préparation et traitement des supports',
+        '• Conseil couleurs et harmonies'
+      ],
+      criteres: [
+        '• Portfolio de réalisations variées',
+        '• Utilisation peintures de qualité',
+        '• Respect des délais de séchage',
+        '• Devis détaillé par pièce et surface'
       ]
     }
   };
@@ -675,23 +763,47 @@ function suggestCategories(description) {
   const lowerDesc = description.toLowerCase();
   const categories = [];
 
-  if (lowerDesc.includes('site') || lowerDesc.includes('web')) {
+  // Construction et travaux
+  if (lowerDesc.includes('travaux') || lowerDesc.includes('chantier') || lowerDesc.includes('bâtiment')) {
+    categories.push('construction');
+  }
+  if (lowerDesc.includes('plomberie') || lowerDesc.includes('plombier') || lowerDesc.includes('fuite') || lowerDesc.includes('canalisation')) {
+    categories.push('plomberie');
+  }
+  if (lowerDesc.includes('électricité') || lowerDesc.includes('électricien') || lowerDesc.includes('installation électrique') || lowerDesc.includes('tableau électrique')) {
+    categories.push('electricite');
+  }
+  if (lowerDesc.includes('peinture') || lowerDesc.includes('peindre') || lowerDesc.includes('repeindre') || lowerDesc.includes('peintre')) {
+    categories.push('peinture');
+  }
+  if (lowerDesc.includes('rénovation') || lowerDesc.includes('rénover') || lowerDesc.includes('réhabilitation')) {
+    categories.push('renovation');
+  }
+  if (lowerDesc.includes('carrelage') || lowerDesc.includes('carreleur') || lowerDesc.includes('faïence')) {
+    categories.push('construction');
+  }
+  if (lowerDesc.includes('maçonnerie') || lowerDesc.includes('maçon') || lowerDesc.includes('mur') || lowerDesc.includes('cloison')) {
+    categories.push('construction');
+  }
+
+  // Technologie
+  if (lowerDesc.includes('site') || lowerDesc.includes('web') || lowerDesc.includes('développement')) {
     categories.push('development');
   }
-  if (lowerDesc.includes('mobile') || lowerDesc.includes('application')) {
+  if (lowerDesc.includes('mobile') || lowerDesc.includes('application') || lowerDesc.includes('app')) {
     categories.push('mobile');
   }
-  if (lowerDesc.includes('design') || lowerDesc.includes('ui') || lowerDesc.includes('ux')) {
+  if (lowerDesc.includes('design') || lowerDesc.includes('ui') || lowerDesc.includes('ux') || lowerDesc.includes('graphique')) {
     categories.push('design');
   }
-  if (lowerDesc.includes('marketing') || lowerDesc.includes('publicité')) {
+  if (lowerDesc.includes('marketing') || lowerDesc.includes('publicité') || lowerDesc.includes('communication')) {
     categories.push('marketing');
   }
-  if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence')) {
+  if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence') || lowerDesc.includes('machine learning')) {
     categories.push('ai');
   }
 
-  return categories.length > 0 ? categories : ['development'];
+  return categories.length > 0 ? categories : ['construction'];
 }
 
 function suggestBudgetRange(description, category, complexity) {
