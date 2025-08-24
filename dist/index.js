@@ -383,23 +383,111 @@ function generateOptimizedDescription(description, category, title) {
     "construction": {
       title: "Travaux de Construction",
       livrables: [
-        "\u2022 R\xE9alisation conforme aux plans",
-        "\u2022 Respect des normes de s\xE9curit\xE9",
-        "\u2022 Nettoyage du chantier",
-        "\u2022 Garanties sur les travaux",
-        "\u2022 Documents de conformit\xE9"
+        "\u2022 R\xE9alisation des travaux selon les r\xE8gles de l'art",
+        "\u2022 Fourniture des mat\xE9riaux conformes aux normes",
+        "\u2022 Nettoyage et \xE9vacuation des d\xE9chets de chantier",
+        "\u2022 Garantie d\xE9cennale sur les travaux r\xE9alis\xE9s",
+        "\u2022 Attestation de conformit\xE9 et factures d\xE9taill\xE9es"
       ],
       competences: [
-        "\u2022 Expertise technique dans le domaine",
-        "\u2022 Connaissance des r\xE9glementations",
-        "\u2022 Mat\xE9riel professionnel adapt\xE9",
-        "\u2022 Assurances et certifications"
+        "\u2022 Qualification professionnelle dans le corps de m\xE9tier",
+        "\u2022 Connaissance des normes du b\xE2timent (RT2012, RE2020)",
+        "\u2022 Mat\xE9riel et outillage professionnel certifi\xE9",
+        "\u2022 Assurance responsabilit\xE9 civile et d\xE9cennale"
       ],
       criteres: [
-        "\u2022 R\xE9f\xE9rences de chantiers similaires",
-        "\u2022 Certifications professionnelles",
-        "\u2022 Assurance d\xE9cennale",
-        "\u2022 Respect des d\xE9lais d'intervention"
+        "\u2022 Photos de r\xE9alisations similaires",
+        "\u2022 Certifications RGE si applicable",
+        "\u2022 Assurance d\xE9cennale valide",
+        "\u2022 Respect des d\xE9lais et devis transparent"
+      ]
+    },
+    "renovation": {
+      title: "Travaux de R\xE9novation",
+      livrables: [
+        "\u2022 R\xE9novation compl\xE8te selon cahier des charges",
+        "\u2022 Mise aux normes \xE9lectriques et plomberie si n\xE9cessaire",
+        "\u2022 Finitions soign\xE9es (peinture, rev\xEAtements)",
+        "\u2022 Nettoyage approfondi post-travaux",
+        "\u2022 Garantie sur l'ensemble des prestations"
+      ],
+      competences: [
+        "\u2022 Multi-comp\xE9tences en second \u0153uvre",
+        "\u2022 Exp\xE9rience en r\xE9novation d'anciens b\xE2timents",
+        "\u2022 Connaissance des mat\xE9riaux \xE9cologiques",
+        "\u2022 Coordination avec diff\xE9rents corps de m\xE9tier"
+      ],
+      criteres: [
+        "\u2022 Portfolio de r\xE9novations r\xE9ussies",
+        "\u2022 Avis clients v\xE9rifi\xE9s",
+        "\u2022 Capacit\xE9 d'adaptation aux impr\xE9vus",
+        "\u2022 Transparence sur les co\xFBts additionnels"
+      ]
+    },
+    "plomberie": {
+      title: "Travaux de Plomberie",
+      livrables: [
+        "\u2022 Installation ou r\xE9paration selon normes DTU",
+        "\u2022 Test d'\xE9tanch\xE9it\xE9 et mise en pression",
+        "\u2022 Remise en \xE9tat des surfaces (carrelage, cloisons)",
+        "\u2022 Nettoyage et \xE9vacuation des d\xE9chets",
+        "\u2022 Garantie pi\xE8ces et main d'\u0153uvre"
+      ],
+      competences: [
+        "\u2022 Qualification plombier certifi\xE9",
+        "\u2022 Connaissance installations gaz et eau",
+        "\u2022 Diagnostic et d\xE9pannage rapide",
+        "\u2022 Outillage professionnel de d\xE9tection"
+      ],
+      criteres: [
+        "\u2022 Interventions d'urgence disponibles",
+        "\u2022 Devis gratuit et d\xE9taill\xE9",
+        "\u2022 Assurance d\xE9cennale plomberie",
+        "\u2022 Respect des normes sanitaires"
+      ]
+    },
+    "electricite": {
+      title: "Travaux d'\xC9lectricit\xE9",
+      livrables: [
+        "\u2022 Installation \xE9lectrique aux normes NF C 15-100",
+        "\u2022 Attestation de conformit\xE9 Consuel",
+        "\u2022 Sch\xE9mas \xE9lectriques mis \xE0 jour",
+        "\u2022 Test de bon fonctionnement des circuits",
+        "\u2022 Garantie d\xE9cennale sur l'installation"
+      ],
+      competences: [
+        "\u2022 Habilitation \xE9lectrique BR/B2V",
+        "\u2022 Connaissance domotique et objets connect\xE9s",
+        "\u2022 Installation bornes de recharge v\xE9hicules",
+        "\u2022 Mise aux normes tableaux \xE9lectriques"
+      ],
+      criteres: [
+        "\u2022 Certification Qualifelec",
+        "\u2022 Interventions urgentes 24h/24",
+        "\u2022 Devis gratuit avec plan d'installation",
+        "\u2022 Assurance d\xE9cennale \xE9lectricit\xE9"
+      ]
+    },
+    "peinture": {
+      title: "Travaux de Peinture",
+      livrables: [
+        "\u2022 Pr\xE9paration soign\xE9e des supports",
+        "\u2022 Application peinture selon techniques appropri\xE9es",
+        "\u2022 Finitions et protection des surfaces",
+        "\u2022 Nettoyage et remise en \xE9tat des lieux",
+        "\u2022 Garantie sur la tenue de la peinture"
+      ],
+      competences: [
+        "\u2022 Ma\xEEtrise techniques de peinture d\xE9corative",
+        "\u2022 Connaissance peintures \xE9cologiques",
+        "\u2022 Pr\xE9paration et traitement des supports",
+        "\u2022 Conseil couleurs et harmonies"
+      ],
+      criteres: [
+        "\u2022 Portfolio de r\xE9alisations vari\xE9es",
+        "\u2022 Utilisation peintures de qualit\xE9",
+        "\u2022 Respect des d\xE9lais de s\xE9chage",
+        "\u2022 Devis d\xE9taill\xE9 par pi\xE8ce et surface"
       ]
     }
   };
@@ -602,22 +690,43 @@ function estimateComplexity(description, category) {
 function suggestCategories(description) {
   const lowerDesc = description.toLowerCase();
   const categories = [];
-  if (lowerDesc.includes("site") || lowerDesc.includes("web")) {
+  if (lowerDesc.includes("travaux") || lowerDesc.includes("chantier") || lowerDesc.includes("b\xE2timent")) {
+    categories.push("construction");
+  }
+  if (lowerDesc.includes("plomberie") || lowerDesc.includes("plombier") || lowerDesc.includes("fuite") || lowerDesc.includes("canalisation")) {
+    categories.push("plomberie");
+  }
+  if (lowerDesc.includes("\xE9lectricit\xE9") || lowerDesc.includes("\xE9lectricien") || lowerDesc.includes("installation \xE9lectrique") || lowerDesc.includes("tableau \xE9lectrique")) {
+    categories.push("electricite");
+  }
+  if (lowerDesc.includes("peinture") || lowerDesc.includes("peindre") || lowerDesc.includes("repeindre") || lowerDesc.includes("peintre")) {
+    categories.push("peinture");
+  }
+  if (lowerDesc.includes("r\xE9novation") || lowerDesc.includes("r\xE9nover") || lowerDesc.includes("r\xE9habilitation")) {
+    categories.push("renovation");
+  }
+  if (lowerDesc.includes("carrelage") || lowerDesc.includes("carreleur") || lowerDesc.includes("fa\xEFence")) {
+    categories.push("construction");
+  }
+  if (lowerDesc.includes("ma\xE7onnerie") || lowerDesc.includes("ma\xE7on") || lowerDesc.includes("mur") || lowerDesc.includes("cloison")) {
+    categories.push("construction");
+  }
+  if (lowerDesc.includes("site") || lowerDesc.includes("web") || lowerDesc.includes("d\xE9veloppement")) {
     categories.push("development");
   }
-  if (lowerDesc.includes("mobile") || lowerDesc.includes("application")) {
+  if (lowerDesc.includes("mobile") || lowerDesc.includes("application") || lowerDesc.includes("app")) {
     categories.push("mobile");
   }
-  if (lowerDesc.includes("design") || lowerDesc.includes("ui") || lowerDesc.includes("ux")) {
+  if (lowerDesc.includes("design") || lowerDesc.includes("ui") || lowerDesc.includes("ux") || lowerDesc.includes("graphique")) {
     categories.push("design");
   }
-  if (lowerDesc.includes("marketing") || lowerDesc.includes("publicit\xE9")) {
+  if (lowerDesc.includes("marketing") || lowerDesc.includes("publicit\xE9") || lowerDesc.includes("communication")) {
     categories.push("marketing");
   }
-  if (lowerDesc.includes("ia") || lowerDesc.includes("intelligence")) {
+  if (lowerDesc.includes("ia") || lowerDesc.includes("intelligence") || lowerDesc.includes("machine learning")) {
     categories.push("ai");
   }
-  return categories.length > 0 ? categories : ["development"];
+  return categories.length > 0 ? categories : ["construction"];
 }
 function suggestBudgetRange(description, category, complexity) {
   const baseBudgets = {
