@@ -248,6 +248,55 @@ app.post("/api/ai/detect-dumping", (req, res) => {
   };
   res.json(mockDetection);
 });
+app.post("/api/ai/detect-abuse", (req, res) => {
+  const { bidData } = req.body;
+  const mockAbuse = {
+    isAbuse: Math.random() > 0.8,
+    confidence: Math.floor(Math.random() * 40) + 60,
+    reasons: Math.random() > 0.5 ? [
+      "Pattern de soumission suspect",
+      "Prix anormalement bas r\xE9p\xE9t\xE9"
+    ] : [],
+    severity: Math.random() > 0.7 ? "high" : "medium"
+  };
+  res.json(mockAbuse);
+});
+app.post("/api/ai/bidding-guidance", (req, res) => {
+  const { missionData, providerData } = req.body;
+  const basePrice = missionData.budget || 5e3;
+  const suggestedBid = Math.round(basePrice * (0.7 + Math.random() * 0.3));
+  const mockGuidance = {
+    suggestedBid,
+    reasoning: [
+      "Bas\xE9 sur votre profil et l'historique de prix",
+      "Tient compte de la concurrence actuelle",
+      "Optimis\xE9 pour maximiser vos chances de succ\xE8s"
+    ],
+    confidence: Math.floor(Math.random() * 30) + 70,
+    competitorAnalysis: {
+      averageBid: basePrice * 0.85,
+      yourPosition: "competitive",
+      winProbability: Math.floor(Math.random() * 40) + 60
+    }
+  };
+  res.json(mockGuidance);
+});
+app.post("/api/ai/market-analysis", (req, res) => {
+  const { category, location } = req.body;
+  const mockAnalysis = {
+    demandLevel: Math.random() > 0.5 ? "high" : "medium",
+    competitionLevel: Math.random() > 0.5 ? "medium" : "low",
+    averageBudget: Math.floor(Math.random() * 5e3) + 2e3,
+    trendingSkills: ["React", "Node.js", "TypeScript", "Python"],
+    marketHeat: Math.floor(Math.random() * 100),
+    recommendations: [
+      "Forte demande en d\xE9veloppement web",
+      "Les projets IA sont en hausse",
+      "Comp\xE9titivit\xE9 mod\xE9r\xE9e dans votre r\xE9gion"
+    ]
+  };
+  res.json(mockAnalysis);
+});
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
