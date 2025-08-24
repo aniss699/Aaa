@@ -1,0 +1,289 @@
+🧠 PROMPT REPLIT — Projet complet avec TOUTES les modifs d’aujourd’hui
+
+(À coller tel quel dans Replit Agent / Ghostwriter)
+
+Tu es un assistant IA full‑stack.
+Génère / mets à jour un monorepo exécutable localement (Docker) pour une plateforme FR d’appels d’offres inversés + mise en relation payante avec : standardisation d’annonces, matching & scoring explicables, enchère inversée guidée, LOC (probabilité d’aboutissement), anti‑abus, sourcing web “mode ÉCO” (gratuit, sans clés), fusion candidats internes + externes, et intégration complète dans l’API.
+Code typé, testé, documenté (FR). Une seule commande pour lancer.
+
+⸻
+
+0) Paramètres généraux & env
+	•	Langue par défaut : FR.
+	•	Mode ÉCO (gratuit) : pas d’APIs payantes, découverte via RSS/Sitemap + crawler conforme (robots.txt + rate‑limit).
+	•	.env minimal par défaut :
+
+OFFLINE_MODE=false
+NO_EXTERNAL_CALLS=false
+DOMAIN_WHITELIST="*.gouv.fr, *.insee.fr, *.cci.fr, *.pagesjaunes.fr, *.github.io, *.notion.site, *.wordpress.com"
+RATE_LIMIT_GLOBAL_RPS=2
+RATE_LIMIT_PER_DOMAIN_RPS=1
+USER_AGENT="TestMarketplaceBot/0.1 (+contact@exemple.fr)"
+
+FEATURE_SOURCING=true
+FEATURE_API_CONNECTORS=false
+FEATURE_CRAWLER=true
+
+EMBEDDINGS_ENABLED=false
+BM25_ENABLED=true
+
+
+	•	Possibilité future d’activer des connecteurs API (Google CSE, Bing, SIRENE) via flags et clés — mais laisser désactivé par défaut.
+
+⸻
+
+1) Structure monorepo
+
+/apps
+  /api        # Node 20, TypeScript, Fastify, Prisma (Postgres), Zod, OpenAPI, WS
+  /ml         # Python 3.11, FastAPI, scikit-learn, LightGBM, (sentence-transformers local optionnel)
+  /worker     # Node, BullMQ (Redis) : jobs prepare/retrain/recalc/payouts/sourcing
+  /ingestion  # (NOUVEAU) sourcing web : connectors, crawler, extractors, enrichers, scoring, jobs
+/packages
+  /core       # TS utils: scoring multi-objectif, fairness/diversity, exposure, ingestion helpers
+  /schemas    # Prisma + Zod validators
+/infra
+  docker-compose.yml
+  init.sql
+  /data       # CSV locaux (cp_city_coords.csv, taxonomy_skills_fr.csv, price_terms_fr.csv)
+/tests
+  unit/ (Vitest + pytest)
+/tests-e2e
+  e2e/ (supertest)
+/tests-load
+  k6/ (scénarios simples)
+README.md
+
+Services Docker : api, ml, worker, ingestion (si séparé), postgres, redis.
+Commande unique : docker-compose up --build.
+
+⸻
+
+2) Schéma DB (Prisma) — tables clés & ajouts
+	•	User(id, email unique, role:CLIENT|PRO|PERSON|ADMIN, rating_mean, rating_count, created_at)
+	•	ProviderProfile, ClientProfile
+	•	Project(… , category, quality_target, risk_tolerance, geo_required, onsite_radius_km?, status, loc_score float)
+	•	Bid(…, amount, timeline_days, message, score_breakdown jsonb, is_leading bool, flagged bool)
+	•	MatchFeature, AbuseSignal, EventLog, ModelVersion
+
+Standardisation d’annonces (NOUVEAU)
+	•	ProjectStandardization(
+project_id FK, title_std, summary_std, acceptance_criteria text[],
+category_std, sub_category_std, tags_std string[],
+tasks_std jsonb[], deliverables_std jsonb[],
+skills_std string[], constraints_std string[],
+brief_quality_score float, richness_score float,
+missing_info jsonb[], price_suggested_min/med/max int,
+delay_suggested_days int, loc_uplift_reco jsonb,
+rewrite_version string, created_at, updated_at
+)
+
+Mise en relation (existant)
+	•	PersonProfile, AvailabilitySlot, Booking, IntroRequest, ContactOffer, Payment, Payout
+
+Sourcing Web (NOUVEAU)
+	•	WebSource(domain unique, robots_txt jsonb, crawl_policy jsonb, last_ok_at, blocked bool)
+	•	WebDoc(url unique, domain, type:HOME|ABOUT|SERVICES|PORTFOLIO|PRICING|CONTACT|OTHER, title, text_summary, lang, published_at?, fetched_at, etag?, hash, source_type:RSS|SITEMAP|CRAWL, meta jsonb)
+	•	ExternalCompany(name, siren?, siret?, naf_code?, website?, emails[], phones[], address jsonb, city, postal_code, country, geo {lat,lng}?, social jsonb, raw_tags[], skills[], confidence float, first_seen_at, last_seen_at)
+	•	ExternalCompanySignal(company_id FK, kind:PRICE|AVAILABILITY|PORTFOLIO|RATING|CLAIMED, payload jsonb, score float, seen_at)
+	•	SourcingMatch(project_id FK, company_id FK, lead_score float, reasons jsonb, status:CANDIDATE|CONTACTED|REFUSED|CONVERTED, created_at)
+
+Index : WebDoc.url unique, GIN jsonb sur skills/tags/meta, btree dates ; extension vector si dispo (optionnelle).
+
+⸻
+
+3) Microservice ML (FastAPI, Python)
+
+Existants à maintenir
+	•	embedder.py (option embeddings locaux) — fallback BM25/TF‑IDF si EMBEDDINGS_ENABLED=false
+	•	ranker.py : LightGBM régressif pour GlobalScore (projets↔prestataires)
+	•	auction.py : Price Reference Model (quantiles q25/50/75) + règles d’enchère (min_decrement adaptatif, nudges FR, anti‑dumping/coût plancher)
+	•	abuse.py : IsolationForest + règles (BID/PROJECT/BOOKING/INTRO)
+	•	loc.py : LOC (projet/booking/intro) + endpoint /loc/uplift (recommandations budget/délais)
+
+Nouveaux pour standardisation
+	•	text_normalizer.py : nettoyage FR, normalisation unités (m², h, pages, km), extraction quantités/contraintes on‑site/remote
+	•	taxonomizer.py : mapping catégorie/sous-catégorie/skills via règles + BM25 (zéro clé)
+	•	template_rewriter.py : génération offline (templates) title_std, summary_std, acceptance_criteria
+	•	brief_quality.py : brief_quality_score, richness_score, missing_info
+	•	price_time_suggester.py : prix min/med/max via PRM + ajustements (quality_target, on‑site, market_heat, rareté skills) + delay_suggested_days
+	•	loc_uplift.py : LOC_base, recommandations {new_budget,new_delay,delta_loc}
+
+Endpoints ML
+	•	POST /standardize → (normalizer + taxonomizer + rewriter + quality + price_time + loc_uplift)
+	•	POST /brief/recompute → recalcul après réponses aux missing_info
+	•	(conserver) /rank, /auction/guide, /abuse/score, /loc/project|booking|intro, /pricing/intro, /rank/people
+
+Toutes les réponses retournent breakdown et/ou reasons[] + model_version.
+
+⸻
+
+4) API (Fastify, FR)
+
+Projets / enchères (existant +)
+	•	POST /projects, GET /projects/:id, POST /projects/:id/publish
+	•	POST /bids, GET /projects/:id/bids
+	•	IA :
+	•	POST /ai/projects/:id/prepare
+	•	GET  /ai/projects/:id/price-ref → {min, med, max, rationale}
+	•	GET  /ai/projects/:id/candidates?diversity=true → top‑K avec breakdown (fusion interne + sourcing)
+	•	POST /ai/projects/:id/auction/start
+	•	GET  /ai/bids/:id/explain
+	•	GET  /projects/:id/loc (+ ?uplift=true retourne recommandations)
+
+Standardisation d’annonce (NOUVEAU)
+	•	POST /ai/projects/:id/standardize → crée/maj ProjectStandardization + suggestions prix/délais + loc_uplift_reco + missing_info
+	•	GET  /projects/:id/standardized
+	•	POST /ai/projects/:id/brief/complete → met à jour la standardisation après réponses ; recalc scores/prix/délais/LOC
+	•	GET  /ai/projects/:id/preview-scoring → GlobalScore breakdown basé sur la version standardisée (avant publication)
+
+Mise en relation (existant)
+	•	Personnes, disponibilités, bookings (LOC_booking) ; introductions (pricing_intro + LOC_intro)
+
+Sourcing Web “Mode ÉCO” (NOUVEAU)
+	•	POST /sourcing/discover {project_id, strategy:'rss|sitemap', max?} → lance pipeline discover→fetch→parse→extract→enrich→score→index
+	•	GET  /sourcing/project/:id/candidates?min_score=0.4&limit=20 → ExternalCompany triées par SupplierLeadScore + reasons[]
+	•	GET  /sourcing/status → KPIs pipeline (pages crawlées, docs valides, entreprises extraites, temps médian, domaines bloqués)
+
+WS
+	•	/ws/auction/:projectId (enchères), /ws/schedule/:personId (agenda), /ws/intro/:personId (intros)
+
+OpenAPI FR complet avec exemples.
+
+⸻
+
+5) Scoring & intégrations (packages/core)
+
+GlobalScore (enchères) — conserver + intégrer standardisation :
+
+GlobalScore = w_price*PriceScore
+            + w_quality*QualityScore
+            + w_fit*FitScore
+            + w_time*TimeScore
+            - w_risk*AbusePenalty
+            + w_loc*LOCScore
+
+	•	Ajouts standardisation :
+
+QualityScore' = QualityScore * (1 + λq*(brief_quality_score - 0.5))
+FitScore'     = FitScore     * (1 + λr*(richness_score      - 0.5))
+if missing_info_count > 0: Risk += 0.05 ; TimeScore -= 0.03 (penalty soft)
+
+Par défaut λq=0.20, λr=0.15.
+
+	•	breakdown doit exposer brief_quality_adj, richness_adj, missing_info_count.
+
+SupplierLeadScore (sourcing externes) :
+
+SupplierLeadScore =
+    w_fit*FitBM25(project_std.skills_std, company.skills)
+  + w_geo*Geo(distance vs onsite_radius or remote_ok)
+  + w_price*PriceAlign(company.price_signals, project.price_ref)
+  + w_rep*ReputationSignal(PORTFOLIO|SERVICES détectés)
+  + w_fresh*Freshness(last_seen_at)
+  - w_risk*RiskPenalty(dup/spam/incohérences)
+
+Poids initiaux {fit .40, geo .15, price .15, rep .15, fresh .10, risk .05}.
+
+Fusion candidats : GET /ai/projects/:id/candidates combine
+(1) prestataires internes (triés par GlobalScore) et
+(2) ExternalCompany (triés par SupplierLeadScore normalisé),
+puis diversifie via MMR si ?diversity=true.
+
+Autres utilitaires (déjà présents ou à compléter) : exposure/pacing, fairness rerank, mmrDiversify.
+
+⸻
+
+6) Sourcing Web — pipeline (apps/ingestion)
+
+Connectors (gratuits)
+	•	rss_sitemap.ts : découverte via /sitemap.xml, /rss, /feed (sur domaines whitelistés)
+
+Crawler conforme
+	•	robots.ts (respect robots.txt + cache), rate_limit.ts (global+par domaine),
+	•	fetcher.ts (HTTP, ETag/Last-Modified, backoff 429/503),
+	•	parser.ts (cheerio + Readability), normalize.ts (title/text_summary/lang/published_at/source)
+
+Extractors
+	•	company_parser.ts (nom, adresse, CP/ville, email RFC, tel E.164, SIREN/SIRET regex, NAF si présent)
+	•	profile_parser.ts (services/skills/portfolio/tarifs → price_signals)
+	•	contact_parser.ts (liens social, formulaires)
+
+Enrichers
+	•	geo_enricher.ts (lookup local cp_city_coords.csv → lat/lng)
+	•	skill_inference.ts (BM25/TF‑IDF vs taxonomy_skills_fr.csv)
+	•	price_signals.ts (“€/h”, “€/jour”, “à partir de”, “forfait” → range indicative)
+
+Scoring
+	•	lead_scoring.ts (implémentation exacte du SupplierLeadScore + reasons[])
+
+Job
+	•	jobs/discover_and_index.ts : orchestrer discover→fetch→parse→extract→enrich→score→index (BullMQ)
+
+⸻
+
+7) Standardisation → déclenchement sourcing
+
+À la fin de POST /ai/projects/:id/standardize, lancer discover_and_index avec requêtes formées à partir de :
+<category_std> <skills_std[0..2]> <ville/région> mais restreint aux domaines de DOMAIN_WHITELIST.
+Créer SourcingMatch en CANDIDATE pour les premières entreprises scorées.
+
+⸻
+
+8) Tests & Seeds
+
+Seeds
+	•	/infra/data/ : cp_city_coords.csv, taxonomy_skills_fr.csv, price_terms_fr.csv.
+	•	Projets de démo (par vertical), prestataires internes, personnes (mise en relation), bookings/intros, WebDoc d’exemple (ou mini‑site local simulé) pour e2e.
+
+Unit (Vitest/pytest)
+	•	Standardisation : normalizer/taxonomizer/template_rewriter/brief_quality/price_time/loc_uplift
+	•	Sourcing : robots/rate‑limit/parser/BM25/geo/price_signals/lead_scoring
+	•	Scoring : QualityScore', FitScore', fusion candidats + MMR
+
+E2E (supertest)
+	1.	Standardiser projet “Peinture 40 m² Lyon” → missing_info + prix/délais suggérés + LOC_uplift
+	2.	POST /sourcing/discover (sitemap) → GET /sourcing/project/:id/candidates
+	3.	GET /ai/projects/:id/candidates?diversity=true (fusion internes+externes)
+	4.	Enchère guidée (anti‑dumping), award
+	5.	Réservation/Intro (LOC_booking/LOC_intro) — smoke
+
+Load (k6)
+	•	100 utilisateurs : standardize → discover → candidates → bids
+
+⸻
+
+9) Observabilité & KPIs
+	•	/admin/metrics :
+	•	BriefQualityScore moyen, Delta LOC post-standardisation, Time‑to‑First‑Bid,
+	•	NDCG@5, Award Rate, % Winners ≠ Lowest Price,
+	•	Sourcing : pages crawlées, docs valides, entreprises extraites, match@K, temps médian, domaines bloqués.
+	•	EventLog : tracer standardisation, sourcing, scoring, versions modèles.
+
+⸻
+
+10) Sécurité, conformité, équité
+	•	robots.txt respecté, DOMAIN_WHITELIST obligatoire.
+	•	Pas de PII sensible inutile ; toujours provenance (url, fetched_at, hash).
+	•	Explicabilité : tous les scores exposent breakdown / reasons[].
+	•	Fairness & diversité : MMR/fair‑rerank optionnels dans candidates.
+	•	Rate‑limit + backoff + circuit‑breaker par domaine.
+
+⸻
+
+11) README (FR)
+	•	Setup .env, docker-compose up --build, routes majeures (cURL).
+	•	Exemple complet : standardize → discover → candidates (sourcing) → candidates fusionnés → auction.
+	•	Sections : “Standardisation d’annonces”, “Sourcing web (Mode ÉCO)”, “Scoring explicable”, “LOC & uplift”, “Mise en relation”, “Anti‑abus”, “KPIs”.
+
+⸻
+
+12) Definition of Done
+	•	Le repo se lance en 1 commande.
+	•	Standardisation produit titre/résumé/critères/taxonomie/skills, prix & délais suggérés, missing_info, LOC_uplift.
+	•	Sourcing web (RSS/Sitemap + crawler) retourne des ExternalCompany pertinents, scorés par SupplierLeadScore, visibles via /sourcing/project/:id/candidates.
+	•	Candidats IA fusionnent internes + externes dans /ai/projects/:id/candidates (MMR si demandé).
+	•	Scoring inclut ajustements BriefQuality/Richness ; enchère guidée avec anti‑dumping ; LOC exploité (et uplift).
+	•	Tests unitaires & e2e ≥80% core, KPIs exposés, README FR clair.
+
+Génère/Modifie maintenant tout le code, migrations, jobs, tests et doc pour satisfaire exactement ces spécifications.
