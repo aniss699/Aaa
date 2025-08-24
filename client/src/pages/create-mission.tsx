@@ -451,58 +451,101 @@ export default function CreateMission() {
 
                   {/* Dynamic Fields */}
                   {aiOptimization.suggestedFields?.length > 0 && (
-                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                      <h4 className="font-medium text-purple-800 mb-3">Champs suggérés pour améliorer votre annonce :</h4>
-                      <div className="space-y-3">
+                    <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl">
+                      <h4 className="font-semibold text-purple-800 mb-4 flex items-center gap-2">
+                        ✨ Champs suggérés pour améliorer votre annonce :
+                        <Badge variant="secondary" className="text-xs">{aiOptimization.suggestedFields.length} suggestions</Badge>
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {aiOptimization.suggestedFields.map((field, index) => (
                           <div key={index} className="space-y-2">
-                            <Label className="text-sm font-medium text-purple-700">{field.label}</Label>
+                            <Label className="text-sm font-medium text-purple-700 flex items-center gap-1">
+                              {field.priority === 'high' && <span className="text-red-500">●</span>}
+                              {field.priority === 'medium' && <span className="text-orange-500">●</span>}
+                              {field.label}
+                              {field.priority === 'high' && <span className="text-xs text-red-600">(Important)</span>}
+                            </Label>
+
                             {field.type === 'select' && (
                               <Select>
-                                <SelectTrigger className="bg-white border-purple-200">
+                                <SelectTrigger className="bg-white border-purple-200 hover:border-purple-300">
                                   <SelectValue placeholder={`Sélectionner ${field.label.toLowerCase()}`} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {field.options.map((option, optIndex) => (
+                                  {field.options?.map((option, optIndex) => (
                                     <SelectItem key={optIndex} value={option}>{option}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             )}
+
                             {field.type === 'multiselect' && (
-                              <div className="flex flex-wrap gap-2">
-                                {field.options.map((option, optIndex) => (
-                                  <Badge
-                                    key={optIndex}
-                                    variant="outline"
-                                    className="cursor-pointer hover:bg-purple-100 border-purple-300"
-                                  >
-                                    {option}
-                                  </Badge>
-                                ))}
+                              <div className="space-y-2">
+                                <div className="text-xs text-purple-600">Sélectionnez les options pertinentes :</div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {field.options?.map((option, optIndex) => (
+                                    <Badge
+                                      key={optIndex}
+                                      variant="outline"
+                                      className="cursor-pointer hover:bg-purple-100 border-purple-300 hover:border-purple-400 transition-colors text-xs px-2 py-1"
+                                      onClick={() => {
+                                        // Logique pour toggle l'option sélectionnée
+                                        // À implémenter selon vos besoins
+                                      }}
+                                    >
+                                      {option}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
                             )}
+
                             {field.type === 'text' && (
                               <Input
-                                placeholder={field.placeholder}
-                                className="bg-white border-purple-200"
+                                placeholder={field.placeholder || `Préciser ${field.label.toLowerCase()}`}
+                                className="bg-white border-purple-200 focus:border-purple-400"
                               />
                             )}
+
                             {field.type === 'number' && (
                               <Input
                                 type="number"
-                                placeholder={field.placeholder}
-                                className="bg-white border-purple-200"
+                                placeholder={field.placeholder || "Entrer une valeur"}
+                                className="bg-white border-purple-200 focus:border-purple-400"
                               />
                             )}
+
+                            {field.type === 'date' && (
+                              <Input
+                                type="date"
+                                className="bg-white border-purple-200 focus:border-purple-400"
+                              />
+                            )}
+
                             {field.type === 'boolean' && (
-                              <div className="flex items-center space-x-2">
-                                <input type="checkbox" className="rounded border-purple-300" />
-                                <span className="text-sm text-purple-700">Oui</span>
+                              <div className="flex items-center space-x-3 p-2 bg-white rounded border border-purple-200">
+                                <input 
+                                  type="checkbox" 
+                                  id={`field-${index}`}
+                                  className="rounded border-purple-300 text-purple-600 focus:ring-purple-500" 
+                                />
+                                <label htmlFor={`field-${index}`} className="text-sm text-purple-700 cursor-pointer">
+                                  Oui, applicable
+                                </label>
                               </div>
                             )}
                           </div>
                         ))}
+                      </div>
+
+                      <div className="mt-4 p-3 bg-white/70 rounded-lg">
+                        <div className="text-xs text-purple-600 mb-2">
+                          💡 <strong>Conseil :</strong> Plus vous remplissez ces champs, plus vous recevrez des devis précis et adaptés !
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="flex items-center gap-1"><span className="text-red-500">●</span> Priorité haute</span>
+                          <span className="flex items-center gap-1"><span className="text-orange-500">●</span> Recommandé</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -797,58 +840,101 @@ export default function CreateMission() {
 
                   {/* Dynamic Fields */}
                   {aiOptimization.suggestedFields?.length > 0 && (
-                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                      <h4 className="font-medium text-purple-800 mb-3">Champs suggérés pour améliorer votre annonce :</h4>
-                      <div className="space-y-3">
+                    <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl">
+                      <h4 className="font-semibold text-purple-800 mb-4 flex items-center gap-2">
+                        ✨ Champs suggérés pour améliorer votre annonce :
+                        <Badge variant="secondary" className="text-xs">{aiOptimization.suggestedFields.length} suggestions</Badge>
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {aiOptimization.suggestedFields.map((field, index) => (
                           <div key={index} className="space-y-2">
-                            <Label className="text-sm font-medium text-purple-700">{field.label}</Label>
+                            <Label className="text-sm font-medium text-purple-700 flex items-center gap-1">
+                              {field.priority === 'high' && <span className="text-red-500">●</span>}
+                              {field.priority === 'medium' && <span className="text-orange-500">●</span>}
+                              {field.label}
+                              {field.priority === 'high' && <span className="text-xs text-red-600">(Important)</span>}
+                            </Label>
+
                             {field.type === 'select' && (
                               <Select>
-                                <SelectTrigger className="bg-white border-purple-200">
+                                <SelectTrigger className="bg-white border-purple-200 hover:border-purple-300">
                                   <SelectValue placeholder={`Sélectionner ${field.label.toLowerCase()}`} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {field.options.map((option, optIndex) => (
+                                  {field.options?.map((option, optIndex) => (
                                     <SelectItem key={optIndex} value={option}>{option}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
                             )}
+
                             {field.type === 'multiselect' && (
-                              <div className="flex flex-wrap gap-2">
-                                {field.options.map((option, optIndex) => (
-                                  <Badge
-                                    key={optIndex}
-                                    variant="outline"
-                                    className="cursor-pointer hover:bg-purple-100 border-purple-300"
-                                  >
-                                    {option}
-                                  </Badge>
-                                ))}
+                              <div className="space-y-2">
+                                <div className="text-xs text-purple-600">Sélectionnez les options pertinentes :</div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {field.options?.map((option, optIndex) => (
+                                    <Badge
+                                      key={optIndex}
+                                      variant="outline"
+                                      className="cursor-pointer hover:bg-purple-100 border-purple-300 hover:border-purple-400 transition-colors text-xs px-2 py-1"
+                                      onClick={() => {
+                                        // Logique pour toggle l'option sélectionnée
+                                        // À implémenter selon vos besoins
+                                      }}
+                                    >
+                                      {option}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
                             )}
+
                             {field.type === 'text' && (
                               <Input
-                                placeholder={field.placeholder}
-                                className="bg-white border-purple-200"
+                                placeholder={field.placeholder || `Préciser ${field.label.toLowerCase()}`}
+                                className="bg-white border-purple-200 focus:border-purple-400"
                               />
                             )}
+
                             {field.type === 'number' && (
                               <Input
                                 type="number"
-                                placeholder={field.placeholder}
-                                className="bg-white border-purple-200"
+                                placeholder={field.placeholder || "Entrer une valeur"}
+                                className="bg-white border-purple-200 focus:border-purple-400"
                               />
                             )}
+
+                            {field.type === 'date' && (
+                              <Input
+                                type="date"
+                                className="bg-white border-purple-200 focus:border-purple-400"
+                              />
+                            )}
+
                             {field.type === 'boolean' && (
-                              <div className="flex items-center space-x-2">
-                                <input type="checkbox" className="rounded border-purple-300" />
-                                <span className="text-sm text-purple-700">Oui</span>
+                              <div className="flex items-center space-x-3 p-2 bg-white rounded border border-purple-200">
+                                <input 
+                                  type="checkbox" 
+                                  id={`field-${index}`}
+                                  className="rounded border-purple-300 text-purple-600 focus:ring-purple-500" 
+                                />
+                                <label htmlFor={`field-${index}`} className="text-sm text-purple-700 cursor-pointer">
+                                  Oui, applicable
+                                </label>
                               </div>
                             )}
                           </div>
                         ))}
+                      </div>
+
+                      <div className="mt-4 p-3 bg-white/70 rounded-lg">
+                        <div className="text-xs text-purple-600 mb-2">
+                          💡 <strong>Conseil :</strong> Plus vous remplissez ces champs, plus vous recevrez des devis précis et adaptés !
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="flex items-center gap-1"><span className="text-red-500">●</span> Priorité haute</span>
+                          <span className="flex items-center gap-1"><span className="text-orange-500">●</span> Recommandé</span>
+                        </div>
                       </div>
                     </div>
                   )}
