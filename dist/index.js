@@ -522,9 +522,32 @@ function generateSuggestedFields(description, category) {
         suggested: true,
         priority: "medium"
       }
+    ],
+    services_personne: [
+      {
+        label: "Type de prestation",
+        type: "select",
+        options: ["Aide \xE0 domicile", "Soutien scolaire", "Garde d'enfants", "Soins \xE0 la personne"],
+        suggested: true,
+        priority: "high"
+      },
+      {
+        label: "Fr\xE9quence souhait\xE9e",
+        type: "select",
+        options: ["Quotidienne", "Hebdomadaire", "Ponctuelle", "Urgence"],
+        suggested: !lowerDesc.includes("fr\xE9quence") && !lowerDesc.includes("r\xE9gulier"),
+        priority: "high"
+      },
+      {
+        label: "Disponibilit\xE9 horaire",
+        type: "text",
+        placeholder: "Ex: Matin, Apr\xE8s-midi, Soir, Week-end",
+        suggested: !lowerDesc.includes("horaire") && !lowerDesc.includes("disponible"),
+        priority: "medium"
+      }
     ]
   };
-  const categoryFields = fieldsByCategory[category] || [];
+  const categoryFields = fieldsByCategory[category] || fieldsByCategory["development"];
   return categoryFields.filter((field) => field.suggested && field.priority !== "low").sort((a, b) => a.priority === "high" ? -1 : 1).slice(0, 4);
 }
 function generateOptimizedDescription(description, category, title) {
@@ -575,25 +598,25 @@ function generateOptimizedDescription(description, category, title) {
       ]
     },
     marketing: {
-      title: "Campagne Marketing",
+      title: "Marketing & Communication",
       livrables: [
-        "\u2022 Strat\xE9gie marketing document\xE9e",
-        "\u2022 Contenus cr\xE9atifs (visuels, textes)",
-        "\u2022 Calendrier de publication",
-        "\u2022 Reporting et analytics d\xE9taill\xE9s",
-        "\u2022 Recommandations d'optimisation"
+        "\u2022 Strat\xE9gie marketing document\xE9e et planifi\xE9e",
+        "\u2022 Contenus cr\xE9atifs (visuels, textes, vid\xE9os)",
+        "\u2022 Calendrier \xE9ditorial et planning publications",
+        "\u2022 Tableaux de bord avec KPIs et analytics",
+        "\u2022 Recommandations d'optimisation continue"
       ],
       competences: [
-        "\u2022 Expertise en marketing digital et r\xE9seaux sociaux",
-        "\u2022 Ma\xEEtrise des outils analytics (Google Analytics, etc.)",
-        "\u2022 Connaissance des tendances marketing",
-        "\u2022 Capacit\xE9 de cr\xE9ation de contenu engageant"
+        "\u2022 Expertise marketing digital multicanal",
+        "\u2022 Ma\xEEtrise outils analytics et automation",
+        "\u2022 Cr\xE9ation de contenu engageant",
+        "\u2022 Connaissance des algorithmes r\xE9seaux sociaux"
       ],
       criteres: [
-        "\u2022 Exp\xE9rience dans des campagnes similaires",
-        "\u2022 R\xE9sultats mesurables sur projets pr\xE9c\xE9dents",
-        "\u2022 Connaissance du secteur d'activit\xE9",
-        "\u2022 Cr\xE9ativit\xE9 et innovation"
+        "\u2022 R\xE9sultats mesurables sur projets similaires",
+        "\u2022 Connaissance de votre secteur d'activit\xE9",
+        "\u2022 Cr\xE9ativit\xE9 et capacit\xE9 d'innovation",
+        "\u2022 Transparence sur les m\xE9thodes utilis\xE9es"
       ]
     },
     mobile: {
@@ -749,16 +772,40 @@ function generateOptimizedDescription(description, category, title) {
         "\u2022 Respect des d\xE9lais de s\xE9chage",
         "\u2022 Devis d\xE9taill\xE9 par pi\xE8ce et surface"
       ]
+    },
+    services_personne: {
+      title: "Services \xE0 la personne",
+      livrables: [
+        "\u2022 Prestations selon planning convenu",
+        "\u2022 Mat\xE9riel et produits professionnels inclus",
+        "\u2022 Compte-rendu apr\xE8s chaque intervention",
+        "\u2022 Flexibilit\xE9 horaires et remplacement si besoin",
+        "\u2022 Assurance responsabilit\xE9 civile professionnelle"
+      ],
+      competences: [
+        "\u2022 Exp\xE9rience confirm\xE9e dans le service \xE0 domicile",
+        "\u2022 Formation aux techniques professionnelles",
+        "\u2022 Discr\xE9tion, ponctualit\xE9 et sens du service",
+        "\u2022 Connaissance produits \xE9cologiques et s\xE9curit\xE9"
+      ],
+      criteres: [
+        "\u2022 Recommandations clients pr\xE9c\xE9dents",
+        "\u2022 Disponibilit\xE9 compatible avec vos besoins",
+        "\u2022 Tarifs transparents et sans surprise",
+        "\u2022 Possibilit\xE9 d'\xE9valuation p\xE9riode d'essai"
+      ]
     }
   };
   const template = categoryTemplates[category] || categoryTemplates["development"];
+  const analysis = analyzeProjectContent(baseDesc, category);
+  const adaptedDeliverables = adaptDeliverablesBasedOnContent(template.livrables, analysis, category);
   return `**${title || template.title}**
 
 **Contexte et Objectifs :**
 ${baseDesc}
 
 **Livrables Attendus :**
-${template.livrables.join("\n")}
+${adaptedDeliverables.join("\n")}
 
 **Comp\xE9tences Recherch\xE9es :**
 ${template.competences.join("\n")}
@@ -876,6 +923,15 @@ function extractSkillsFromDescription(description, category) {
       "cloisons": "Cloisons",
       "r\xE9novation": "R\xE9novation",
       "am\xE9nagement": "Am\xE9nagement"
+    },
+    "services_personne": {
+      "aide \xE0 domicile": "Aide \xE0 domicile",
+      "soutien scolaire": "Soutien scolaire",
+      "garde d'enfants": "Garde d'enfants",
+      "soins": "Soins \xE0 la personne",
+      "aides m\xE9nag\xE8res": "Aides m\xE9nag\xE8res",
+      "assistance": "Assistance",
+      "famille": "Aide familiale"
     }
   };
   const categorySkills = skillsByCategory[category] || skillsByCategory["development"];
@@ -937,6 +993,13 @@ function estimateComplexity(description, category) {
       { keywords: ["isolation", "\xE9nerg\xE9tique"], points: 2 },
       { keywords: ["plomberie", "\xE9lectricit\xE9"], points: 2 },
       { keywords: ["design", "architecture"], points: 1 }
+    ],
+    services_personne: [
+      { keywords: ["aide \xE0 domicile", "assistance"], points: 2 },
+      { keywords: ["soutien scolaire", "cours"], points: 1 },
+      { keywords: ["garde d'enfants", "baby-sitting"], points: 2 },
+      { keywords: ["soins", "sant\xE9"], points: 3 },
+      { keywords: ["ponctuel", "urgence"], points: 1 }
     ]
   };
   const factors = categoryComplexityFactors[category] || categoryComplexityFactors["development"];
@@ -985,6 +1048,18 @@ function suggestCategories(description) {
   }
   if (lowerDesc.includes("ia") || lowerDesc.includes("intelligence") || lowerDesc.includes("machine learning")) {
     categories.push("ai");
+  }
+  if (lowerDesc.includes("aide \xE0 domicile") || lowerDesc.includes("assistance") || lowerDesc.includes("m\xE9nage") || lowerDesc.includes("courses")) {
+    categories.push("services_personne");
+  }
+  if (lowerDesc.includes("soutien scolaire") || lowerDesc.includes("cours") || lowerDesc.includes("aide aux devoirs")) {
+    categories.push("services_personne");
+  }
+  if (lowerDesc.includes("garde d'enfants") || lowerDesc.includes("baby-sitting")) {
+    categories.push("services_personne");
+  }
+  if (lowerDesc.includes("soins") || lowerDesc.includes("personne \xE2g\xE9e") || lowerDesc.includes("aide m\xE9dicale")) {
+    categories.push("services_personne");
   }
   return categories.length > 0 ? categories : ["construction"];
 }
@@ -1050,6 +1125,16 @@ function suggestBudgetRange(description, category, complexity) {
         "r\xE9novation": 1.5,
         "extension": 2
       }
+    },
+    services_personne: {
+      ranges: [500, 2500],
+      factors: {
+        "aide \xE0 domicile": 1,
+        "soutien scolaire": 0.9,
+        "garde d'enfants": 1.2,
+        "soins": 1.5,
+        "ponctuel": 0.8
+      }
     }
   };
   const categoryData = baseBudgets[category] || baseBudgets["development"];
@@ -1068,6 +1153,55 @@ function suggestBudgetRange(description, category, complexity) {
     max: Math.round(baseRange[1] * finalMultiplier),
     reasoning: `Bas\xE9 sur la cat\xE9gorie ${category}, complexit\xE9 ${complexity}/10 et mots-cl\xE9s d\xE9tect\xE9s`
   };
+}
+function analyzeProjectContent(description, category) {
+  const lowerDesc = description.toLowerCase();
+  const analysis = {
+    isEcommerce: lowerDesc.includes("e-commerce") || lowerDesc.includes("boutique") || lowerDesc.includes("vente"),
+    isMobile: lowerDesc.includes("mobile") || lowerDesc.includes("app") || lowerDesc.includes("ios") || lowerDesc.includes("android"),
+    needsDatabase: lowerDesc.includes("base de donn\xE9es") || lowerDesc.includes("utilisateurs") || lowerDesc.includes("comptes"),
+    needsPayment: lowerDesc.includes("paiement") || lowerDesc.includes("stripe") || lowerDesc.includes("paypal"),
+    isUrgent: lowerDesc.includes("urgent") || lowerDesc.includes("rapide") || lowerDesc.includes("vite"),
+    hasComplexFeatures: lowerDesc.includes("api") || lowerDesc.includes("int\xE9gration") || lowerDesc.includes("avanc\xE9"),
+    needsMaintenance: lowerDesc.includes("maintenance") || lowerDesc.includes("support") || lowerDesc.includes("\xE9volution"),
+    isRenovation: lowerDesc.includes("r\xE9novation") || lowerDesc.includes("r\xE9habilitation"),
+    needsCertification: lowerDesc.includes("norme") || lowerDesc.includes("certification") || lowerDesc.includes("conforme"),
+    isRecurring: lowerDesc.includes("r\xE9gulier") || lowerDesc.includes("hebdomadaire") || lowerDesc.includes("mensuel")
+  };
+  return analysis;
+}
+function adaptDeliverablesBasedOnContent(baseDeliverables, analysis, category) {
+  let adaptedDeliverables = [...baseDeliverables];
+  if (analysis.isEcommerce && category === "development") {
+    adaptedDeliverables.push("\u2022 Configuration syst\xE8me de paiement s\xE9curis\xE9");
+    adaptedDeliverables.push("\u2022 Gestion catalogue produits et commandes");
+  }
+  if (analysis.isMobile) {
+    adaptedDeliverables = adaptedDeliverables.map(
+      (item) => item.includes("responsive") ? "\u2022 Application mobile native ou hybride" : item
+    );
+  }
+  if (analysis.needsDatabase && category === "development") {
+    adaptedDeliverables.push("\u2022 Base de donn\xE9es optimis\xE9e et s\xE9curis\xE9e");
+  }
+  if (analysis.hasComplexFeatures) {
+    adaptedDeliverables.push("\u2022 Documentation API et int\xE9grations tierces");
+  }
+  if (analysis.needsMaintenance) {
+    adaptedDeliverables.push("\u2022 Plan de maintenance et support technique");
+  }
+  if (analysis.isRenovation && category === "construction") {
+    adaptedDeliverables.push("\u2022 Diagnostic initial et conseils optimisation");
+    adaptedDeliverables.push("\u2022 Coordination multi-corps de m\xE9tier si n\xE9cessaire");
+  }
+  if (analysis.needsCertification && category === "construction") {
+    adaptedDeliverables.push("\u2022 Attestations de conformit\xE9 et certificats");
+  }
+  if (analysis.isRecurring && category === "services_personne") {
+    adaptedDeliverables.push("\u2022 Planning r\xE9current avec suivi qualit\xE9");
+    adaptedDeliverables.push("\u2022 Adaptation du service selon vos retours");
+  }
+  return adaptedDeliverables;
 }
 app.post("/api/ai/predict-revenue", (req, res) => {
   const { missionData, providerData } = req.body;
