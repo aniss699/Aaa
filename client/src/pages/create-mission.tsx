@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2, Briefcase, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Euro, Tag, FileText, Zap, Brain, Wand2, Briefcase, MessageSquare, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { MissionStandardizer } from '@/components/ai/mission-standardizer';
 import { CategorySelector } from '@/components/missions/category-selector';
 import { MarketHeatIndicator } from '@/components/ai/market-heat-indicator';
@@ -525,7 +525,7 @@ export default function CreateMission() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setFormData({...formData, description: aiOptimization.optimizedDescription})}
+                        onClick={() => handleInputChange('description', aiOptimization.optimizedDescription)}
                         className="bg-white/80"
                       >
                         <FileText className="w-4 h-4 mr-2" />
@@ -871,7 +871,7 @@ export default function CreateMission() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setFormData({...formData, description: aiOptimization.optimizedDescription})}
+                        onClick={() => handleInputChange('description', aiOptimization.optimizedDescription)}
                         className="bg-white/80"
                       >
                         <FileText className="w-4 h-4 mr-2" />

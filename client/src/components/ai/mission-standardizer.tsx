@@ -243,8 +243,22 @@ ${context}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <pre className="text-sm whitespace-pre-wrap font-sans">{result.standardizedText}</pre>
+              <div className="bg-white p-6 rounded-lg border shadow-sm">
+                <div 
+                  className="prose prose-sm max-w-none text-gray-800 leading-relaxed"
+                  dangerouslySetInnerHTML={{
+                    __html: result.standardizedText
+                      .replace(/\*\*(.*?)\*\*/g, '<h3 class="text-lg font-semibold text-gray-900 mt-4 mb-2">$1</h3>')
+                      .replace(/• (.*?)(?=\n|$)/g, '<li class="ml-4">$1</li>')
+                      .replace(/\n\n/g, '</p><p class="mb-3">')
+                      .replace(/^/, '<p class="mb-3">')
+                      .replace(/$/, '</p>')
+                      .replace(/<p class="mb-3"><\/p>/g, '')
+                      .replace(/<\/li>\n<li/g, '</li><li')
+                      .replace(/<li class="ml-4">/g, '<ul class="list-disc ml-4 mb-3"><li>')
+                      .replace(/<\/li>(?!\n<li)/g, '</li></ul>')
+                  }}
+                />
               </div>
 
               <div className="flex gap-2">

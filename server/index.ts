@@ -269,155 +269,258 @@ app.post('/api/ai/brief-analysis', (req, res) => {
     return res.status(400).json({ error: 'Description requise' });
   }
 
-  // Simulation d'analyse IA avancée
-  const qualityScore = Math.floor(Math.random() * 40) + 60; // Score entre 60-100
-
+  const qualityScore = Math.floor(Math.random() * 40) + 60;
   const improvements = [];
   const missingElements = [];
 
-  // Analyse du contenu
   if (description.length < 100) {
-    improvements.push("Développer davantage la description pour plus de clarté");
-    missingElements.push("Description trop courte");
+    improvements.push('Développer davantage la description pour plus de clarté');
+    missingElements.push('Description trop courte');
   }
 
   if (!description.toLowerCase().includes('budget') && !description.includes('€')) {
-    improvements.push("Mentionner une fourchette budgétaire indicative");
-    missingElements.push("Budget non précisé");
+    improvements.push('Mentionner une fourchette budgétaire indicative');
+    missingElements.push('Budget non précisé');
   }
 
   if (!description.toLowerCase().includes('délai') && !description.toLowerCase().includes('quand')) {
-    improvements.push("Préciser les délais souhaités");
-    missingElements.push("Délais absents");
+    improvements.push('Préciser les délais souhaités');
+    missingElements.push('Délais absents');
   }
 
-  // Analyse contextuelle selon la catégorie
   const categorySpecificAnalysis = analyzeCategorySpecific(description, category);
   improvements.push(...categorySpecificAnalysis.improvements);
   missingElements.push(...categorySpecificAnalysis.missing);
 
-  // Génération d'une version optimisée
-  const optimizedDescription = generateOptimizedDescription(description, category, title);
+  const optimizedDescription = generateOptimizedDescription(description, title, category, categorySpecificAnalysis);
 
-  // Génération de champs dynamiques selon la catégorie
-  const suggestedFields = generateSuggestedFields(description, category);
-
-  const analysis = {
+  const mockAnalysis = {
     qualityScore,
     improvements,
     missingElements,
+    technicalComplexity: categorySpecificAnalysis.complexity,
     optimizedDescription,
-    detectedSkills: extractSkillsFromDescription(description, category),
-    estimatedComplexity: estimateComplexity(description, category),
-    suggestedCategories: category ? [category] : suggestCategories(description),
-    suggestedFields, // Nouveaux champs dynamiques
     marketInsights: {
-      demandLevel: Math.random() > 0.5 ? 'high' : 'medium',
-      competitionLevel: Math.random() > 0.5 ? 'medium' : 'low',
-      suggestedBudgetRange: suggestBudgetRange(description, category, estimateComplexity(description, category))
+      competitionLevel: Math.random() > 0.6 ? 'high' : 'medium',
+      suggestedBudgetRange: {
+        min: 1500,
+        max: 3500
+      }
     }
   };
 
-  res.json(analysis);
+  res.json(mockAnalysis);
 });
 
 function analyzeCategorySpecific(description, category) {
-  const lowerDesc = description.toLowerCase();
-  const improvements = [];
-  const missing = [];
+  const analysis = {
+    complexity: 'medium',
+    improvements: [],
+    missing: [],
+    suggestedDeliverables: [],
+    isUrgent: false,
+    needsDatabase: false,
+    hasComplexFeatures: false,
+    needsMaintenance: false,
+    isRenovation: false,
+    needsCertification: false,
+    isRecurring: false
+  };
 
+  const lowerDesc = description.toLowerCase();
+
+  // Analyse générale
+  if (lowerDesc.includes('urgent') || lowerDesc.includes('rapide') || lowerDesc.includes('vite')) {
+    analysis.isUrgent = true;
+  }
+  if (lowerDesc.includes('base de données') || lowerDesc.includes('utilisateur') || lowerDesc.includes('compte')) {
+    analysis.needsDatabase = true;
+  }
+  if (lowerDesc.includes('api') || lowerDesc.includes('intégration') || lowerDesc.includes('complexe')) {
+    analysis.hasComplexFeatures = true;
+  }
+  if (lowerDesc.includes('maintenance') || lowerDesc.includes('support') || lowerDesc.includes('évolution')) {
+    analysis.needsMaintenance = true;
+  }
+  if (lowerDesc.includes('rénovation') || lowerDesc.includes('réhabilitation')) {
+    analysis.isRenovation = true;
+  }
+  if (lowerDesc.includes('norme') || lowerDesc.includes('certification') || lowerDesc.includes('conforme')) {
+    analysis.needsCertification = true;
+  }
+  if (lowerDesc.includes('régulier') || lowerDesc.includes('hebdomadaire') || lowerDesc.includes('mensuel')) {
+    analysis.isRecurring = true;
+  }
+
+  // Analyse spécifique par catégorie
   const categoryAnalysis = {
     development: () => {
       if (!lowerDesc.match(/(react|vue|angular|php|python|javascript|node|laravel|symfony)/)) {
-        improvements.push("Spécifier les technologies préférées");
-        missing.push("Technologies non mentionnées");
+        analysis.improvements.push("Spécifier les technologies préférées");
+        analysis.missing.push("Technologies non mentionnées");
       }
       if (!lowerDesc.includes('api') && !lowerDesc.includes('base de données')) {
-        improvements.push("Préciser les intégrations techniques");
+        analysis.improvements.push("Préciser les intégrations techniques");
       }
       if (!lowerDesc.includes('responsive') && !lowerDesc.includes('mobile')) {
-        improvements.push("Indiquer si compatibilité mobile requise");
+        analysis.improvements.push("Indiquer si compatibilité mobile requise");
       }
+      if (analysis.needsDatabase) {
+        analysis.suggestedDeliverables.push('Base de données optimisée');
+      }
+      if (analysis.hasComplexFeatures) {
+        analysis.suggestedDeliverables.push('Documentation API');
+      }
+      analysis.complexity = 'high';
     },
 
     mobile: () => {
       if (!lowerDesc.includes('ios') && !lowerDesc.includes('android')) {
-        improvements.push("Préciser les plateformes cibles (iOS/Android)");
-        missing.push("Plateformes non spécifiées");
+        analysis.improvements.push("Préciser les plateformes cibles (iOS/Android)");
+        analysis.missing.push("Plateformes non spécifiées");
       }
       if (!lowerDesc.includes('store') && !lowerDesc.includes('publication')) {
-        improvements.push("Indiquer si publication sur stores nécessaire");
+        analysis.improvements.push("Indiquer si publication sur stores nécessaire");
       }
+      if (analysis.hasComplexFeatures) {
+        analysis.suggestedDeliverables.push('Mode hors-ligne');
+      }
+      analysis.complexity = 'high';
     },
 
     construction: () => {
       if (!lowerDesc.match(/\d+\s*m[²2]/)) {
-        improvements.push("Préciser la surface en m²");
-        missing.push("Surface non indiquée");
+        analysis.improvements.push("Préciser la surface en m²");
+        analysis.missing.push("Surface non indiquée");
       }
       if (!lowerDesc.includes('étage') && !lowerDesc.includes('niveau')) {
-        improvements.push("Indiquer le nombre d'étages");
+        analysis.improvements.push("Indiquer le nombre d'étages");
       }
       if (!lowerDesc.includes('accès') && !lowerDesc.includes('parking')) {
-        improvements.push("Mentionner les contraintes d\'accès");
+        analysis.improvements.push("Mentionner les contraintes d\'accès");
       }
+      if (analysis.isRenovation) {
+        analysis.suggestedDeliverables.push('Diagnostic initial');
+      }
+      if (analysis.needsCertification) {
+        analysis.suggestedDeliverables.push('Certificats de conformité');
+      }
+      analysis.complexity = 'medium';
     },
 
     plomberie: () => {
       if (!lowerDesc.includes('urgent') && !lowerDesc.includes('délai')) {
-        improvements.push("Préciser l'urgence de l'intervention");
+        analysis.improvements.push("Préciser l'urgence de l'intervention");
       }
       if (!lowerDesc.includes('étage') && !lowerDesc.includes('niveau')) {
-        improvements.push("Indiquer l'étage de l'intervention");
+        analysis.improvements.push("Indiquer l'étage de l'intervention");
       }
+      analysis.complexity = 'medium';
     },
 
     electricite: () => {
       if (!lowerDesc.includes('norme') && !lowerDesc.includes('consuel')) {
-        improvements.push("Préciser si mise aux normes nécessaire");
+        analysis.improvements.push("Préciser si mise aux normes nécessaire");
       }
       if (!lowerDesc.includes('tableau') && !lowerDesc.includes('disjoncteur')) {
-        improvements.push("Détailler l'installation électrique existante");
+        analysis.improvements.push("Détailler l'installation électrique existante");
       }
+      if (analysis.needsCertification) {
+        analysis.suggestedDeliverables.push('Attestation Consuel');
+      }
+      analysis.complexity = 'medium';
     },
 
     menage: () => {
       if (!lowerDesc.match(/\d+\s*m[²2]/)) {
-        improvements.push("Préciser la surface du logement");
-        missing.push("Surface non indiquée");
+        analysis.improvements.push("Préciser la surface du logement");
+        analysis.missing.push("Surface non indiquée");
       }
       if (!lowerDesc.includes('fréquence') && !lowerDesc.includes('semaine')) {
-        improvements.push("Indiquer la fréquence souhaitée");
+        analysis.improvements.push("Indiquer la fréquence souhaitée");
       }
+      if (analysis.isRecurring) {
+        analysis.suggestedDeliverables.push('Planning récurrent');
+      }
+      analysis.complexity = 'low';
     },
 
     garde_enfants: () => {
       if (!lowerDesc.match(/\d+\s*(?:ans?|années?)/)) {
-        improvements.push("Préciser l'âge des enfants");
-        missing.push("Âge des enfants non précisé");
+        analysis.improvements.push("Préciser l'âge des enfants");
+        analysis.missing.push("Âge des enfants non précisé");
       }
       if (!lowerDesc.includes('horaire') && !lowerDesc.includes('heure')) {
-        improvements.push("Détailler les horaires de garde");
+        analysis.improvements.push("Détailler les horaires de garde");
       }
+      analysis.complexity = 'low';
     },
 
     jardinage: () => {
       if (!lowerDesc.match(/\d+\s*m[²2]/)) {
-        improvements.push("Préciser la surface du jardin");
-        missing.push("Surface non indiquée");
+        analysis.improvements.push("Préciser la surface du jardin");
+        analysis.missing.push("Surface non indiquée");
       }
       if (!lowerDesc.includes('tonte') && !lowerDesc.includes('taille') && !lowerDesc.includes('entretien')) {
-        improvements.push("Détailler les travaux de jardinage souhaités");
+        analysis.improvements.push("Détailler les travaux de jardinage souhaités");
       }
+      analysis.complexity = 'low';
     },
 
     comptabilite: () => {
       if (!lowerDesc.includes('entreprise') && !lowerDesc.includes('société')) {
-        improvements.push("Préciser le type d'entreprise");
+        analysis.improvements.push("Préciser le type d'entreprise");
       }
       if (!lowerDesc.includes('mensuel') && !lowerDesc.includes('trimestre') && !lowerDesc.includes('annuel')) {
-        improvements.push("Indiquer la périodicité souhaitée");
+        analysis.improvements.push("Indiquer la périodicité souhaitée");
       }
+      analysis.complexity = 'medium';
+    },
+
+    design: () => {
+      if (!lowerDesc.includes('logo') && !lowerDesc.includes('identité visuelle')) {
+        analysis.improvements.push("Préciser les éléments graphiques souhaités (logo, charte...)");
+        analysis.missing.push("Éléments graphiques non spécifiés");
+      }
+      if (!lowerDesc.includes('responsive') && !lowerDesc.includes('mobile')) {
+        analysis.improvements.push("Indiquer si le design doit être responsive");
+      }
+      analysis.complexity = 'medium';
+    },
+
+    marketing: () => {
+      if (!lowerDesc.includes('objectif') && !lowerDesc.includes('cible')) {
+        analysis.improvements.push("Définir clairement les objectifs marketing");
+        analysis.missing.push("Objectifs non définis");
+      }
+      if (!lowerDesc.includes('budget') && !lowerDesc.includes('investissement')) {
+        analysis.improvements.push("Indiquer une enveloppe budgétaire");
+      }
+      analysis.complexity = 'high';
+    },
+
+    ai: () => {
+      if (!lowerDesc.includes('modèle') && !lowerDesc.includes('algorithme')) {
+        analysis.improvements.push("Spécifier le type de modèle IA ou algorithme souhaité");
+        analysis.missing.push("Modèle IA non spécifié");
+      }
+      if (!lowerDesc.includes('données') && !lowerDesc.includes('dataset')) {
+        analysis.improvements.push("Préciser les données d'entraînement disponibles");
+      }
+      analysis.complexity = 'high';
+    },
+
+    services_personne: () => {
+      if (!lowerDesc.includes('fréquence') && !lowerDesc.includes('régulier')) {
+        analysis.improvements.push("Indiquer la fréquence de la prestation");
+      }
+      if (!lowerDesc.includes('horaire') && !lowerDesc.includes('disponible')) {
+        analysis.improvements.push("Préciser les disponibilités");
+      }
+      if (analysis.isRecurring) {
+        analysis.suggestedDeliverables.push('Planning de service');
+      }
+      analysis.complexity = 'low';
     }
   };
 
@@ -426,913 +529,1056 @@ function analyzeCategorySpecific(description, category) {
     analyzer();
   }
 
-  return { improvements, missing };
-}
-
-function generateSuggestedFields(description, category) {
-  const lowerDesc = description.toLowerCase();
-  const fields = [];
-
-  const fieldsByCategory = {
-    development: [
-      {
-        label: "Technologies préférées",
-        type: "multiselect",
-        options: ["React", "Vue.js", "Angular", "PHP", "Python", "Node.js", "Laravel", "Symfony", "Django"],
-        suggested: !lowerDesc.match(/(react|vue|angular|php|python|javascript|node)/),
-        priority: "high"
-      },
-      {
-        label: "Type d'application",
-        type: "select",
-        options: ["Site vitrine", "E-commerce", "Application web", "API/Backend", "Plateforme SaaS"],
-        suggested: true,
-        priority: "medium"
-      },
-      {
-        label: "Nombre de pages/fonctionnalités",
-        type: "number",
-        placeholder: "Ex: 5 pages principales",
-        suggested: !lowerDesc.includes('page'),
-        priority: "medium"
-      }
-    ],
-
-    mobile: [
-      {
-        label: "Plateformes cibles",
-        type: "multiselect",
-        options: ["iOS", "Android", "Cross-platform"],
-        suggested: !lowerDesc.includes('ios') && !lowerDesc.includes('android'),
-        priority: "high"
-      },
-      {
-        label: "Publication sur stores",
-        type: "boolean",
-        suggested: !lowerDesc.includes('store'),
-        priority: "high"
-      },
-      {
-        label: "Fonctionnalités spéciales",
-        type: "multiselect",
-        options: ["Géolocalisation", "Push notifications", "Paiement intégré", "Mode offline", "Appareil photo"],
-        suggested: true,
-        priority: "medium"
-      }
-    ],
-
-    construction: [
-      {
-        label: "Surface des travaux (m²)",
-        type: "number",
-        placeholder: "Surface en mètres carrés",
-        suggested: !lowerDesc.match(/\d+\s*m[²2]/),
-        priority: "high"
-      },
-      {
-        label: "Type de logement",
-        type: "select",
-        options: ["Maison individuelle", "Appartement", "Local commercial", "Bureau"],
-        suggested: true,
-        priority: "medium"
-      },
-      {
-        label: "Contraintes d'accès",
-        type: "text",
-        placeholder: "Ex: 3ème étage sans ascenseur, parking possible",
-        suggested: !lowerDesc.includes('accès'),
-        priority: "medium"
-      }
-    ],
-
-    plomberie: [
-      {
-        label: "Urgence de l'intervention",
-        type: "select",
-        options: ["Urgence immédiate", "Dans la semaine", "Sous 15 jours", "Flexible"],
-        suggested: !lowerDesc.includes('urgent'),
-        priority: "high"
-      },
-      {
-        label: "Type d'intervention",
-        type: "select",
-        options: ["Réparation fuite", "Installation neuve", "Maintenance", "Dépannage"],
-        suggested: true,
-        priority: "high"
-      },
-      {
-        label: "Étage de l'intervention",
-        type: "select",
-        options: ["Rez-de-chaussée", "1er étage", "2ème étage", "Plus haut"],
-        suggested: !lowerDesc.includes('étage'),
-        priority: "medium"
-      }
-    ],
-
-    electricite: [
-      {
-        label: "Mise aux normes nécessaire",
-        type: "boolean",
-        suggested: !lowerDesc.includes('norme'),
-        priority: "high"
-      },
-      {
-        label: "Type d'installation",
-        type: "multiselect",
-        options: ["Éclairage", "Prises électriques", "Tableau électrique", "Domotique", "Borne de recharge"],
-        suggested: true,
-        priority: "high"
-      },
-      {
-        label: "Certification Consuel requise",
-        type: "boolean",
-        suggested: !lowerDesc.includes('consuel'),
-        priority: "medium"
-      }
-    ],
-
-    menage: [
-      {
-        label: "Surface du logement (m²)",
-        type: "number",
-        placeholder: "Surface en mètres carrés",
-        suggested: !lowerDesc.match(/\d+\s*m[²2]/),
-        priority: "high"
-      },
-      {
-        label: "Fréquence souhaitée",
-        type: "select",
-        options: ["Hebdomadaire", "Bi-mensuelle", "Mensuelle", "Ponctuelle"],
-        suggested: !lowerDesc.includes('fréquence'),
-        priority: "high"
-      },
-      {
-        label: "Tâches spécifiques",
-        type: "multiselect",
-        options: ["Repassage", "Ménage intérieur", "Vitres", "Cuisine", "Sanitaires"],
-        suggested: true,
-        priority: "medium"
-      }
-    ],
-
-    garde_enfants: [
-      {
-        label: "Âge des enfants",
-        type: "text",
-        placeholder: "Ex: 3 et 7 ans",
-        suggested: !lowerDesc.match(/\d+\s*(?:ans?|années?)/),
-        priority: "high"
-      },
-      {
-        label: "Horaires de garde",
-        type: "text",
-        placeholder: "Ex: 8h-18h du lundi au vendredi",
-        suggested: !lowerDesc.includes('horaire'),
-        priority: "high"
-      },
-      {
-        label: "Activités souhaitées",
-        type: "multiselect",
-        options: ["Aide aux devoirs", "Activités créatives", "Sorties parc", "Jeux éducatifs", "Cuisine simple"],
-        suggested: true,
-        priority: "medium"
-      }
-    ],
-    services_personne: [
-      {
-        label: "Type de prestation",
-        type: "select",
-        options: ["Aide à domicile", "Soutien scolaire", "Garde d'enfants", "Soins à la personne"],
-        suggested: true,
-        priority: "high"
-      },
-      {
-        label: "Fréquence souhaitée",
-        type: "select",
-        options: ["Quotidienne", "Hebdomadaire", "Ponctuelle", "Urgence"],
-        suggested: !lowerDesc.includes('fréquence') && !lowerDesc.includes('régulier'),
-        priority: "high"
-      },
-      {
-        label: "Disponibilité horaire",
-        type: "text",
-        placeholder: "Ex: Matin, Après-midi, Soir, Week-end",
-        suggested: !lowerDesc.includes('horaire') && !lowerDesc.includes('disponible'),
-        priority: "medium"
-      }
-    ]
-  };
-
-  const categoryFields = fieldsByCategory[category] || fieldsByCategory['development'];
-
-  // Retourner seulement les champs suggérés avec priorité high ou medium
-  return categoryFields
-    .filter(field => field.suggested && field.priority !== 'low')
-    .sort((a, b) => a.priority === 'high' ? -1 : 1)
-    .slice(0, 4); // Limiter à 4 champs maximum
-}
-
-function generateOptimizedDescription(description, category, title) {
-  const baseDesc = description || "Description du projet";
-
-  // Templates spécifiques par catégorie
-  const categoryTemplates = {
-    development: {
-      title: 'Développement Logiciel',
-      livrables: [
-        '• Code source propre et documenté',
-        '• Tests unitaires et d\'intégration',
-        '• Documentation technique complète',
-        '• Déploiement et mise en production',
-        '• Formation utilisateur si nécessaire'
-      ],
-      competences: [
-        '• Maîtrise des technologies modernes (React, Vue.js, Node.js, etc.)',
-        '• Expérience en architecture logicielle',
-        '• Connaissance des bonnes pratiques de sécurité',
-        '• Méthodologies agiles (Scrum, Kanban)'
-      ],
-      criteres: [
-        '• Portfolio de projets similaires',
-        '• Expérience avec les technologies requises',
-        '• Références clients dans le développement',
-        '• Capacité à respecter les délais'
-      ]
-    },
-    design: {
-      title: 'Projet Design',
-      livrables: [
-        '• Maquettes graphiques haute fidélité',
-        '• Charte graphique complète',
-        '• Fichiers sources (PSD, Figma, etc.)',
-        '• Guide d\'utilisation de la marque',
-        '• Adaptations pour différents supports'
-      ],
-      competences: [
-        '• Maîtrise des outils de design (Photoshop, Illustrator, Figma)',
-        '• Connaissance UX/UI et ergonomie',
-        '• Sens artistique et créativité',
-        '• Compréhension des tendances visuelles'
-      ],
-      criteres: [
-        '• Portfolio créatif et diversifié',
-        '• Style en adéquation avec le projet',
-        '• Expérience dans le secteur d\'activité',
-        '• Capacité d\'adaptation et d\'écoute'
-      ]
-    },
-    marketing: {
-      title: 'Marketing & Communication',
-      livrables: [
-        '• Stratégie marketing documentée et planifiée',
-        '• Contenus créatifs (visuels, textes, vidéos)',
-        '• Calendrier éditorial et planning publications',
-        '• Tableaux de bord avec KPIs et analytics',
-        '• Recommandations d\'optimisation continue'
-      ],
-      competences: [
-        '• Expertise marketing digital multicanal',
-        '• Maîtrise outils analytics et automation',
-        '• Création de contenu engageant',
-        '• Connaissance des algorithmes réseaux sociaux'
-      ],
-      criteres: [
-        '• Résultats mesurables sur projets similaires',
-        '• Connaissance de votre secteur d\'activité',
-        '• Créativité et capacité d\'innovation',
-        '• Transparence sur les méthodes utilisées'
-      ]
-    },
-    mobile: {
-      title: 'Application Mobile',
-      livrables: [
-        '• Application native ou cross-platform',
-        '• Code source et documentation',
-        '• Tests sur différents appareils',
-        '• Publication sur les stores (si demandée)',
-        '• Guide de maintenance'
-      ],
-      competences: [
-        '• Développement mobile (React Native, Flutter, natif)',
-        '• Connaissance des guidelines iOS/Android',
-        '• Expérience UX mobile',
-        '• Intégration API et services backend'
-      ],
-      criteres: [
-        '• Portfolio d\'applications mobiles',
-        '• Expérience avec les technologies requises',
-        '• Applications publiées sur les stores',
-        '• Connaissance des bonnes pratiques mobiles'
-      ]
-    },
-    ai: {
-      title: 'Projet Intelligence Artificielle',
-      livrables: [
-        '• Modèle IA entraîné et optimisé',
-        '• Documentation technique détaillée',
-        '• API d\'intégration',
-        '• Métriques de performance',
-        '• Guide de déploiement et maintenance'
-      ],
-      competences: [
-        '• Expertise en Machine Learning et Deep Learning',
-        '• Maîtrise Python, TensorFlow, PyTorch',
-        '• Connaissance des algorithmes d\'IA',
-        '• Expérience en déploiement de modèles'
-      ],
-      criteres: [
-        '• Projets IA réalisés avec succès',
-        '• Publications ou certifications en IA',
-        '• Compréhension des enjeux métier',
-        '• Capacité d\'innovation technique'
-      ]
-    },
-    construction: {
-      title: 'Travaux de Construction',
-      livrables: [
-        '• Réalisation des travaux selon les règles de l\'art',
-        '• Fourniture des matériaux conformes aux normes',
-        '• Nettoyage et évacuation des déchets de chantier',
-        '• Garantie décennale sur les travaux réalisés',
-        '• Attestation de conformité et factures détaillées'
-      ],
-      competences: [
-        '• Qualification professionnelle dans le corps de métier',
-        '• Connaissance des normes du bâtiment (RT2012, RE2020)',
-        '• Matériel et outillage professionnel certifié',
-        '• Assurance responsabilité civile et décennale'
-      ],
-      criteres: [
-        '• Photos de réalisations similaires',
-        '• Certifications RGE si applicable',
-        '• Assurance décennale valide',
-        '• Respect des délais et devis transparent'
-      ]
-    },
-    renovation: {
-      title: 'Travaux de Rénovation',
-      livrables: [
-        '• Rénovation complète selon cahier des charges',
-        '• Mise aux normes électriques et plomberie si nécessaire',
-        '• Finitions soignées (peinture, revêtements)',
-        '• Nettoyage approfondi post-travaux',
-        '• Garantie sur l\'ensemble des prestations'
-      ],
-      competences: [
-        '• Multi-compétences en second œuvre',
-        '• Expérience en rénovation d\'anciens bâtiments',
-        '• Connaissance des matériaux écologiques',
-        '• Coordination avec différents corps de métier'
-      ],
-      criteres: [
-        '• Portfolio de rénovations réussies',
-        '• Avis clients vérifiés',
-        '• Capacité d\'adaptation aux imprévus',
-        '• Transparence sur les coûts additionnels'
-      ]
-    },
-    plomberie: {
-      title: 'Travaux de Plomberie',
-      livrables: [
-        '• Installation ou réparation selon normes DTU',
-        '• Test d\'étanchéité et mise en pression',
-        '• Remise en état des surfaces (carrelage, cloisons)',
-        '• Nettoyage et évacuation des déchets',
-        '• Garantie pièces et main d\'œuvre'
-      ],
-      competences: [
-        '• Qualification plombier certifié',
-        '• Connaissance installations gaz et eau',
-        '• Diagnostic et dépannage rapide',
-        '• Outillage professionnel de détection'
-      ],
-      criteres: [
-        '• Interventions d\'urgence disponibles',
-        '• Devis gratuit et détaillé',
-        '• Assurance décennale plomberie',
-        '• Respect des normes sanitaires'
-      ]
-    },
-    electricite: {
-      title: 'Travaux d\'Électricité',
-      livrables: [
-        '• Installation électrique aux normes NF C 15-100',
-        '• Attestation de conformité Consuel',
-        '• Schémas électriques mis à jour',
-        '• Test de bon fonctionnement des circuits',
-        '• Garantie décennale sur l\'installation'
-      ],
-      competences: [
-        '• Habilitation électrique BR/B2V',
-        '• Connaissance domotique et objets connectés',
-        '• Installation bornes de recharge véhicules',
-        '• Mise aux normes tableaux électriques'
-      ],
-      criteres: [
-        '• Certification Qualifelec',
-        '• Interventions urgentes 24h/24',
-        '• Devis gratuit avec plan d\'installation',
-        '• Assurance décennale électricité'
-      ]
-    },
-    peinture: {
-      title: 'Travaux de Peinture',
-      livrables: [
-        '• Préparation soignée des supports',
-        '• Application peinture selon techniques appropriées',
-        '• Finitions et protection des surfaces',
-        '• Nettoyage et remise en état des lieux',
-        '• Garantie sur la tenue de la peinture'
-      ],
-      competences: [
-        '• Maîtrise techniques de peinture décorative',
-        '• Connaissance peintures écologiques',
-        '• Préparation et traitement des supports',
-        '• Conseil couleurs et harmonies'
-      ],
-      criteres: [
-        '• Portfolio de réalisations variées',
-        '• Utilisation peintures de qualité',
-        '• Respect des délais de séchage',
-        '• Devis détaillé par pièce et surface'
-      ]
-    },
-    services_personne: {
-      title: 'Services à la personne',
-      livrables: [
-        '• Prestations selon planning convenu',
-        '• Matériel et produits professionnels inclus',
-        '• Compte-rendu après chaque intervention',
-        '• Flexibilité horaires et remplacement si besoin',
-        '• Assurance responsabilité civile professionnelle'
-      ],
-      competences: [
-        '• Expérience confirmée dans le service à domicile',
-        '• Formation aux techniques professionnelles',
-        '• Discrétion, ponctualité et sens du service',
-        '• Connaissance produits écologiques et sécurité'
-      ],
-      criteres: [
-        '• Recommandations clients précédents',
-        '• Disponibilité compatible avec vos besoins',
-        '• Tarifs transparents et sans surprise',
-        '• Possibilité d\'évaluation période d\'essai'
-      ]
-    }
-  };
-
-  const template = categoryTemplates[category] || categoryTemplates['development'];
-  const analysis = analyzeProjectContent(baseDesc, category);
-  const adaptedDeliverables = adaptDeliverablesBasedOnContent(template.livrables, analysis, category);
-
-  return `**${title || template.title}**
-
-**Contexte et Objectifs :**
-${baseDesc}
-
-**Livrables Attendus :**
-${adaptedDeliverables.join('\n')}
-
-**Compétences Recherchées :**
-${template.competences.join('\n')}
-
-**Critères de Sélection :**
-${template.criteres.join('\n')}
-
-**Budget et Modalités :**
-• Budget à définir selon proposition détaillée
-• Paiement échelonné selon avancement
-• Possibilité de facturation en régie ou forfait
-
-**Suivi et Communication :**
-• Points d\'avancement réguliers
-• Livraison par phases si nécessaire
-• Support post-livraison inclus`;
-}
-
-function extractSkillsFromDescription(description, category) {
-  const skillsByCategory = {
-    'development': {
-      'react': 'React.js',
-      'vue': 'Vue.js',
-      'angular': 'Angular',
-      'php': 'PHP',
-      'python': 'Python',
-      'javascript': 'JavaScript',
-      'typescript': 'TypeScript',
-      'node': 'Node.js',
-      'laravel': 'Laravel',
-      'symfony': 'Symfony',
-      'django': 'Django',
-      'flask': 'Flask',
-      'sql': 'SQL/Database',
-      'mongodb': 'MongoDB',
-      'postgresql': 'PostgreSQL',
-      'mysql': 'MySQL',
-      'docker': 'Docker',
-      'aws': 'AWS Cloud',
-      'git': 'Git/Version Control',
-      'api': 'API Development',
-      'rest': 'REST API',
-      'graphql': 'GraphQL'
-    },
-    'mobile': {
-      'react native': 'React Native',
-      'flutter': 'Flutter',
-      'swift': 'Swift (iOS)',
-      'kotlin': 'Kotlin (Android)',
-      'java': 'Java (Android)',
-      'ionic': 'Ionic',
-      'xamarin': 'Xamarin',
-      'cordova': 'Apache Cordova',
-      'firebase': 'Firebase',
-      'push notification': 'Push Notifications',
-      'app store': 'App Store Publication',
-      'play store': 'Play Store Publication'
-    },
-    'design': {
-      'photoshop': 'Adobe Photoshop',
-      'illustrator': 'Adobe Illustrator',
-      'figma': 'Figma',
-      'sketch': 'Sketch',
-      'xd': 'Adobe XD',
-      'indesign': 'Adobe InDesign',
-      'ui': 'UI Design',
-      'ux': 'UX Design',
-      'wireframe': 'Wireframing',
-      'prototype': 'Prototyping',
-      'branding': 'Branding',
-      'logo': 'Logo Design',
-      'motion': 'Motion Design',
-      'animation': 'Animation'
-    },
-    'marketing': {
-      'seo': 'SEO',
-      'sem': 'SEM',
-      'google ads': 'Google Ads',
-      'facebook ads': 'Facebook Ads',
-      'instagram': 'Instagram Marketing',
-      'linkedin': 'LinkedIn Marketing',
-      'email marketing': 'Email Marketing',
-      'mailchimp': 'Mailchimp',
-      'analytics': 'Google Analytics',
-      'content': 'Content Marketing',
-      'copywriting': 'Copywriting',
-      'social media': 'Social Media Management',
-      'influencer': 'Influencer Marketing'
-    },
-    'ai': {
-      'machine learning': 'Machine Learning',
-      'deep learning': 'Deep Learning',
-      'tensorflow': 'TensorFlow',
-      'pytorch': 'PyTorch',
-      'python': 'Python',
-      'r': 'R',
-      'nlp': 'Natural Language Processing',
-      'computer vision': 'Computer Vision',
-      'neural network': 'Neural Networks',
-      'chatbot': 'Chatbot Development',
-      'data science': 'Data Science',
-      'pandas': 'Pandas',
-      'numpy': 'NumPy',
-      'scikit': 'Scikit-learn'
-    },
-    'construction': {
-      'plomberie': 'Plomberie',
-      'électricité': 'Électricité',
-      'maçonnerie': 'Maçonnerie',
-      'peinture': 'Peinture',
-      'carrelage': 'Carrelage',
-      'parquet': 'Parquet',
-      'isolation': 'Isolation',
-      'charpente': 'Charpente',
-      'toiture': 'Toiture',
-      'cloisons': 'Cloisons',
-      'rénovation': 'Rénovation',
-      'aménagement': 'Aménagement'
-    },
-    'services_personne': {
-      'aide à domicile': 'Aide à domicile',
-      'soutien scolaire': 'Soutien scolaire',
-      'garde d\'enfants': 'Garde d\'enfants',
-      'soins': 'Soins à la personne',
-      'aides ménagères': 'Aides ménagères',
-      'assistance': 'Assistance',
-      'famille': 'Aide familiale'
-    }
-  };
-
-  const categorySkills = skillsByCategory[category] || skillsByCategory['development'];
-  const detectedSkills = [];
-  const lowerDesc = description.toLowerCase();
-
-  Object.entries(categorySkills).forEach(([key, skill]) => {
-    if (lowerDesc.includes(key)) {
-      detectedSkills.push(skill);
-    }
-  });
-
-  return detectedSkills;
-}
-
-function estimateComplexity(description, category) {
-  let complexity = 3; // Base complexity
-  const lowerDesc = description.toLowerCase();
-
-  // Facteurs généraux
-  if (lowerDesc.includes('api') || lowerDesc.includes('intégration')) complexity += 1;
-  if (lowerDesc.includes('paiement') || lowerDesc.includes('payment')) complexity += 2;
-  if (lowerDesc.includes('temps réel') || lowerDesc.includes('real-time')) complexity += 2;
-
-  // Facteurs spécifiques par catégorie
-  const categoryComplexityFactors = {
-    development: [
-      { keywords: ['microservices', 'architecture'], points: 2 },
-      { keywords: ['ia', 'intelligence artificielle', 'ml'], points: 3 },
-      { keywords: ['blockchain', 'crypto'], points: 3 },
-      { keywords: ['mobile', 'web'], points: 2 },
-      { keywords: ['base de données', 'database'], points: 1 },
-      { keywords: ['sécurité', 'authentification'], points: 2 }
-    ],
-    mobile: [
-      { keywords: ['ios', 'android'], points: 1 },
-      { keywords: ['cross-platform', 'hybride'], points: 2 },
-      { keywords: ['push notification', 'géolocalisation'], points: 1 },
-      { keywords: ['ar', 'réalité augmentée'], points: 3 },
-      { keywords: ['offline', 'synchronisation'], points: 2 }
-    ],
-    design: [
-      { keywords: ['logo', 'identité visuelle'], points: 1 },
-      { keywords: ['site web', 'interface'], points: 2 },
-      { keywords: ['animation', 'motion'], points: 2 },
-      { keywords: ['3d', 'modélisation'], points: 3 },
-      { keywords: ['print', 'impression'], points: 1 }
-    ],
-    marketing: [
-      { keywords: ['campagne', 'stratégie'], points: 1 },
-      { keywords: ['multicanal', 'omnicanal'], points: 2 },
-      { keywords: ['automation', 'automatisation'], points: 2 },
-      { keywords: ['influencer', 'partenariat'], points: 2 },
-      { keywords: ['international', 'multilingue'], points: 2 }
-    ],
-    ai: [
-      { keywords: ['deep learning', 'neural'], points: 3 },
-      { keywords: ['nlp', 'computer vision'], points: 2 },
-      { keywords: ['chatbot', 'assistant'], points: 2 },
-      { keywords: ['big data', 'données massives'], points: 3 },
-      { keywords: ['temps réel', 'streaming'], points: 2 }
-    ],
-    construction: [
-      { keywords: ['rénovation complète', 'gros œuvre'], points: 3 },
-      { keywords: ['extension', 'agrandissement'], points: 2 },
-      { keywords: ['isolation', 'énergétique'], points: 2 },
-      { keywords: ['plomberie', 'électricité'], points: 2 },
-      { keywords: ['design', 'architecture'], points: 1 }
-    ],
-    services_personne: [
-      { keywords: ['aide à domicile', 'assistance'], points: 2 },
-      { keywords: ['soutien scolaire', 'cours'], points: 1 },
-      { keywords: ['garde d\'enfants', 'baby-sitting'], points: 2 },
-      { keywords: ['soins', 'santé'], points: 3 },
-      { keywords: ['ponctuel', 'urgence'], points: 1 }
-    ]
-  };
-
-  const factors = categoryComplexityFactors[category] || categoryComplexityFactors['development'];
-
-  factors.forEach(factor => {
-    if (factor.keywords.some(keyword => lowerDesc.includes(keyword))) {
-      complexity += factor.points;
-    }
-  });
-
-  return Math.min(complexity, 10); // Cap à 10
-}
-
-function suggestCategories(description) {
-  const lowerDesc = description.toLowerCase();
-  const categories = [];
-
-  // Construction et travaux
-  if (lowerDesc.includes('travaux') || lowerDesc.includes('chantier') || lowerDesc.includes('bâtiment')) {
-    categories.push('construction');
-  }
-  if (lowerDesc.includes('plomberie') || lowerDesc.includes('plombier') || lowerDesc.includes('fuite') || lowerDesc.includes('canalisation')) {
-    categories.push('plomberie');
-  }
-  if (lowerDesc.includes('électricité') || lowerDesc.includes('électricien') || lowerDesc.includes('installation électrique') || lowerDesc.includes('tableau électrique')) {
-    categories.push('electricite');
-  }
-  if (lowerDesc.includes('peinture') || lowerDesc.includes('peindre') || lowerDesc.includes('repeindre') || lowerDesc.includes('peintre')) {
-    categories.push('peinture');
-  }
-  if (lowerDesc.includes('rénovation') || lowerDesc.includes('rénover') || lowerDesc.includes('réhabilitation')) {
-    categories.push('renovation');
-  }
-  if (lowerDesc.includes('carrelage') || lowerDesc.includes('carreleur') || lowerDesc.includes('faïence')) {
-    categories.push('construction');
-  }
-  if (lowerDesc.includes('maçonnerie') || lowerDesc.includes('maçon') || lowerDesc.includes('mur') || lowerDesc.includes('cloison')) {
-    categories.push('construction');
-  }
-
-  // Technologie
-  if (lowerDesc.includes('site') || lowerDesc.includes('web') || lowerDesc.includes('développement')) {
-    categories.push('development');
-  }
-  if (lowerDesc.includes('mobile') || lowerDesc.includes('application') || lowerDesc.includes('app')) {
-    categories.push('mobile');
-  }
-  if (lowerDesc.includes('design') || lowerDesc.includes('ui') || lowerDesc.includes('ux') || lowerDesc.includes('graphique')) {
-    categories.push('design');
-  }
-  if (lowerDesc.includes('marketing') || lowerDesc.includes('publicité') || lowerDesc.includes('communication')) {
-    categories.push('marketing');
-  }
-  if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence') || lowerDesc.includes('machine learning')) {
-    categories.push('ai');
-  }
-
-  // Services à la personne
-  if (lowerDesc.includes('aide à domicile') || lowerDesc.includes('assistance') || lowerDesc.includes('ménage') || lowerDesc.includes('courses')) {
-    categories.push('services_personne');
-  }
-  if (lowerDesc.includes('soutien scolaire') || lowerDesc.includes('cours') || lowerDesc.includes('aide aux devoirs')) {
-    categories.push('services_personne');
-  }
-  if (lowerDesc.includes('garde d\'enfants') || lowerDesc.includes('baby-sitting')) {
-    categories.push('services_personne');
-  }
-  if (lowerDesc.includes('soins') || lowerDesc.includes('personne âgée') || lowerDesc.includes('aide médicale')) {
-    categories.push('services_personne');
-  }
-
-
-  return categories.length > 0 ? categories : ['construction'];
-}
-
-function suggestBudgetRange(description, category, complexity) {
-  const baseBudgets = {
-    development: {
-      ranges: [2000, 8000],
-      factors: {
-        'frontend': 1.0,
-        'backend': 1.2,
-        'fullstack': 1.4,
-        'mobile': 1.3,
-        'api': 1.1,
-        'e-commerce': 1.5
-      }
-    },
-    mobile: {
-      ranges: [3000, 12000],
-      factors: {
-        'native': 1.5,
-        'cross-platform': 1.2,
-        'ios': 1.3,
-        'android': 1.3,
-        'publication': 1.1
-      }
-    },
-    design: {
-      ranges: [800, 3000],
-      factors: {
-        'logo': 0.8,
-        'site web': 1.2,
-        'application': 1.3,
-        'branding': 1.4,
-        'print': 1.0
-      }
-    },
-    marketing: {
-      ranges: [1000, 5000],
-      factors: {
-        'seo': 1.1,
-        'publicité': 1.3,
-        'réseaux sociaux': 1.0,
-        'content': 1.2,
-        'stratégie': 1.4
-      }
-    },
-    ai: {
-      ranges: [5000, 20000],
-      factors: {
-        'machine learning': 1.3,
-        'deep learning': 1.6,
-        'chatbot': 1.1,
-        'computer vision': 1.4,
-        'nlp': 1.3
-      }
-    },
-    construction: {
-      ranges: [1500, 15000],
-      factors: {
-        'peinture': 0.8,
-        'plomberie': 1.2,
-        'électricité': 1.3,
-        'rénovation': 1.5,
-        'extension': 2.0
-      }
-    },
-    services_personne: {
-      ranges: [500, 2500],
-      factors: {
-        'aide à domicile': 1.0,
-        'soutien scolaire': 0.9,
-        'garde d\'enfants': 1.2,
-        'soins': 1.5,
-        'ponctuel': 0.8
-      }
-    }
-  };
-
-  const categoryData = baseBudgets[category] || baseBudgets['development'];
-  let baseRange = categoryData.ranges;
-
-  // Appliquer les facteurs spécifiques trouvés dans la description
-  const lowerDesc = description.toLowerCase();
-  let multiplier = 1.0;
-
-  Object.entries(categoryData.factors).forEach(([key, factor]) => {
-    if (lowerDesc.includes(key)) {
-      multiplier = Math.max(multiplier, factor);
-    }
-  });
-
-  // Ajuster selon la complexité
-  const complexityMultiplier = 0.7 + (complexity / 10) * 1.3; // 0.7x à 2x selon complexité
-
-  const finalMultiplier = multiplier * complexityMultiplier;
-
-  return {
-    min: Math.round(baseRange[0] * finalMultiplier),
-    max: Math.round(baseRange[1] * finalMultiplier),
-    reasoning: `Basé sur la catégorie ${category}, complexité ${complexity}/10 et mots-clés détectés`
-  };
-}
-
-function analyzeProjectContent(description, category) {
-  const lowerDesc = description.toLowerCase();
-
-  // Détection des spécificités du projet
-  const analysis = {
-    isEcommerce: lowerDesc.includes('e-commerce') || lowerDesc.includes('boutique') || lowerDesc.includes('vente'),
-    isMobile: lowerDesc.includes('mobile') || lowerDesc.includes('app') || lowerDesc.includes('ios') || lowerDesc.includes('android'),
-    needsDatabase: lowerDesc.includes('base de données') || lowerDesc.includes('utilisateurs') || lowerDesc.includes('comptes'),
-    needsPayment: lowerDesc.includes('paiement') || lowerDesc.includes('stripe') || lowerDesc.includes('paypal'),
-    isUrgent: lowerDesc.includes('urgent') || lowerDesc.includes('rapide') || lowerDesc.includes('vite'),
-    hasComplexFeatures: lowerDesc.includes('api') || lowerDesc.includes('intégration') || lowerDesc.includes('avancé'),
-    needsMaintenance: lowerDesc.includes('maintenance') || lowerDesc.includes('support') || lowerDesc.includes('évolution'),
-    isRenovation: lowerDesc.includes('rénovation') || lowerDesc.includes('réhabilitation'),
-    needsCertification: lowerDesc.includes('norme') || lowerDesc.includes('certification') || lowerDesc.includes('conforme'),
-    isRecurring: lowerDesc.includes('régulier') || lowerDesc.includes('hebdomadaire') || lowerDesc.includes('mensuel')
-  };
-
   return analysis;
 }
 
-function adaptDeliverablesBasedOnContent(baseDeliverables, analysis, category) {
-  let adaptedDeliverables = [...baseDeliverables];
+function generateOptimizedDescription(description, title, category, analysis) {
+  const projectTitle = title || generateProjectTitle(description, category);
 
-  // Adaptations intelligentes selon l'analyse
-  if (analysis.isEcommerce && category === 'development') {
-    adaptedDeliverables.push('• Configuration système de paiement sécurisé');
-    adaptedDeliverables.push('• Gestion catalogue produits et commandes');
+  const categoryTemplates = {
+    'development': generateWebDevOptimizedDescription,
+    'mobile': generateMobileDevOptimizedDescription,
+    'design': generateDesignOptimizedDescription,
+    'marketing': generateMarketingOptimizedDescription,
+    'content': generateContentOptimizedDescription,
+    'translation': generateTranslationOptimizedDescription,
+    'consulting': generateConsultingOptimizedDescription,
+    'e-commerce': generateEcommerceOptimizedDescription,
+    'construction': generateConstructionOptimizedDescription,
+    'renovation': generateRenovationOptimizedDescription,
+    'plomberie': generatePlomberieOptimizedDescription,
+    'electricite': generateElectriciteOptimizedDescription,
+    'peinture': generatePeintureOptimizedDescription,
+    'services_personne': generateServicesPersonneOptimizedDescription,
+    'ai': generateAIOptimizedDescription,
+    'menage': generateMenageOptimizedDescription,
+    'garde_enfants': generateGardeEnfantsOptimizedDescription,
+    'jardinage': generateJardinageOptimizedDescription,
+    'comptabilite': generateComptabiliteOptimizedDescription,
+  };
+
+  const generator = categoryTemplates[category] || generateGenericOptimizedDescription;
+  return generator(description, projectTitle, analysis);
+}
+
+function generateProjectTitle(description, category) {
+  const categoryTitles = {
+    'development': 'Développement de Solution Digitale sur Mesure',
+    'mobile': 'Création d\'Application Mobile Performante',
+    'design': 'Conception Graphique et Identité Visuelle',
+    'marketing': 'Stratégie Marketing Digital & Acquisition Client',
+    'content': 'Création de Contenu Professionnel Engageant',
+    'translation': 'Service de Traduction Spécialisée',
+    'consulting': 'Mission de Conseil Stratégique',
+    'e-commerce': 'Développement Boutique en Ligne Optimisée',
+    'construction': 'Travaux de Construction et Gros Œuvre',
+    'renovation': 'Projet de Rénovation Intérieure/Extérieure',
+    'plomberie': 'Intervention Plomberie Urgente ou Planifiée',
+    'electricite': 'Installation et Mise aux Normes Électriques',
+    'peinture': 'Travaux de Peinture Intérieure et Extérieure',
+    'services_personne': 'Prestation de Services à la Personne',
+    'ai': 'Projet Intelligence Artificielle & Machine Learning',
+    'menage': 'Service de Nettoyage et Entretien',
+    'garde_enfants': 'Garde d\'Enfants et Soutien Familial',
+    'jardinage': 'Entretien de Jardin et Espaces Verts',
+    'comptabilite': 'Expertise Comptable et Fiscale',
+  };
+
+  return categoryTitles[category] || 'Projet Professionnel';
+}
+
+function generateWebDevOptimizedDescription(description, title, analysis) {
+  const techStack = extractTechFromDescription(description);
+  const features = extractFeaturesFromDescription(description);
+
+  return `**${title}**
+
+**Contexte et Objectifs :**
+${description.length > 50 ? description : 'Nous cherchons à développer une solution web moderne et performante qui répond parfaitement à nos besoins métier.'}
+
+**Fonctionnalités Attendues :**
+${features.length > 0 ? features.map(f => `• ${f}`).join('\n') : `• Interface utilisateur intuitive et responsive
+• Backend robuste et sécurisé
+• Base de données optimisée
+• Panel d\'administration complet`}
+
+**Stack Technique Souhaitée :**
+${techStack.length > 0 ? techStack.map(t => `• ${t}`).join('\n') : `• Frontend moderne (React, Vue.js ou Angular)
+• Backend performant (Node.js, PHP Laravel ou Python)
+• Base de données relationnelle ou NoSQL selon besoins
+• Hébergement cloud avec SSL`}
+
+**Livrables Attendus :**
+• Code source complet et documenté
+• Tests unitaires et d'intégration
+• Documentation technique et utilisateur
+• Formation à l'utilisation
+• 3 mois de support technique inclus
+
+**Critères de Sélection :**
+• Portfolio avec projets similaires récents
+• Maîtrise des technologies requises
+• Méthodologie de développement agile
+• Communication fluide en français
+• Respect des délais et budget
+
+**Budget et Délais :**
+• Budget indicatif : À définir selon proposition détaillée
+• Délai souhaité : ${analysis.isUrgent ? '2-4 semaines' : '6-8 semaines'}
+• Paiement échelonné selon jalons
+
+**Modalités de Candidature :**
+Merci de présenter votre approche, exemples de réalisations similaires, planning prévisionnel et devis détaillé.`;
+}
+
+function generateMobileDevOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Vision du Projet :**
+${description.length > 50 ? description : 'Développement d\'une application mobile native ou hybride avec une expérience utilisateur exceptionnelle.'}
+
+**Plateformes Ciblées :**
+• iOS (App Store)
+• Android (Google Play)
+• ${analysis.hasComplexFeatures ? 'Version web progressive (PWA) en complément' : 'Cross-platform pour optimiser les coûts'}
+
+**Fonctionnalités Clés :**
+• Interface utilisateur moderne et intuitive
+• Authentification sécurisée
+• Notifications push intelligentes
+• Mode hors-ligne pour fonctions essentielles
+• Synchronisation cloud temps réel
+• Analytics et tracking utilisateur
+
+**Exigences Techniques :**
+• Performance optimale sur tous appareils
+• Compatibilité iOS 13+ et Android 8+
+• Conformité aux guidelines Apple et Google
+• Architecture scalable et maintenable
+• Sécurité renforcée (chiffrement, API)
+
+**Livrables :**
+• Applications natives ou hybrides publiées
+• Code source avec documentation complète
+• Kit de ressources (icônes, assets)
+• Guide de maintenance et évolution
+• Formation équipe technique
+
+**Profil Recherché :**
+• 3+ ans d'expérience développement mobile
+• Portfolio d'applications publiées sur stores
+• Maîtrise React Native, Flutter ou développement natif
+• Connaissance UX/UI mobile
+• Capacité à gérer publication sur stores
+
+**Timeline et Budget :**
+• Phase de conception : 1-2 semaines
+• Développement : ${analysis.isUrgent ? '4-6 semaines' : '8-12 semaines'}
+• Tests et publication : 1-2 semaines
+• Budget : Devis détaillé souhaité avec options`;
+}
+
+function generateDesignOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Brief Créatif :**
+${description.length > 50 ? description : 'Création d\'une identité visuelle forte et d\'éléments graphiques impactants qui reflètent parfaitement notre vision.'}
+
+**Éléments à Créer :**
+• Logo principal et déclinaisons
+• Charte graphique complète
+• Palette couleurs et typographies
+• Templates et supports de communication
+• Éléments pour web et print
+• ${analysis.hasComplexFeatures ? 'Animation et motion design' : 'Déclinaisons réseaux sociaux'}
+
+**Style et Orientation :**
+• Design moderne et intemporel
+• Adaptation multi-supports
+• Respect des tendances actuelles
+• Originalité et mémorabilité
+• Cohérence sur tous les supports
+
+**Spécifications Techniques :**
+• Fichiers vectoriels haute résolution
+• Formats multiples (AI, EPS, PNG, JPG, PDF)
+• Versions couleur, noir/blanc, monochrome
+• Guide d'utilisation détaillé
+• Templates modifiables
+
+**Livrables Attendus :**
+• Logo final avec déclinaisons
+• Charte graphique PDF complète
+• Tous fichiers sources modifiables
+• Mockups de présentation
+• Guide d'application de la marque
+
+**Profil Designer :**
+• Portfolio créatif et diversifié
+• Maîtrise Suite Adobe (Illustrator, Photoshop, InDesign)
+• Expérience en identité visuelle
+• Sens artistique développé
+• Communication créative fluide
+
+**Process de Collaboration :**
+• Briefing créatif détaillé initial
+• 3 propositions de concepts différents
+• 2-3 phases de révisions incluses
+• Validation par étapes
+• Livraison finale organisée
+
+**Délais et Budget :**
+• Délai souhaité : ${analysis.isUrgent ? '1-2 semaines' : '3-4 semaines'}
+• Budget : Merci d'indiquer vos tarifs selon éléments
+• Paiement : 50% à la commande, 50% à la livraison`;
+}
+
+function generateMarketingOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Contexte Business :**
+${description.length > 50 ? description : 'Nous cherchons à développer notre visibilité digitale et acquérir de nouveaux clients grâce à une stratégie marketing performante.'}
+
+**Objectifs Marketing :**
+• Augmenter la visibilité de la marque
+• Générer des leads qualifiés
+• Améliorer le taux de conversion
+• Optimiser le ROI publicitaire
+• ${analysis.hasComplexFeatures ? 'Développer la notoriété sectorielle' : 'Fidéliser la clientèle existante'}
+
+**Canaux Prioritaires :**
+• Google Ads (Search et Display)
+• Facebook et Instagram Ads
+• LinkedIn Ads (BtoB)
+• SEO et content marketing
+• Email marketing
+• Influenceurs et partenariats
+
+**Stratégie Attendue :**
+• Audit marketing initial complet
+• Définition personas et parcours client
+• Stratégie de contenu adaptée
+• Planning éditorial mensuel
+• Campagnes publicitaires optimisées
+• Reporting et optimisation continue
+
+**Compétences Requises :**
+• Expertise Google Ads et Facebook Business
+• Maîtrise des outils analytics
+• Connaissance du secteur d'activité
+• Capacités rédactionnelles
+• Sens de l'analyse et optimisation
+
+**Livrables Mensuels :**
+• Stratégie marketing documentée
+• Campagnes publicitaires opérationnelles
+• Contenus créatifs (visuels, textes)
+• Rapports de performance détaillés
+• Recommandations d'optimisation
+
+**Budget et Durée :**
+• Mission sur ${analysis.isUrgent ? '3-6 mois' : '6-12 mois'}
+• Budget publicitaire : À définir séparément
+• Honoraires : Forfait mensuel ou commission résultats
+• ROI cible : Définition d'objectifs mesurables
+
+**Modalités de Collaboration :**
+• Réunions hebdomadaires de suivi
+• Accès outils analytics et plateformes
+• Reporting transparent et régulier
+• Flexibilité selon évolutions marché`;
+}
+
+function generateContentOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Projet Éditorial :**
+${description.length > 50 ? description : 'Création de contenus de qualité professionnelle pour développer notre communication et engager notre audience.'}
+
+**Types de Contenus :**
+• Articles de blog SEO-optimisés
+• Pages web et fiches produits
+• Newsletters et emailing
+• Contenus réseaux sociaux
+• Livres blancs et guides
+• ${analysis.hasComplexFeatures ? 'Scripts vidéo et podcasts' : 'Communiqués de presse'}
+
+**Exigences Qualité :**
+• Écriture fluide et engageante
+• Respect de la ligne éditoriale
+• Optimisation SEO native
+• Recherche et documentation rigoureuse
+• Originalité et valeur ajoutée
+• Adaptation aux différents formats
+
+**Spécifications Techniques :**
+• Longueur selon brief spécifique
+• Intégration mots-clés stratégiques
+• Structure H1, H2, H3 optimisée
+• Méta-descriptions et titres SEO
+• Appels à l'action pertinents
+
+**Secteur et Ton :**
+• Adaptation parfaite à notre secteur
+• Ton professionnel mais accessible
+• Expertise technique démontrée
+• Style cohérent sur tous contenus
+• Respect de l'image de marque
+
+**Livrables :**
+• Contenus finalisés et relus
+• Optimisation SEO intégrée
+• Suggestions visuels et illustrations
+• Planning éditorial si récurrent
+• Droits de propriété complets
+
+**Profil Rédacteur :**
+• Portfolio de contenus similaires
+• Maîtrise techniques SEO
+• Capacité de recherche documentaire
+• Respect strict des délais
+• Communication professionnelle
+
+**Organisation :**
+• Brief détaillé pour chaque contenu
+• 1-2 révisions incluses par contenu
+• Délai : ${analysis.isUrgent ? '48-72h par article' : '1 semaine par contenu'}
+• Tarification : Au mot ou forfait selon volume`;
+}
+
+function generateTranslationOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Projet de Traduction :**
+${description.length > 50 ? description : 'Traduction professionnelle de haute qualité respectant le sens, le style et les spécificités culturelles.'}
+
+**Langues de Travail :**
+• Langue source : À préciser
+• Langue cible : À préciser
+• Variantes régionales si nécessaires
+• Localisation culturelle adaptée
+
+**Types de Documents :**
+• Documents techniques et manuels
+• Contenus web et marketing
+• Contrats et documents légaux
+• Présentations et rapports
+• ${analysis.hasComplexFeatures ? 'Logiciels et interfaces' : 'Courriers et communications'}
+
+**Exigences Qualité :**
+• Traduction humaine professionnelle
+• Respect du registre et du ton
+• Adaptation culturelle pertinente
+• Cohérence terminologique
+• Relecture et correction incluses
+
+**Spécialisations :**
+• Domaine d'expertise requis
+• Maîtrise vocabulaire technique
+• Connaissance secteur d'activité
+• Normes de qualité ISO 17100
+• Confidentialité garantie
+
+**Processus de Travail :**
+• Analyse et devis préalables
+• Glossaire et guide de style
+• Traduction par natif expert
+• Relecture par second traducteur
+• Livraison dans formats originaux
+
+**Livrables :**
+• Documents traduits finalisés
+• Glossaire terminologique créé
+• Rapport de traduction si souhaité
+• Fichiers dans formats demandés
+• Support post-livraison
+
+**Délais et Tarification :**
+• Délai : ${analysis.isUrgent ? '24-48h urgence' : 'Standard selon volume'}
+• Tarification : Au mot ou forfait
+• Révisions mineures incluses
+• Certification possible si requise
+
+**Modalités :**
+• Confidentialité stricte garantie
+• Formats acceptés : Word, PDF, Excel, etc.
+• Communication directe privilégiée
+• Paiement sécurisé échelonné`;
+}
+
+function generateConsultingOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Contexte de la Mission :**
+${description.length > 50 ? description : 'Nous recherchons un consultant expert pour nous accompagner dans l\'analyse et l\'optimisation de nos processus métier.'}
+
+**Objectifs de Consultation :**
+• Diagnostic complet de la situation
+• Identification des axes d'amélioration
+• Recommandations stratégiques
+• Plan d'action opérationnel
+• ${analysis.hasComplexFeatures ? 'Conduite du changement' : 'Formation des équipes'}
+
+**Domaines d'Expertise :**
+• Stratégie et organisation
+• Processus et efficacité opérationnelle
+• Transformation digitale
+• Management et RH
+• Finance et contrôle de gestion
+
+**Méthodologie Attendue :**
+• Audit initial approfondi
+• Entretiens avec parties prenantes
+• Analyse de données et benchmarking
+• Ateliers collaboratifs
+• Restitution et recommandations
+
+**Livrables Consultants :**
+• Rapport de diagnostic détaillé
+• Présentation des recommandations
+• Plan d'action priorisé et chiffré
+• Outils et méthodologies
+• Formation équipes si nécessaire
+
+**Profil Expert :**
+• 5+ ans expérience consulting
+• Expertise sectorielle démontrée
+• Portfolio de missions similaires
+• Références clients vérifiables
+• Capacité d'analyse et synthèse
+
+**Modalités d'Intervention :**
+• Mission sur ${analysis.isUrgent ? '2-4 semaines' : '1-3 mois'}
+• Interventions sur site et distanciel
+• Points d'avancement réguliers
+• Flexibilité selon contraintes terrain
+
+**Budget et Conditions :**
+• TJM ou forfait mission selon préférence
+• Frais de déplacement si nécessaires
+• Confidentialité stricte requise
+• Paiement selon jalons définis
+
+**Suivi Post-Mission :**
+• Support mise en œuvre recommandations
+• Points de suivi à 3 et 6 mois
+• Ajustements méthodologies si besoin
+• Bilan final et ROI mesuré`;
+}
+
+function generateEcommerceOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Vision E-commerce :**
+${description.length > 50 ? description : 'Création d\'une boutique en ligne performante et convertissante avec une expérience client exceptionnelle.'}
+
+**Fonctionnalités E-commerce :**
+• Catalogue produits avec filtres avancés
+• Panier et tunnel de commande optimisé
+• Gestion multi-moyens de paiement
+• Espace client complet
+• Système de reviews et avis
+• ${analysis.hasComplexFeatures ? 'Marketplace multi-vendeurs' : 'Programme de fidélité'}
+
+**Intégrations Requises :**
+• Passerelles de paiement (Stripe, PayPal)
+• Solutions d'expédition (Colissimo, Chronopost)
+• Outils marketing (MailChimp, Google Analytics)
+• ERP/CRM si existant
+• Réseaux sociaux et comparateurs
+
+**Design et UX :**
+• Design responsive mobile-first
+• Interface intuitive et moderne
+• Optimisation taux de conversion
+• Tunnel de commande fluide
+• Performance et temps de chargement
+
+**Fonctionnalités Admin :**
+• Gestion complète des produits
+• Suivi des commandes en temps réel
+• Statistiques et reporting avancés
+• Gestion des stocks automatisée
+• Outils marketing intégrés
+
+**Aspects Techniques :**
+• Hébergement haute performance
+• Sécurité et certificats SSL
+• Sauvegarde automatique
+• SEO on-page optimisé
+• Conformité RGPD
+
+**Livrables :**
+• Boutique e-commerce complète
+• Formation administration
+• Documentation utilisateur
+• 3 mois de support technique
+• Garantie de fonctionnement
+
+**Expertise Requise :**
+• Portfolio boutiques e-commerce
+• Maîtrise Shopify, WooCommerce ou Prestashop
+• Connaissance conversion et UX
+• Expérience intégrations paiement
+• Support et maintenance
+
+**Timeline Projet :**
+• Conception et setup : 1-2 semaines
+• Développement : ${analysis.isUrgent ? '3-4 semaines' : '6-8 semaines'}  
+• Tests et formation : 1 semaine
+• Mise en production assistée
+
+**Investissement :**
+• Développement : Devis selon fonctionnalités
+• Hébergement et licences séparés
+• Formation et support inclus
+• Options de maintenance disponibles`;
+}
+
+function generateConstructionOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Description des Travaux :**
+${description.length > 50 ? description : 'Réalisation de travaux de construction ou rénovation dans le respect des normes et délais impartis.'}
+
+**Nature des Travaux :**
+• Gros œuvre / Second œuvre
+• Extension / Surélévation
+• Rénovation énergétique
+• Aménagement intérieur/extérieur
+• Isolation thermique / acoustique
+• ${analysis.hasComplexFeatures ? 'Mise en conformité réglementaire' : 'Finitions et décoration'}
+
+**Spécificités du Site :**
+• Surface : ${analysis.missing.includes("Surface non indiquée") ? 'À préciser' : description.match(/\d+\s*m[²2]/)?.[0] || 'À préciser'}
+• Type de bâtiment : ${analysis.missing.includes("Type de bâtiment non spécifié") ? 'À préciser' : description.match(/^(Maison|Appartement|Immeuble|Local commercial|Bureau)/i)?.[0] || 'À préciser'}
+• Accessibilité : ${analysis.missing.includes("Contraintes d'accès non mentionnées") ? 'À préciser' : description.match(/accès|parking|difficile|facile/i)?.[0] || 'À préciser'}
+• État actuel : ${analysis.missing.includes("État du bâti non spécifié") ? 'À préciser' : description.match(/bon état|délabré|ancien|neuf/i)?.[0] || 'À préciser'}
+
+**Exigences Techniques :**
+• Respect des normes DTU et RT/RE
+• Matériaux de qualité et durables
+• Savoir-faire artisanal ou technique
+• Coordination des corps de métier
+• Gestion du chantier et sécurité
+
+**Livrables :**
+• Travaux réalisés selon cahier des charges
+• Garantie décennale et de parfait achèvement
+• Certificats de conformité si requis
+• Nettoyage final du chantier
+• Factures détaillées et transparentes
+
+**Profil Entreprise :**
+• Qualification professionnelle reconnue (Qualibat, RGE...)
+• Assurance responsabilité civile et décennale
+• Expérience confirmée sur projets similaires
+• Références clients disponibles
+• Devis gratuit et détaillé
+
+**Planning :**
+• Durée estimée : ${analysis.isUrgent ? '2-4 semaines' : '1-3 mois'}
+• Début des travaux : Date souhaitée
+
+**Budget :**
+• Enveloppe budgétaire indicative : À définir
+• Paiement : Acompte, paiements intermédiaires, solde à réception`;
+}
+
+function generateRenovationOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Contexte du Projet :**
+${description.length > 50 ? description : 'Rénovation complète ou partielle d\'un bien immobilier pour améliorer son confort, sa performance et son esthétique.'}
+
+**Nature de la Rénovation :**
+• Rénovation intérieure complète
+• Rénovation partielle (cuisine, SDB...)
+• Rénovation extérieure (façade, toiture...)
+• Optimisation énergétique
+• Mise aux normes (électricité, plomberie)
+• ${analysis.hasComplexFeatures ? 'Restauration patrimoniale' : 'Amélioration esthétique'}
+
+**Ampleur des Travaux :**
+• Surface concernée : ${analysis.missing.includes("Surface non indiquée") ? 'À préciser' : description.match(/\d+\s*m[²2]/)?.[0] || 'À préciser'}
+• Nombre de pièces : À préciser
+• Travaux spécifiques : ${analysis.suggestedDeliverables.length > 0 ? analysis.suggestedDeliverables.join(', ') : 'À définir'}
+
+**Exigences Techniques :**
+• Qualité des matériaux et finitions
+• Respect des styles architecturaux
+• Performance thermique et acoustique
+• Normes de sécurité et accessibilité
+• Coordination des artisans
+
+**Livrables :**
+• Travaux de rénovation exécutés selon cahier des charges
+• Garantie décennale et de parfait achèvement
+• Propreté et remise en état des lieux
+• Facturation détaillée et transparente
+
+**Profil Artisan/Entreprise :**
+• Expérience significative en rénovation
+• Portfolio de réalisations variées
+• Compétences multi-métiers ou coordination
+• Assurance professionnelle valide
+• Devis précis et respecté
+
+**Planning et Budget :**
+• Durée estimée : ${analysis.isUrgent ? '4-8 semaines' : '2-4 mois'}
+• Budget indicatif : À définir selon devis
+• Paiement : Acompte, paiements intermédiaires, solde à réception`;
+}
+
+function generatePlomberieOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin Urgent/Planifié :**
+${analysis.isUrgent ? 'Intervention plomberie urgente nécessaire.' : 'Demande d\'intervention plomberie pour installation ou réparation.'}
+
+**Nature de l'Intervention :**
+• Dépannage (fuite, robinet, WC...)
+• Installation (sanitaire, chauffage...)
+• Rénovation (réseau, salle de bain...)
+• Recherche de fuite
+• Débouchage canalisation
+• ${analysis.hasComplexFeatures ? 'Mise aux normes installation gaz' : 'Entretien chaudière'}
+
+**Informations Complémentaires :**
+• Lieu de l'intervention : ${description.match(/(\d+\s*(?:rue|avenue|boulevard)\s*[\w\s-]+)/i)?.[1] || 'Adresse à préciser'}
+• Étage : ${analysis.missing.includes("Étage non spécifié") ? 'À préciser' : description.match(/(?:au|au\s)(\d+)(?:er|ème)\sétage/i)?.[1] || 'Rez-de-chaussée'}
+• Accessibilité : Facile / Difficile
+• Contexte : Maison / Appartement / Local commercial
+
+**Exigences Professionnelles :**
+• Plombier qualifié et certifié
+• Interventions dans le respect des normes
+• Utilisation de matériel professionnel
+• Diagnostic précis et devis clair
+• Garantie sur les travaux effectués
+
+**Livrables :**
+• Réparation ou installation fonctionnelle
+• Nettoyage de la zone d'intervention
+• Explication des travaux réalisés
+• Facture détaillée avec garantie
+
+**Disponibilité et Tarifs :**
+• Urgence : Intervention sous 2-4h
+• Standard : Sur RDV sous 48h
+• Tarifs : Déplacement + Taux horaire / Forfait intervention
+• Devis gratuit sur demande`;
+}
+
+function generateElectriciteOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Nature de l'Intervention :**
+${description.length > 50 ? description : 'Installation, modification ou dépannage électrique dans le respect des normes de sécurité.'}
+
+**Type de Prestation :**
+• Installation électrique neuve (maison, appartement)
+• Rénovation électrique complète
+• Modification de tableau électrique
+• Installation de prises, interrupteurs
+• Dépannage électrique (court-circuit, panne)
+• ${analysis.hasComplexFeatures ? 'Installation domotique' : 'Mise en place éclairage'}
+
+**Contexte Technique :**
+• Type de bâtiment : Maison / Appartement / Bureau / Local
+• Age de l'installation : Ancienne / Rénovée / Neuve
+• Normes à respecter : NF C 15-100 / Consuel
+• Complexité : Faible / Moyenne / Élevée
+
+**Exigences Professionnelles :**
+• Électricien habilité et certifié
+• Respect strict des normes de sécurité
+• Utilisation de matériel homologué
+• Diagnostic précis et devis détaillé
+• Garantie sur les travaux et le matériel
+
+**Livrables :**
+• Installation électrique conforme et fonctionnelle
+• Attestation Consuel si nécessaire
+• Nettoyage de la zone d'intervention
+• Explication des travaux réalisés
+• Facture détaillée
+
+**Disponibilité et Tarifs :**
+• Urgence : Intervention rapide
+• Standard : Sur rendez-vous
+• Tarifs : Déplacement + Taux horaire / Forfait
+• Devis gratuit et détaillé`;
+}
+
+function generatePeintureOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Description des Travaux de Peinture :**
+${description.length > 50 ? description : 'Application de peinture de qualité pour embellir et protéger vos murs et boiseries.'}
+
+**Nature des Travaux :**
+• Peinture intérieure (murs, plafonds, boiseries)
+• Peinture extérieure (façades, volets)
+• Rénovation peinture (recouvrement papier peint, lessivage)
+• Pose revêtement mural (intissé, toile de verre)
+• Travaux de préparation (ponçage, enduit)
+• ${analysis.hasComplexFeatures ? 'Effets décoratifs (patine, enduit à la chaux)' : 'Peinture écologique'}
+
+**Informations sur la Surface :**
+• Type de surface : Placo / Enduit / Bois / Métal
+• Surface à peindre : ${analysis.missing.includes("Surface non indiquée") ? 'À préciser' : description.match(/\d+\s*m[²2]/)?.[0] || 'À préciser'}
+• Nombre de pièces/façades : À préciser
+• État actuel : Bon état / Travaux de préparation nécessaires
+
+**Exigences Professionnelles :**
+• Peintre qualifié et expérimenté
+• Utilisation de peintures de qualité et adaptées
+• Respect des techniques d'application
+• Soin apporté aux finitions
+• Protection du mobilier et des sols
+• Nettoyage après travaux
+
+**Livrables :**
+• Surfaces peintes uniformément et proprement
+• Finitions soignées
+• Zone de travail nettoyée
+• Facture détaillée
+
+**Disponibilité et Tarifs :**
+• Planning : Selon disponibilité et urgence
+• Tarifs : Au m² ou forfait par pièce/chantier
+• Devis gratuit et détaillé`;
+}
+
+function generateServicesPersonneOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Type de Prestation :**
+${description.length > 50 ? description : 'Service personnalisé pour répondre à vos besoins quotidiens ou ponctuels.'}
+
+**Domaine de Service :**
+• Aide à domicile (ménage, courses, repas)
+• Assistance aux personnes âgées ou handicapées
+• Soutien scolaire / Aide aux devoirs
+• Garde d'enfants / Baby-sitting
+• Jardinage / Petit bricolage
+• ${analysis.hasComplexFeatures ? 'Accompagnement administratif' : 'Tâches ménagères'}
+
+**Informations Clés :**
+• Fréquence : Quotidienne / Hebdomadaire / Mensuelle / Ponctuelle
+• Durée par intervention : À préciser
+• Période souhaitée : Matin / Après-midi / Soir / Week-end
+• Âge des personnes aidées : ${analysis.missing.includes("Âge des personnes aidées non spécifié") ? 'À préciser' : description.match(/\d+\s*(?:ans?|années?)/i)?.[0] || 'À préciser'}
+
+**Attentes du Prestataire :**
+• Ponctualité et fiabilité
+• Discrétion et respect de la vie privée
+• Bienveillance et patience
+• Compétences adaptées au service
+• Propreté et soin
+
+**Livrables :**
+• Prestation réalisée conformément à la demande
+• Retour sur les tâches effectuées
+• Respect des horaires convenus
+
+**Modalités :**
+• Tarifs : Horaire ou forfait selon prestation
+• Possibilité de devis personnalisé
+• Assurance responsabilité civile professionnelle
+• Déclaration simplifiée CESU possible`;
+}
+
+function generateAIOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin en Intelligence Artificielle :**
+${description.length > 50 ? description : 'Développement et intégration de solutions basées sur l\'IA pour optimiser vos processus et vos prises de décision.'}
+
+**Domaine d'Application :**
+• Analyse prédictive
+• Traitement du langage naturel (NLP)
+• Vision par ordinateur
+• Machine Learning / Deep Learning
+• Chatbots / Assistants virtuels
+• Automatisation des tâches
+• ${analysis.hasComplexFeatures ? 'Systèmes de recommandation' : 'Optimisation des flux'}
+
+**Objectifs Spécifiques :**
+• Améliorer la performance
+• Personnaliser l'expérience client
+• Automatiser des tâches répétitives
+• Extraire des insights des données
+• Prédire des événements futurs
+• ${analysis.needsDatabase ? 'Gérer de grands volumes de données' : 'Optimiser l'utilisation des ressources'}
+
+**Compétences Techniques Requises :**
+• Maîtrise Python et librairies IA (TensorFlow, PyTorch, Scikit-learn)
+• Connaissance des algorithmes de ML/DL
+• Expérience en traitement de données
+• Compétences en déploiement de modèles
+• Connaissance des API IA
+
+**Livrables Attendus :**
+• Modèle IA entraîné et optimisé
+• API d\'intégration pour vos systèmes
+• Documentation technique et utilisateur
+• Métriques de performance et validation
+• Support et maintenance
+
+**Planning et Budget :**
+• Durée : ${analysis.isUrgent ? '4-8 semaines' : '2-4 mois'}
+• Budget : Devis détaillé requis
+• Paiement : Selon avancement et jalons`;
+}
+
+function generateMenageOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Nature de la Prestation :**
+${description.length > 50 ? description : 'Nettoyage et entretien de votre domicile pour un environnement sain et agréable.'}
+
+**Type de Nettoyage :**
+• Nettoyage régulier (hebdomadaire, bi-mensuel)
+• Nettoyage ponctuel (après travaux, déménagement)
+• Grand ménage de printemps
+• Nettoyage de vitres
+• Entretien des sols et surfaces
+• ${analysis.hasComplexFeatures ? 'Nettoyage spécialisé (taches tenaces)' : 'Entretien courant'}
+
+**Informations sur le Logement :**
+• Surface approximative : ${analysis.missing.includes("Surface non indiquée") ? 'À préciser' : description.match(/\d+\s*m[²2]/)?.[0] || 'À préciser'}
+• Nombre de pièces : À préciser
+• Type de logement : Appartement / Maison / Bureau
+• Fréquence souhaitée : ${analysis.isRecurring ? analysis.missing.includes("Fréquence non spécifiée") ? 'À préciser' : description.match(/(?:hebdomadaire|bi-mensuel|mensuel|ponctuel)/i)?.[0] || 'À préciser' : 'Ponctuelle'}
+
+**Exigences :**
+• Produits d\'entretien écologiques et efficaces
+• Matériel professionnel fourni
+• Soin et discrétion
+• Ponctualité et fiabilité
+• Respect de vos consignes
+
+**Livrables :**
+• Logement propre et désinfecté
+• Surfaces brillantes et sans traces
+• Sols impeccables
+• Environnement sain et agréable
+
+**Tarifs :**
+• Forfait horaire ou forfait par prestation
+• Devis gratuit sur demande
+• Possibilité d'intervention rapide`;
+}
+
+function generateGardeEnfantsOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin de Garde d'Enfants :**
+${description.length > 50 ? description : 'Garde d\'enfants fiable et attentionnée pour assurer leur bien-être et leur épanouissement.'}
+
+**Informations sur les Enfants :**
+• Âge(s) : ${analysis.missing.includes("Âge des enfants non précisé") ? 'À préciser' : description.match(/\d+\s*(?:ans?|années?)/i)?.[0] || 'À préciser'}
+• Nombre d\'enfants : À préciser
+• Besoins spécifiques : (Allergies, suivi scolaire, activités...)
+
+**Conditions de Garde :**
+• Période : Journée / Soirée / Week-end / Vacances scolaires
+• Horaires : ${analysis.missing.includes("Horaires non spécifiés") ? 'À préciser' : description.match(/(\d{1,2}h(?::\d{2})?)\s*(?:à|-)\s*(\d{1,2}h(?::\d{2})?)/i)?.[0] || 'À préciser'}
+• Lieu : Domicile des parents / Domicile de la nounou
+• Tâches : Jeux, repas, aide aux devoirs, accompagnement activités
+
+**Profil du Gardien/de la Gardienne :**
+• Expérience significative avec les enfants
+• Qualifications pertinentes (BAFA,PSC1...)
+• Bienveillance, patience et dynamisme
+• Fiabilité et ponctualité
+• Références vérifiables
+
+**Livrables :**
+• Enfants en sécurité et bienveillés
+• Activités stimulantes et adaptées
+• Respect des consignes parentales
+• Communication transparente avec les parents
+
+**Tarifs :**
+• Taux horaire selon expérience et horaires
+• Forfait possible pour garde régulière
+• Devis personnalisé sur demande`;
+}
+
+function generateJardinageOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Nature des Travaux de Jardinage :**
+${description.length > 50 ? description : 'Entretien et aménagement de votre jardin pour un espace extérieur agréable et bien entretenu.'}
+
+**Prestations Proposées :**
+• Tonte de pelouse
+• Taille de haies et arbustes
+• Désherbage et entretien massifs
+• Plantation et entretien fleurs/plantes
+• Évacuation des déchets verts
+• ${analysis.hasComplexFeatures ? 'Aménagement paysager' : 'Arrosage'}
+
+**Informations sur le Jardin :**
+• Surface approximative : ${analysis.missing.includes("Surface non indiquée") ? 'À préciser' : description.match(/\d+\s*m[²2]/)?.[0] || 'À préciser'}
+• Type d'espace : Jardin / Terrasse / Balcon
+• Fréquence souhaitée : Ponctuelle / Régulière (hebdomadaire, mensuelle)
+• Travaux spécifiques : À définir
+
+**Exigences :**
+• Jardinier expérimenté et fiable
+• Utilisation de matériel professionnel adapté
+• Respect de l'environnement
+• Soin apporté aux végétaux
+• Propreté après intervention
+
+**Livrables :**
+• Jardin propre, taillé et entretenu
+• Pelouse soignée
+• Espaces verts désherbés et ordonnés
+• Déchets verts évacués
+
+**Tarifs :**
+• Taux horaire ou forfait par intervention/surface
+• Devis gratuit sur demande
+• Tarifs dégressifs pour interventions régulières`;
+}
+
+function generateComptabiliteOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin en Expertise Comptable :**
+${description.length > 50 ? description : 'Accompagnement professionnel pour la gestion de votre comptabilité et optimisation fiscale.'}
+
+**Nature de la Prestation :**
+• Tenue comptable complète
+• Révision comptable
+• Établissement des comptes annuels
+• Déclarations fiscales (TVA, IS...)
+• Conseil fiscal et optimisation
+• ${analysis.hasComplexFeatures ? 'Audit financier' : 'Paie et gestion sociale'}
+
+**Contexte de l'Entreprise :**
+• Type d'entreprise : SA / SARL / SAS / Auto-entrepreneur / Association
+• Secteur d'activité : À préciser
+• Chiffre d'affaires annuel : À définir
+• Périodicité souhaitée : Mensuelle / Trimestrielle / Annuelle
+
+**Attentes du Client :**
+• Fiabilité et rigueur
+• Respect des délais réglementaires
+• Confidentialité des données
+• Conseil personnalisé et réactif
+• Optimisation de la charge fiscale
+
+**Livrables :**
+• Comptes annuels conformes
+• Déclarations fiscales et sociales à jour
+• Bilans et comptes de résultat
+• Tableaux de bord et indicateurs clés
+• Conseils stratégiques
+
+**Profil Expert-Comptable :**
+• Diplôme d'expertise comptable
+• Expérience dans votre secteur
+• Références clients
+• Proximité géographique ou digitale
+
+**Modalités :**
+• Contrat de mission adapté
+• Tarifs clairs et transparents
+• Confidentialité garantie
+• Accompagnement personnalisé`;
+}
+
+
+function extractTechFromDescription(description) {
+  const technologies = [];
+  const techKeywords = {
+    'React': ['react', 'reactjs'],
+    'Vue.js': ['vue', 'vuejs', 'vue.js'],
+    'Angular': ['angular', 'angularjs'],
+    'Node.js': ['node', 'nodejs', 'node.js'],
+    'PHP': ['php'],
+    'Laravel': ['laravel'],
+    'Symfony': ['symfony'],
+    'Python': ['python', 'django', 'flask'],
+    'WordPress': ['wordpress', 'wp'],
+    'Shopify': ['shopify'],
+    'Magento': ['magento'],
+    'MongoDB': ['mongodb', 'mongo'],
+    'MySQL': ['mysql'],
+    'PostgreSQL': ['postgresql', 'postgres']
+  };
+
+  const descLower = description.toLowerCase();
+
+  for (const [tech, keywords] of Object.entries(techKeywords)) {
+    if (keywords.some(keyword => descLower.includes(keyword))) {
+      technologies.push(tech);
+    }
   }
 
-  if (analysis.isMobile) {
-    adaptedDeliverables = adaptedDeliverables.map(item => 
-      item.includes('responsive') ? '• Application mobile native ou hybride' : item
-    );
-  }
+  return technologies;
+}
 
-  if (analysis.needsDatabase && category === 'development') {
-    adaptedDeliverables.push('• Base de données optimisée et sécurisée');
-  }
+function extractFeaturesFromDescription(description) {
+  const features = [];
+  const featureKeywords = [
+    'authentification', 'login', 'connexion',
+    'paiement', 'payment', 'stripe', 'paypal',
+    'recherche', 'search', 'filtre',
+    'admin', 'administration', 'gestion',
+    'mobile', 'responsive', 'adaptatif',
+    'api', 'intégration', 'webhook',
+    'chat', 'messaging', 'notification',
+    'analytics', 'statistiques', 'tracking'
+  ];
 
-  if (analysis.hasComplexFeatures) {
-    adaptedDeliverables.push('• Documentation API et intégrations tierces');
-  }
+  const descLower = description.toLowerCase();
 
-  if (analysis.needsMaintenance) {
-    adaptedDeliverables.push('• Plan de maintenance et support technique');
-  }
+  featureKeywords.forEach(keyword => {
+    if (descLower.includes(keyword)) {
+      switch(keyword) {
+        case 'authentification':
+        case 'login':
+        case 'connexion':
+          if (!features.includes('Système d\'authentification sécurisé'))
+            features.push('Système d\'authentification sécurisé');
+          break;
+        case 'paiement':
+        case 'payment':
+        case 'stripe':
+        case 'paypal':
+          if (!features.includes('Intégration paiements en ligne'))
+            features.push('Intégration paiements en ligne');
+          break;
+        case 'recherche':
+        case 'search':
+        case 'filtre':
+          if (!features.includes('Système de recherche avancée'))
+            features.push('Système de recherche avancée');
+          break;
+        case 'admin':
+        case 'administration':
+        case 'gestion':
+          if (!features.includes('Interface d\'administration'))
+            features.push('Interface d\'administration');
+          break;
+        case 'mobile':
+        case 'responsive':
+        case 'adaptatif':
+          if (!features.includes('Design responsive multi-appareils'))
+            features.push('Design responsive multi-appareils');
+          break;
+      }
+    }
+  });
 
-  if (analysis.isRenovation && category === 'construction') {
-    adaptedDeliverables.push('• Diagnostic initial et conseils optimisation');
-    adaptedDeliverables.push('• Coordination multi-corps de métier si nécessaire');
-  }
-
-  if (analysis.needsCertification && category === 'construction') {
-    adaptedDeliverables.push('• Attestations de conformité et certificats');
-  }
-
-  if (analysis.isRecurring && category === 'services_personne') {
-    adaptedDeliverables.push('• Planning récurrent avec suivi qualité');
-    adaptedDeliverables.push('• Adaptation du service selon vos retours');
-  }
-
-  return adaptedDeliverables;
+  return features;
 }
 
 app.post('/api/ai/predict-revenue', (req, res) => {
