@@ -1,0 +1,154 @@
+Parfait. Voici le prompt à coller dans Replit pour transformer ton “moteur IA” actuel en un améliorateur d’annonces 2.0 avec actions tangibles (réécriture profonde, standardisation, suggestions prix/délais, questions manquantes, uplift LOC, application en 1 clic, historique, et UI simple).
+
+⸻
+
+🧠 PROMPT REPLIT — Moteur IA d’amélioration d’annonces 2.0 (actions tangibles)
+
+Tu es un assistant IA full‑stack.
+Dans mon repo actuel, remplace/améliore le moteur “IA” des annonces pour qu’il fournisse une version améliorée exploitable des annonces publiées, avec endpoints, pages, boutons, tests, métriques.
+Langue: FR. Pas d’API payantes requises.
+
+0) Objectif
+
+À partir d’une annonce publiée (Project), le moteur doit :
+	1.	Réécrire profondément (titre + résumé + critères d’acceptation) et standardiser (catégorie, sous‑catégorie, tâches, livrables, skills, contraintes).
+	2.	Proposer prix/délais réalistes (min/med/max + délai) + justifications.
+	3.	Détecter manques → questions ciblées.
+	4.	Calculer BriefQualityScore, RichnessScore, LOC_base + uplift recommandé (+budget, +jours).
+	5.	Appliquer en 1 clic les suggestions au Project (budget/délais/labels) et journaliser un changelog.
+	6.	Impacter le scoring (qualité/fit/temps/loc/risk) et la mise en avant.
+
+1) Schéma & persistance
+
+Créer/valider table ProjectStandardization (si pas existante) :
+	•	project_id FK, title_std, summary_std, acceptance_criteria text[],
+	•	category_std, sub_category_std, tags_std string[],
+	•	tasks_std jsonb[], deliverables_std jsonb[],
+	•	skills_std string[], constraints_std string[],
+	•	brief_quality_score float (0–1), richness_score float (0–1),
+	•	missing_info jsonb[],
+	•	price_suggested_min/med/max int (cents), delay_suggested_days int,
+	•	loc_base float, loc_uplift_reco jsonb {new_budget, new_delay, delta_loc},
+	•	rewrite_version string, created_at, updated_at.
+
+Créer table ProjectChangeLog :
+	•	id, project_id, before jsonb, after jsonb, applied_by (system/user), reason string, created_at.
+
+2) Microservice ML (FastAPI) – moteur d’amélioration
+
+Ajouter/renforcer modules (offline OK, embeddings locaux optionnels ; sinon BM25/TF‑IDF) :
+	•	text_normalizer.py : nettoyage FR, unités (m², h, pages, km), extraction quantités/contraintes.
+	•	taxonomizer.py : mapping catégorie/sous‑catégorie/skills/tags via règles + BM25.
+	•	template_rewriter.py : réécriture structurée (templates par catégorie) → title_std, summary_std (5–7 phrases), acceptance_criteria (SMART).
+	•	brief_quality.py : brief_quality_score, richness_score, missing_info (questions concrètes).
+	•	price_time_suggester.py : price_suggested_{min,med,max}, delay_suggested_days + rationale (s’appuie sur PRM quantiles + ajustements qualité/on‑site/rareté).
+	•	loc.py (+ loc_uplift.py) : loc_base + recommandation {new_budget,new_delay,delta_loc}.
+
+Endpoints ML
+	•	POST /improve {project} → renvoie l’objet complet standardisé + scores + suggestions + uplift + reasons.
+	•	POST /brief/recompute {project_id, answers[]} → met à jour standardisation/scores après réponses.
+
+Toutes les sorties incluent breakdown / reasons[] + model_version.
+
+3) API (Fastify) – actions tangibles
+
+Créer/mettre à jour :
+	•	POST /ai/projects/:id/improve
+➜ appelle /improve, persiste ProjectStandardization, retourne la version améliorée + diffs vs original.
+	•	POST /ai/projects/:id/brief/complete {answers:[{question_id,value}],apply?:boolean}
+➜ met à jour standardisation et recalcule prix/délais/LOC.
+	•	GET  /ai/projects/:id/preview
+➜ renvoie prévisualisation : texte réécrit, critères, prix/délais suggérés, scores (quality/richness/loc), questions manquantes, diff titre/desc.
+	•	POST /ai/projects/:id/apply {apply_budget?:'min'|'med'|'max', apply_delay?:boolean, apply_title?:boolean, apply_summary?:boolean}
+➜ applique suggestions au Project (maj budget/délais/titre/desc), enregistre ProjectChangeLog, recalcule scoring.
+	•	GET  /projects/:id/changelog ➜ historique des applications IA.
+
+Garder existants : /ai/projects/:id/price-ref, /ai/projects/:id/candidates, /projects/:id/loc.
+
+4) Intégration scoring & mise en avant
+
+Dans packages/core/scoring.ts :
+	•	Booster QualityScore/FitScore avec brief_quality_score & richness_score :
+
+QualityScore' = QualityScore * (1 + 0.20*(brief_quality_score - 0.5))
+FitScore'     = FitScore     * (1 + 0.15*(richness_score      - 0.5))
+
+
+	•	Si missing_info.length>0 ➜ Risk += 0.05, TimeScore -= 0.03.
+	•	LOC: utiliser loc_base et, si apply a augmenté budget/délai, mettre à jour LOCScore.
+	•	GET /ai/projects/:id/candidates doit refléter ces ajustements dans le breakdown.
+
+5) UI minimaliste (SSR) – pages & boutons
+
+Ajouter templates (sans framework) + routes GET :
+	•	/projects/:id/improve
+	•	Colonne gauche : annonce d’origine.
+	•	Colonne droite : version améliorée (titre, résumé, critères, tâches, livrables, skills, contraintes).
+	•	Cartes Prix (min/med/max), Délais, BriefQuality, Richness, LOC (base/uplift).
+	•	Questions manquantes (form POST /ai/projects/:id/brief/complete).
+	•	Boutons : “Appliquer (budget médian + délais)” → POST /ai/projects/:id/apply,
+“Appliquer le texte (titre + résumé)”, “Recalculer après réponses”.
+	•	/projects/:id/changelog : liste des modifications (diffs) avec date et raison.
+
+Textes FR prêts (placeholders) :
+	•	“Nous avons clarifié votre annonce, ajouté des critères d’acceptation, et proposé un budget/délai réalistes.”
+	•	“Impact estimé sur la probabilité d’aboutissement : +{ΔLOC}%.”
+
+6) Métriques & KPIs
+	•	Ajouter à /admin/metrics :
+	•	% d’annonces améliorées, ΔBriefQuality, ΔRichness, ΔLOC,
+	•	TTFB (Time‑to‑First‑Bid) avant/après amélioration,
+	•	Award rate des annonces améliorées vs non améliorées,
+	•	Apply rate (suggestions appliquées).
+
+7) Tests
+
+Unit (Vitest/pytest)
+	•	template_rewriter (format, champs obligatoires), brief_quality (scores/qs manquantes), price_time_suggester (cohérence), loc_uplift (delta > 0 sur scénarios).
+	•	scoring (ajustements quality/fit/risk/time).
+E2E (supertest)
+
+	1.	POST /ai/projects/:id/improve → reçoit version améliorée complète + persistance OK.
+	2.	GET /ai/projects/:id/preview → affiche diff & scores.
+	3.	POST /ai/projects/:id/apply (budget=med, delay=true, title=true, summary=true) → Project modifié + entrée ProjectChangeLog.
+	4.	GET /ai/projects/:id/candidates → breakdown intègre les ajustements.
+	5.	KPIs /admin/metrics → compteurs mis à jour.
+
+8) README (FR)
+	•	“Activer l’amélioration IA en 3 étapes” :
+	1.	POST /ai/projects/:id/improve
+	2.	GET  /ai/projects/:id/preview
+	3.	POST /ai/projects/:id/apply
+	•	Exemples curl ci‑dessous + captures textuelles.
+
+9) Definition of Done
+	•	Le moteur IA produit une version améliorée exploitable (réécriture + standardisation + prix/délais + questions + LOC uplift) et la persiste.
+	•	Des endpoints et pages permettent de prévisualiser et appliquer les suggestions en 1 clic.
+	•	Les scores et la mise en avant reflètent les améliorations.
+	•	Changelog consultable.
+	•	Tests verts, KPIs exposés, README mis à jour.
+
+⸻
+
+5 cURL pour vérifier
+
+# 1) Améliorer une annonce publiée
+curl -X POST http://localhost:3000/ai/projects/<ID>/improve -H "Content-Type: application/json" -d '{}'
+
+# 2) Prévisualiser la version améliorée + diffs
+curl http://localhost:3000/ai/projects/<ID>/preview
+
+# 3) Répondre aux questions manquantes (exemple)
+curl -X POST http://localhost:3000/ai/projects/<ID>/brief/complete \
+  -H "Content-Type: application/json" \
+  -d '{"answers":[{"question_id":"surface_m2","value":"40"},{"question_id":"finition","value":"satin"}],"apply":false}'
+
+# 4) Appliquer les suggestions IA (budget médian + délais + texte)
+curl -X POST http://localhost:3000/ai/projects/<ID>/apply \
+  -H "Content-Type: application/json" \
+  -d '{"apply_budget":"med","apply_delay":true,"apply_title":true,"apply_summary":true}'
+
+# 5) Voir l’historique des changements
+curl http://localhost:3000/projects/<ID>/changelog
+
+— Fin du prompt.
