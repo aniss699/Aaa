@@ -222,6 +222,158 @@ app.post("/api/ai/optimize-brief", (req, res) => {
   };
   res.json(optimizedBrief);
 });
+app.post("/api/ai/brief-analysis", (req, res) => {
+  const { description, category, title } = req.body;
+  if (!description) {
+    return res.status(400).json({ error: "Description requise" });
+  }
+  const qualityScore = Math.floor(Math.random() * 40) + 60;
+  const improvements = [];
+  const missingElements = [];
+  if (description.length < 100) {
+    improvements.push("D\xE9velopper davantage la description pour plus de clart\xE9");
+    missingElements.push("Description trop courte");
+  }
+  if (!description.toLowerCase().includes("budget") && !description.includes("\u20AC")) {
+    improvements.push("Mentionner une fourchette budg\xE9taire indicative");
+    missingElements.push("Budget non pr\xE9cis\xE9");
+  }
+  if (!description.toLowerCase().includes("d\xE9lai") && !description.toLowerCase().includes("quand")) {
+    improvements.push("Pr\xE9ciser les d\xE9lais souhait\xE9s");
+    missingElements.push("D\xE9lais absents");
+  }
+  if (!description.toLowerCase().match(/(react|vue|angular|php|python|javascript|node)/)) {
+    improvements.push("Sp\xE9cifier les technologies pr\xE9f\xE9r\xE9es si applicables");
+    missingElements.push("Technologies non mentionn\xE9es");
+  }
+  if (!description.toLowerCase().includes("livrable")) {
+    improvements.push("D\xE9tailler les livrables attendus");
+    missingElements.push("Livrables flous");
+  }
+  const optimizedDescription = generateOptimizedDescription(description, category, title);
+  const analysis = {
+    qualityScore,
+    improvements,
+    missingElements,
+    optimizedDescription,
+    detectedSkills: extractSkillsFromDescription(description),
+    estimatedComplexity: estimateComplexity(description),
+    suggestedCategories: category ? [category] : suggestCategories(description),
+    marketInsights: {
+      demandLevel: Math.random() > 0.5 ? "high" : "medium",
+      competitionLevel: Math.random() > 0.5 ? "medium" : "low",
+      suggestedBudgetRange: suggestBudgetRange(description, category)
+    }
+  };
+  res.json(analysis);
+});
+function generateOptimizedDescription(description, category, title) {
+  const baseDesc = description || "Description du projet";
+  return `**${title || "Projet \xE0 d\xE9finir"}**
+
+**Contexte et Objectifs :**
+${baseDesc}
+
+**Livrables Attendus :**
+\u2022 Solution compl\xE8te et fonctionnelle
+\u2022 Code source document\xE9 et comment\xE9
+\u2022 Tests unitaires et documentation technique
+\u2022 Formation/support utilisateur inclus
+
+**Comp\xE9tences Techniques Recherch\xE9es :**
+\u2022 Ma\xEEtrise des technologies modernes du ${category || "d\xE9veloppement"}
+\u2022 Exp\xE9rience en bonnes pratiques de d\xE9veloppement
+\u2022 Capacit\xE9 \xE0 travailler en m\xE9thodologie agile
+\u2022 Communication fluide et r\xE9guli\xE8re
+
+**Crit\xE8res de S\xE9lection :**
+\u2022 Portfolio de projets similaires
+\u2022 R\xE9f\xE9rences clients v\xE9rifiables
+\u2022 M\xE9thodologie de travail structur\xE9e
+\u2022 Disponibilit\xE9 et r\xE9activit\xE9
+
+**Budget et Modalit\xE9s :**
+\u2022 Budget \xE0 d\xE9finir selon proposition d\xE9taill\xE9e
+\u2022 Paiement \xE9chelonn\xE9 selon avancement
+\u2022 Possibilit\xE9 de facturation en r\xE9gie ou forfait
+
+**Suivi et Communication :**
+\u2022 Points d'avancement r\xE9guliers
+\u2022 Livraison par phases si n\xE9cessaire
+\u2022 Support post-livraison inclus`;
+}
+function extractSkillsFromDescription(description) {
+  const skillsMap = {
+    "react": "React.js",
+    "vue": "Vue.js",
+    "angular": "Angular",
+    "php": "PHP",
+    "python": "Python",
+    "javascript": "JavaScript",
+    "typescript": "TypeScript",
+    "node": "Node.js",
+    "sql": "SQL/Database",
+    "mongodb": "MongoDB",
+    "postgresql": "PostgreSQL",
+    "docker": "Docker",
+    "aws": "AWS Cloud"
+  };
+  const detectedSkills = [];
+  const lowerDesc = description.toLowerCase();
+  Object.entries(skillsMap).forEach(([key, skill]) => {
+    if (lowerDesc.includes(key)) {
+      detectedSkills.push(skill);
+    }
+  });
+  return detectedSkills;
+}
+function estimateComplexity(description) {
+  let complexity = 3;
+  const lowerDesc = description.toLowerCase();
+  if (lowerDesc.includes("api") || lowerDesc.includes("int\xE9gration")) complexity += 1;
+  if (lowerDesc.includes("paiement") || lowerDesc.includes("payment")) complexity += 2;
+  if (lowerDesc.includes("mobile") && lowerDesc.includes("web")) complexity += 2;
+  if (lowerDesc.includes("temps r\xE9el") || lowerDesc.includes("real-time")) complexity += 2;
+  if (lowerDesc.includes("ia") || lowerDesc.includes("intelligence artificielle")) complexity += 3;
+  if (lowerDesc.includes("blockchain") || lowerDesc.includes("crypto")) complexity += 3;
+  return Math.min(complexity, 10);
+}
+function suggestCategories(description) {
+  const lowerDesc = description.toLowerCase();
+  const categories = [];
+  if (lowerDesc.includes("site") || lowerDesc.includes("web")) {
+    categories.push("development");
+  }
+  if (lowerDesc.includes("mobile") || lowerDesc.includes("application")) {
+    categories.push("mobile");
+  }
+  if (lowerDesc.includes("design") || lowerDesc.includes("ui") || lowerDesc.includes("ux")) {
+    categories.push("design");
+  }
+  if (lowerDesc.includes("marketing") || lowerDesc.includes("publicit\xE9")) {
+    categories.push("marketing");
+  }
+  if (lowerDesc.includes("ia") || lowerDesc.includes("intelligence")) {
+    categories.push("ai");
+  }
+  return categories.length > 0 ? categories : ["development"];
+}
+function suggestBudgetRange(description, category) {
+  const baseBudgets = {
+    "development": [2e3, 8e3],
+    "mobile": [3e3, 12e3],
+    "design": [800, 3e3],
+    "marketing": [1e3, 5e3],
+    "ai": [5e3, 2e4]
+  };
+  const baseRange = baseBudgets[category] || [2e3, 6e3];
+  const complexity = estimateComplexity(description);
+  const multiplier = 0.5 + complexity / 10 * 1.5;
+  return {
+    min: Math.round(baseRange[0] * multiplier),
+    max: Math.round(baseRange[1] * multiplier)
+  };
+}
 app.post("/api/ai/predict-revenue", (req, res) => {
   const { missionData, providerData } = req.body;
   const mockPrediction = {
