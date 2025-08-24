@@ -11,7 +11,55 @@ app.use(express.static(path.join(__dirname, "../dist/public")));
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "AppelsPro API is running" });
 });
+var missions = [
+  {
+    id: "mission1",
+    title: "D\xE9veloppement d'une application mobile de e-commerce",
+    description: "Je recherche un d\xE9veloppeur exp\xE9riment\xE9 pour cr\xE9er une application mobile compl\xE8te de vente en ligne avec syst\xE8me de paiement int\xE9gr\xE9.",
+    category: "development",
+    budget: "5000",
+    location: "Paris, France",
+    clientId: "client1",
+    clientName: "Marie Dubois",
+    status: "open",
+    createdAt: (/* @__PURE__ */ new Date("2024-01-15")).toISOString(),
+    bids: []
+  }
+  // ... autres missions
+];
 app.get("/api/missions", (req, res) => {
+  res.json(missions);
+});
+app.post("/api/missions", (req, res) => {
+  const { title, description, category, budget, location, clientId, clientName } = req.body;
+  if (!title || !description || !category || !budget || !clientId || !clientName) {
+    return res.status(400).json({ error: "Champs requis manquants" });
+  }
+  const newMission = {
+    id: `mission_${Date.now()}`,
+    title,
+    description,
+    category,
+    budget,
+    location: location || "Non sp\xE9cifi\xE9",
+    clientId,
+    clientName,
+    status: "open",
+    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+    bids: []
+  };
+  missions.push(newMission);
+  res.status(201).json(newMission);
+});
+app.get("/api/missions/:id", (req, res) => {
+  const { id } = req.params;
+  const mission = missions.find((m) => m.id === id);
+  if (!mission) {
+    return res.status(404).json({ error: "Mission non trouv\xE9e" });
+  }
+  res.json(mission);
+});
+app.get("/api/missions-demo", (req, res) => {
   const demoMissions = [
     {
       id: "mission1",
@@ -132,6 +180,47 @@ app.post("/api/ai/match-missions", (req, res) => {
     }
   ];
   res.json(mockMatches);
+});
+app.post("/api/ai/price-analysis", (req, res) => {
+  const { category, description, location, complexity } = req.body;
+  const basePrice = {
+    "development": 5e3,
+    "design": 2e3,
+    "marketing": 1500,
+    "mobile": 8e3,
+    "ai": 12e3
+  }[category] || 3e3;
+  const complexityMultiplier = complexity / 5;
+  const suggestedPrice = Math.round(basePrice * complexityMultiplier);
+  const priceRange = {
+    min: Math.round(suggestedPrice * 0.8),
+    max: Math.round(suggestedPrice * 1.3)
+  };
+  const mockAnalysis = {
+    suggestedPrice,
+    priceRange,
+    reasoning: `Bas\xE9 sur la cat\xE9gorie ${category}, complexit\xE9 ${complexity}/10 et analyse du march\xE9`,
+    marketContext: {
+      demandLevel: Math.random() > 0.5 ? "high" : "medium",
+      competitionLevel: Math.random() > 0.5 ? "medium" : "low"
+    }
+  };
+  res.json(mockAnalysis);
+});
+app.post("/api/ai/optimize-brief", (req, res) => {
+  const { description } = req.body;
+  const optimizedBrief = {
+    optimizedDescription: `${description}
+
+[Optimis\xE9 par IA] Objectifs clairs, fonctionnalit\xE9s d\xE9taill\xE9es, contraintes techniques sp\xE9cifi\xE9es.`,
+    improvements: [
+      "Structure am\xE9lior\xE9e",
+      "D\xE9tails techniques ajout\xE9s",
+      "Crit\xE8res de succ\xE8s d\xE9finis"
+    ],
+    qualityScore: Math.floor(Math.random() * 30) + 70
+  };
+  res.json(optimizedBrief);
 });
 app.post("/api/ai/predict-revenue", (req, res) => {
   const { missionData, providerData } = req.body;
