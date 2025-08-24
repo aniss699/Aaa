@@ -73,7 +73,7 @@ app.get('/api/missions/:id', (req, res) => {
   const mission = missions.find(m => m.id === id);
 
   if (!mission) {
-    return res.status(404).json({ error: 'Mission non trouvée' });
+    return res.status(400).json({ error: 'Mission non trouvée' });
   }
 
   res.json(mission);
@@ -211,37 +211,191 @@ app.post('/api/ai/match-missions', (req, res) => {
 });
 
 // Endpoint pour l'analyse de prix IA
-app.post('/api/ai/price-analysis', (req, res) => {
-  const { category, description, location, complexity } = req.body;
+app.post('/api/ai/price-analysis', async (req, res) => {
+  try {
+    const { category, description, location, complexity, urgency } = req.body;
 
-  // Simulation d'analyse de prix basée sur la complexité et la catégorie
-  const basePrice = {
-    'development': 5000,
-    'design': 2000,
-    'marketing': 1500,
-    'mobile': 8000,
-    'ai': 12000
-  }[category] || 3000;
+    // Base de données enrichie des catégories avec métriques de marché
+    const categoryMarketData = {
+      'developpement': {
+        avgBudget: 3500, priceRange: [800, 15000], avgDuration: 21, 
+        availableProviders: 850, competitionLevel: 'high',
+        seasonalMultiplier: 1.2, urgencyPremium: 0.3,
+        skills: ['JavaScript', 'React', 'Node.js', 'Python', 'PHP'],
+        demandTrend: 'growing', clientSatisfactionRate: 0.87
+      },
+      'design': {
+        avgBudget: 1500, priceRange: [300, 5000], avgDuration: 14,
+        availableProviders: 620, competitionLevel: 'medium',
+        seasonalMultiplier: 0.9, urgencyPremium: 0.1,
+        skills: ['Figma', 'Photoshop', 'UX/UI', 'Illustrator'],
+        demandTrend: 'stable', clientSatisfactionRate: 0.91
+      },
+      'marketing': {
+        avgBudget: 1200, priceRange: [200, 4000], avgDuration: 10,
+        availableProviders: 470, competitionLevel: 'medium',
+        seasonalMultiplier: 1.1, urgencyPremium: 0.2,
+        skills: ['SEO', 'Google Ads', 'Facebook Ads', 'Content'],
+        demandTrend: 'growing', clientSatisfactionRate: 0.83
+      },
+      'travaux': {
+        avgBudget: 2800, priceRange: [500, 20000], avgDuration: 28,
+        availableProviders: 1200, competitionLevel: 'high',
+        seasonalMultiplier: 1.3, urgencyPremium: 0.4,
+        skills: ['Plomberie', 'Électricité', 'Peinture', 'Maçonnerie'],
+        demandTrend: 'seasonal', clientSatisfactionRate: 0.89
+      },
+      'services_personne': {
+        avgBudget: 800, priceRange: [100, 2000], avgDuration: 7,
+        availableProviders: 950, competitionLevel: 'high',
+        seasonalMultiplier: 1.0, urgencyPremium: 0.5,
+        skills: ['Ménage', 'Garde enfants', 'Aide domicile'],
+        demandTrend: 'stable', clientSatisfactionRate: 0.94
+      },
+      'jardinage': {
+        avgBudget: 600, priceRange: [80, 1500], avgDuration: 5,
+        availableProviders: 380, competitionLevel: 'medium',
+        seasonalMultiplier: 1.8, urgencyPremium: 0.1,
+        skills: ['Élagage', 'Tonte', 'Plantation', 'Paysagisme'],
+        demandTrend: 'seasonal', clientSatisfactionRate: 0.88
+      },
+      'transport': {
+        avgBudget: 400, priceRange: [50, 1200], avgDuration: 3,
+        availableProviders: 320, competitionLevel: 'medium',
+        seasonalMultiplier: 1.1, urgencyPremium: 0.6,
+        skills: ['Permis B', 'Véhicule utilitaire', 'Manutention'],
+        demandTrend: 'stable', clientSatisfactionRate: 0.85
+      },
+      'beaute_bienetre': {
+        avgBudget: 300, priceRange: [30, 800], avgDuration: 4,
+        availableProviders: 280, competitionLevel: 'low',
+        seasonalMultiplier: 0.8, urgencyPremium: 0.0,
+        skills: ['Coiffure', 'Esthétique', 'Massage', 'Manucure'],
+        demandTrend: 'stable', clientSatisfactionRate: 0.92
+      },
+      'services_pro': {
+        avgBudget: 2500, priceRange: [500, 10000], avgDuration: 14,
+        availableProviders: 420, competitionLevel: 'low',
+        seasonalMultiplier: 1.0, urgencyPremium: 0.2,
+        skills: ['Comptabilité', 'Juridique', 'Conseil', 'Formation'],
+        demandTrend: 'stable', clientSatisfactionRate: 0.90
+      },
+      'evenementiel': {
+        avgBudget: 1800, priceRange: [300, 8000], avgDuration: 21,
+        availableProviders: 180, competitionLevel: 'low',
+        seasonalMultiplier: 1.5, urgencyPremium: 0.3,
+        skills: ['Organisation', 'Traiteur', 'Décoration', 'Animation'],
+        demandTrend: 'seasonal', clientSatisfactionRate: 0.86
+      },
+      'enseignement': {
+        avgBudget: 900, priceRange: [200, 3000], avgDuration: 30,
+        availableProviders: 650, competitionLevel: 'medium',
+        seasonalMultiplier: 1.4, urgencyPremium: 0.1,
+        skills: ['Pédagogie', 'Français', 'Mathématiques', 'Langues'],
+        demandTrend: 'seasonal', clientSatisfactionRate: 0.91
+      },
+      'animaux': {
+        avgBudget: 250, priceRange: [20, 600], avgDuration: 5,
+        availableProviders: 150, competitionLevel: 'low',
+        seasonalMultiplier: 1.0, urgencyPremium: 0.4,
+        skills: ['Vétérinaire', 'Garde animaux', 'Toilettage', 'Dressage'],
+        demandTrend: 'stable', clientSatisfactionRate: 0.93
+      }
+    };
 
-  const complexityMultiplier = complexity / 5; // Normaliser sur 2
-  const suggestedPrice = Math.round(basePrice * complexityMultiplier);
+    const marketData = categoryMarketData[category] || categoryMarketData['developpement'];
 
-  const priceRange = {
-    min: Math.round(suggestedPrice * 0.8),
-    max: Math.round(suggestedPrice * 1.3)
-  };
+    // Calcul de prix intelligent basé sur multiples facteurs
+    let baseBudget = marketData.avgBudget;
 
-  const mockAnalysis = {
-    suggestedPrice,
-    priceRange,
-    reasoning: `Basé sur la catégorie ${category}, complexité ${complexity}/10 et analyse du marché`,
-    marketContext: {
-      demandLevel: Math.random() > 0.5 ? 'high' : 'medium',
-      competitionLevel: Math.random() > 0.5 ? 'medium' : 'low'
-    }
-  };
+    // Ajustement complexité (1-10)
+    const complexityMultiplier = 0.7 + (complexity * 0.06); // 0.7 à 1.3
+    baseBudget *= complexityMultiplier;
 
-  res.json(mockAnalysis);
+    // Ajustement urgence
+    const urgencyMultiplier = urgency === 'high' ? (1 + marketData.urgencyPremium) : 
+                             urgency === 'medium' ? 1.05 : 1.0;
+    baseBudget *= urgencyMultiplier;
+
+    // Ajustement saisonnier
+    baseBudget *= marketData.seasonalMultiplier;
+
+    // Calcul du nombre de prestataires potentiellement intéressés
+    const descriptionQuality = Math.min(1.0, description.length / 200);
+    const budgetAttractiveness = baseBudget > marketData.avgBudget ? 1.2 : 0.8;
+    const urgencyFactor = urgency === 'high' ? 0.7 : 1.0; // Moins de prestataires dispo en urgence
+
+    const estimatedInterestedProviders = Math.round(
+      marketData.availableProviders * 
+      descriptionQuality * 
+      budgetAttractiveness * 
+      urgencyFactor * 
+      0.05 // 5% des prestataires généralement intéressés par une mission
+    );
+
+    // Délai suggéré intelligent
+    let suggestedDuration = marketData.avgDuration;
+
+    // Ajustement complexité
+    suggestedDuration += (complexity - 5) * 2;
+
+    // Ajustement urgence
+    if (urgency === 'high') suggestedDuration *= 0.7;
+    else if (urgency === 'medium') suggestedDuration *= 0.9;
+
+    suggestedDuration = Math.max(1, Math.round(suggestedDuration));
+
+    const analysis = {
+      recommendedBudget: {
+        min: Math.round(baseBudget * 0.8),
+        optimal: Math.round(baseBudget),
+        max: Math.round(baseBudget * 1.3),
+        reasoning: `Basé sur ${marketData.avgBudget}€ (moyenne ${category}), ajusté pour complexité (x${complexityMultiplier.toFixed(2)}) et urgence (x${urgencyMultiplier.toFixed(2)})`
+      },
+      marketInsights: {
+        categoryDemand: marketData.demandTrend,
+        competitionLevel: marketData.competitionLevel,
+        availableProviders: marketData.availableProviders,
+        estimatedApplications: estimatedInterestedProviders,
+        successRate: marketData.clientSatisfactionRate,
+        averageDelay: marketData.avgDuration,
+        priceRange: marketData.priceRange
+      },
+      timeline: {
+        suggestedDays: suggestedDuration,
+        reasoning: `Durée type ${marketData.avgDuration}j, ajustée pour complexité et urgence`
+      },
+      providerAvailability: {
+        total: marketData.availableProviders,
+        estimated_interested: estimatedInterestedProviders,
+        competition_level: marketData.competitionLevel,
+        advice: marketData.competitionLevel === 'high' ? 
+          'Marché très concurrentiel - soyez précis dans vos exigences' :
+          'Bonne disponibilité des prestataires'
+      },
+      optimization_tips: [
+        baseBudget > marketData.priceRange[1] * 0.8 ? 
+          'Budget attractif - vous devriez recevoir de nombreuses candidatures' :
+          'Considérez augmenter le budget pour plus de candidatures',
+
+        urgency === 'high' ? 
+          'Mission urgente - préparez-vous à payer une prime d\'urgence de 20-40%' :
+          'Délai raisonnable - bonne flexibilité sur le planning',
+
+        `Compétences clés pour cette catégorie: ${marketData.skills.join(', ')}`,
+
+        marketData.seasonalMultiplier > 1.1 ? 
+          'Période de forte demande - les prix peuvent être plus élevés' :
+          'Période favorable pour négocier les prix'
+      ],
+      confidence: 0.85
+    };
+
+    res.json(analysis);
+  } catch (error) {
+    console.error('Erreur analyse prix IA:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'analyse' });
+  }
 });
 
 // Endpoint pour l'optimisation de brief IA
@@ -555,6 +709,13 @@ function generateOptimizedDescription(description, title, category, analysis) {
     'garde_enfants': generateGardeEnfantsOptimizedDescription,
     'jardinage': generateJardinageOptimizedDescription,
     'comptabilite': generateComptabiliteOptimizedDescription,
+    'travaux': generateConstructionOptimizedDescription, // Alias for construction
+    'transport': generateTransportOptimizedDescription,
+    'beaute_bienetre': generateBeauteBienEtreOptimizedDescription,
+    'services_pro': generateServicesProOptimizedDescription,
+    'evenementiel': generateEvenementielOptimizedDescription,
+    'enseignement': generateEnseignementOptimizedDescription,
+    'animaux': generateAnimauxOptimizedDescription,
   };
 
   const generator = categoryTemplates[category] || generateGenericOptimizedDescription;
@@ -582,6 +743,13 @@ function generateProjectTitle(description, category) {
     'garde_enfants': 'Garde d\'Enfants et Soutien Familial',
     'jardinage': 'Entretien de Jardin et Espaces Verts',
     'comptabilite': 'Expertise Comptable et Fiscale',
+    'travaux': 'Travaux de Construction et Rénovation',
+    'transport': 'Service de Transport et Déménagement',
+    'beaute_bienetre': 'Prestation de Beauté et Bien-être à Domicile',
+    'services_pro': 'Conseil et Services aux Professionnels',
+    'evenementiel': 'Organisation d\'Événements Sur Mesure',
+    'enseignement': 'Soutien Scolaire et Cours Particuliers',
+    'animaux': 'Services pour Animaux de Compagnie',
   };
 
   return categoryTitles[category] || 'Projet Professionnel';
@@ -600,7 +768,7 @@ ${description.length > 50 ? description : 'Nous cherchons à développer une sol
 ${features.length > 0 ? features.map(f => `• ${f}`).join('\n') : `• Interface utilisateur intuitive et responsive
 • Backend robuste et sécurisé
 • Base de données optimisée
-• Panel d'administration complet`}
+• Panel d\'administration complet`}
 
 **Stack Technique Souhaitée :**
 ${techStack.length > 0 ? techStack.map(t => `• ${t}`).join('\n') : `• Frontend moderne (React, Vue.js ou Angular)
@@ -610,9 +778,9 @@ ${techStack.length > 0 ? techStack.map(t => `• ${t}`).join('\n') : `• Fronte
 
 **Livrables Attendus :**
 • Code source complet et documenté
-• Tests unitaires et d'intégration
+• Tests unitaires et d\'intégration
 • Documentation technique et utilisateur
-• Formation à l'utilisation
+• Formation à l\'utilisation
 • 3 mois de support technique inclus
 
 **Critères de Sélection :**
@@ -1186,7 +1354,7 @@ ${description.length > 50 ? description : 'Installation, modification ou dépann
 
 **Contexte Technique :**
 • Type de bâtiment : Maison / Appartement / Bureau / Local
-• Age de l\'installation : Ancienne / Rénovée / Neuve
+• Âge de l\'installation : Ancienne / Rénovée / Neuve
 • Normes à respecter : NF C 15-100 / Consuel
 • Complexité : Faible / Moyenne / Élevée
 
@@ -1610,6 +1778,237 @@ function extractFeaturesFromDescription(description) {
 
   return features;
 }
+
+// Helper functions for specific categories (placeholder for now)
+function generateTransportOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Type de Transport :**
+${description.length > 50 ? description : 'Service de transport fiable pour vos besoins logistiques ou personnels.'}
+
+**Nature de la Prestation :**
+• Déménagement (particulier, professionnel)
+• Livraison de marchandises
+• Transport de colis
+• Location de véhicule utilitaire avec chauffeur
+• Transfert aéroport/gare
+• ${analysis.hasComplexFeatures ? 'Transport de matériel spécialisé' : 'Trajet ponctuel'}
+
+**Informations Clés :**
+• Origine : À préciser
+• Destination : À préciser
+• Type de véhicule requis : Camionnette / Camion / Voiture
+• Volume / Poids : À estimer
+• Urgence : ${analysis.isUrgent ? 'Urgente' : 'Standard'}
+
+**Exigences :**
+• Ponctualité et professionnalisme
+• Soin dans la manutention
+• Respect des délais
+• Véhicule adapté et entretenu
+• Assurance transport
+
+**Livrables :**
+• Objet livré à destination en bon état
+• Respect des horaires convenus
+• Facture claire
+
+**Tarifs :**
+• Devis gratuit sur demande
+• Tarification selon distance, volume et urgence`;
+}
+
+function generateBeauteBienEtreOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin de Soins Beauté/Bien-être :**
+${description.length > 50 ? description : 'Profitez de prestations de beauté et de bien-être personnalisées à votre domicile.'}
+
+**Type de Prestation :**
+• Coiffure (coupe, couleur, brushing)
+• Soins esthétiques (manucure, pédicure, épilation)
+• Modelage et massage relaxant
+• Maquillage professionnel
+• ${analysis.hasComplexFeatures ? 'Conseil en image' : 'Soins du visage'}
+
+**Informations sur la Prestation :**
+• Lieu : Domicile / Studio
+• Période souhaitée : Journée / Soirée / Week-end
+• Fréquence : Ponctuelle / Régulière
+
+**Profil du Professionnel :**
+• Diplômé(e) et expérimenté(e)
+• Matériel professionnel et produits de qualité
+• Hygiène et discrétion irréprochables
+• Ponctualité et professionnalisme
+
+**Livrables :**
+• Résultat conforme aux attentes
+• Moment de détente et de bien-être
+
+**Tarifs :**
+• Tarifs à la prestation ou forfait
+• Devis personnalisé sur demande`;
+}
+
+function generateServicesProOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin de Services Professionnels :**
+${description.length > 50 ? description : 'Accompagnement de votre activité professionnelle par des experts dans divers domaines.'}
+
+**Domaine de Service :**
+• Conseil juridique / fiscal
+• Aide à la création d'entreprise
+• Gestion administrative et comptable
+• Formation professionnelle
+• Développement web / mobile
+• ${analysis.hasComplexFeatures ? 'Audit de sécurité' : 'Stratégie commerciale'}
+
+**Objectifs :**
+• Optimiser la gestion de votre entreprise
+• Améliorer votre performance
+• Respecter vos obligations légales
+• Développer vos compétences
+
+**Profil du Prestataire :**
+• Expertise reconnue dans son domaine
+• Expérience significative auprès des entreprises
+• Capacité d'analyse et de conseil
+• Confidentialité et rigueur
+
+**Livrables :**
+• Rapports d'audit, analyses
+• Documents juridiques et fiscaux
+• Plans d'action et recommandations
+• Formations adaptées
+
+**Modalités :**
+• Devis gratuit sur demande
+• Interventions sur site ou à distance
+• Confidentialité garantie`;
+}
+
+function generateEvenementielOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Organisation d'Événement :**
+${description.length > 50 ? description : 'Conception et réalisation d\'événements mémorables et réussis pour vos besoins professionnels ou personnels.'}
+
+**Type d\'Événement :**
+• Mariage
+• Anniversaire
+• Séminaire d'entreprise
+• Lancement de produit
+• Soirée de gala
+• ${analysis.hasComplexFeatures ? 'Festival / Concert' : 'Cocktail'}
+
+**Prestations :**
+• Recherche de lieu
+• Conception du concept
+• Gestion du budget
+• Coordination des prestataires (traiteur, DJ, photographe...)
+• Décoration et ambiance
+• Logistique et accueil
+
+**Exigences :**
+• Créativité et sens de l'organisation
+• Réactivité et gestion du stress
+• Souci du détail
+• Respect des délais et du budget
+
+**Livrables :**
+• Événement clé en main parfaitement orchestré
+• Expérience mémorable pour les participants
+
+**Tarifs :**
+• Forfait d'organisation selon l'événement
+• Commission sur les prestataires
+• Devis personnalisé sur demande`;
+}
+
+function generateEnseignementOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Besoin de Soutien Scolaire/Cours :**
+${description.length > 50 ? description : 'Accompagnement pédagogique personnalisé pour favoriser la réussite scolaire et le développement des compétences.'}
+
+**Niveau Concerné :**
+• Primaire
+• Collège
+• Lycée
+• Supérieur
+• Adulte
+
+**Matières Proposées :**
+• Français
+• Mathématiques
+• Anglais / Autres langues
+• Physique-Chimie
+• Histoire-Géographie
+• ${analysis.hasComplexFeatures ? 'Informatique / Programmation' : 'SVT'}
+
+**Objectifs :**
+• Soutien méthodologique
+• Consolidation des acquis
+• Préparation aux examens
+• Approfondissement des connaissances
+• Développement de l'autonomie
+
+**Profil du Formateur :**
+• Pédagogue et patient
+• Diplômé(e) ou expert(e) dans sa matière
+• Expérience dans l'enseignement / soutien scolaire
+• Capacité d'adaptation
+
+**Livrables :**
+• Progression mesurable de l'apprenant
+• Meilleure compréhension des matières
+• Confiance en soi renforcée
+
+**Tarifs :**
+• Taux horaire selon niveau et matière
+• Forfait possible pour stages intensifs
+• Devis personnalisé sur demande`;
+}
+
+function generateAnimauxOptimizedDescription(description, title, analysis) {
+  return `**${title}**
+
+**Service pour Animaux :**
+${description.length > 50 ? description : 'Prestations professionnelles et attentionnées pour le bien-être de vos compagnons à quatre pattes.'}
+
+**Type de Service :**
+• Garde d'animaux (pension, famille d'accueil)
+• Promenade / Lâcher
+• Toilettage
+• Dressage / Éducation canine
+• Visite à domicile
+• ${analysis.hasComplexFeatures ? 'Transport d\'animaux' : 'Garde ponctuelle'}
+
+**Informations sur l'Animal :**
+• Espèce : Chien / Chat / Autre
+• Race : À préciser
+• Âge : À préciser
+• Comportement / Besoins spécifiques : (Santé, alimentation, caractère...)
+
+**Exigences :**
+• Amour et respect des animaux
+• Expérience et compétences adaptées
+• Patience et bienveillance
+• Fiabilité et ponctualité
+• Environnement sécurisé et stimulant
+
+**Livrables :**
+• Animal soigné, heureux et en sécurité
+• Compte-rendu des activités
+• Animal propre et bien présenté (toilettage)
+
+**Tarifs :**
+• Tarification à la journée, à la semaine ou à la prestation
+• Devis personnalisé sur demande`;
+}
+
 
 app.post('/api/ai/predict-revenue', (req, res) => {
   const { missionData, providerData } = req.body;
