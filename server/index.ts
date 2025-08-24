@@ -261,6 +261,192 @@ app.post('/api/ai/optimize-brief', (req, res) => {
   res.json(optimizedBrief);
 });
 
+// Endpoint pour l'analyse de brief IA (utilisé dans create-mission.tsx)
+app.post('/api/ai/brief-analysis', (req, res) => {
+  const { description, category, title } = req.body;
+
+  if (!description) {
+    return res.status(400).json({ error: 'Description requise' });
+  }
+
+  // Simulation d'analyse IA avancée
+  const qualityScore = Math.floor(Math.random() * 40) + 60; // Score entre 60-100
+
+  const improvements = [];
+  const missingElements = [];
+
+  // Analyse du contenu
+  if (description.length < 100) {
+    improvements.push("Développer davantage la description pour plus de clarté");
+    missingElements.push("Description trop courte");
+  }
+
+  if (!description.toLowerCase().includes('budget') && !description.includes('€')) {
+    improvements.push("Mentionner une fourchette budgétaire indicative");
+    missingElements.push("Budget non précisé");
+  }
+
+  if (!description.toLowerCase().includes('délai') && !description.toLowerCase().includes('quand')) {
+    improvements.push("Préciser les délais souhaités");
+    missingElements.push("Délais absents");
+  }
+
+  if (!description.toLowerCase().match(/(react|vue|angular|php|python|javascript|node)/)) {
+    improvements.push("Spécifier les technologies préférées si applicables");
+    missingElements.push("Technologies non mentionnées");
+  }
+
+  if (!description.toLowerCase().includes('livrable')) {
+    improvements.push("Détailler les livrables attendus");
+    missingElements.push("Livrables flous");
+  }
+
+  // Génération d'une version optimisée
+  const optimizedDescription = generateOptimizedDescription(description, category, title);
+
+  const analysis = {
+    qualityScore,
+    improvements,
+    missingElements,
+    optimizedDescription,
+    detectedSkills: extractSkillsFromDescription(description),
+    estimatedComplexity: estimateComplexity(description),
+    suggestedCategories: category ? [category] : suggestCategories(description),
+    marketInsights: {
+      demandLevel: Math.random() > 0.5 ? 'high' : 'medium',
+      competitionLevel: Math.random() > 0.5 ? 'medium' : 'low',
+      suggestedBudgetRange: suggestBudgetRange(description, category)
+    }
+  };
+
+  res.json(analysis);
+});
+
+function generateOptimizedDescription(description, category, title) {
+  const baseDesc = description || "Description du projet";
+  
+  return `**${title || 'Projet à définir'}**
+
+**Contexte et Objectifs :**
+${baseDesc}
+
+**Livrables Attendus :**
+• Solution complète et fonctionnelle
+• Code source documenté et commenté
+• Tests unitaires et documentation technique
+• Formation/support utilisateur inclus
+
+**Compétences Techniques Recherchées :**
+• Maîtrise des technologies modernes du ${category || 'développement'}
+• Expérience en bonnes pratiques de développement
+• Capacité à travailler en méthodologie agile
+• Communication fluide et régulière
+
+**Critères de Sélection :**
+• Portfolio de projets similaires
+• Références clients vérifiables
+• Méthodologie de travail structurée
+• Disponibilité et réactivité
+
+**Budget et Modalités :**
+• Budget à définir selon proposition détaillée
+• Paiement échelonné selon avancement
+• Possibilité de facturation en régie ou forfait
+
+**Suivi et Communication :**
+• Points d'avancement réguliers
+• Livraison par phases si nécessaire
+• Support post-livraison inclus`;
+}
+
+function extractSkillsFromDescription(description) {
+  const skillsMap = {
+    'react': 'React.js',
+    'vue': 'Vue.js', 
+    'angular': 'Angular',
+    'php': 'PHP',
+    'python': 'Python',
+    'javascript': 'JavaScript',
+    'typescript': 'TypeScript',
+    'node': 'Node.js',
+    'sql': 'SQL/Database',
+    'mongodb': 'MongoDB',
+    'postgresql': 'PostgreSQL',
+    'docker': 'Docker',
+    'aws': 'AWS Cloud'
+  };
+
+  const detectedSkills = [];
+  const lowerDesc = description.toLowerCase();
+
+  Object.entries(skillsMap).forEach(([key, skill]) => {
+    if (lowerDesc.includes(key)) {
+      detectedSkills.push(skill);
+    }
+  });
+
+  return detectedSkills;
+}
+
+function estimateComplexity(description) {
+  let complexity = 3; // Base complexity
+  const lowerDesc = description.toLowerCase();
+
+  // Facteurs qui augmentent la complexité
+  if (lowerDesc.includes('api') || lowerDesc.includes('intégration')) complexity += 1;
+  if (lowerDesc.includes('paiement') || lowerDesc.includes('payment')) complexity += 2;
+  if (lowerDesc.includes('mobile') && lowerDesc.includes('web')) complexity += 2;
+  if (lowerDesc.includes('temps réel') || lowerDesc.includes('real-time')) complexity += 2;
+  if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence artificielle')) complexity += 3;
+  if (lowerDesc.includes('blockchain') || lowerDesc.includes('crypto')) complexity += 3;
+
+  return Math.min(complexity, 10); // Cap à 10
+}
+
+function suggestCategories(description) {
+  const lowerDesc = description.toLowerCase();
+  const categories = [];
+
+  if (lowerDesc.includes('site') || lowerDesc.includes('web')) {
+    categories.push('development');
+  }
+  if (lowerDesc.includes('mobile') || lowerDesc.includes('application')) {
+    categories.push('mobile');
+  }
+  if (lowerDesc.includes('design') || lowerDesc.includes('ui') || lowerDesc.includes('ux')) {
+    categories.push('design');
+  }
+  if (lowerDesc.includes('marketing') || lowerDesc.includes('publicité')) {
+    categories.push('marketing');
+  }
+  if (lowerDesc.includes('ia') || lowerDesc.includes('intelligence')) {
+    categories.push('ai');
+  }
+
+  return categories.length > 0 ? categories : ['development'];
+}
+
+function suggestBudgetRange(description, category) {
+  const baseBudgets = {
+    'development': [2000, 8000],
+    'mobile': [3000, 12000],
+    'design': [800, 3000],
+    'marketing': [1000, 5000],
+    'ai': [5000, 20000]
+  };
+
+  const baseRange = baseBudgets[category] || [2000, 6000];
+  const complexity = estimateComplexity(description);
+  
+  // Ajuster selon la complexité
+  const multiplier = 0.5 + (complexity / 10) * 1.5; // 0.5x à 2x selon complexité
+  
+  return {
+    min: Math.round(baseRange[0] * multiplier),
+    max: Math.round(baseRange[1] * multiplier)
+  };
+}
+
 app.post('/api/ai/predict-revenue', (req, res) => {
   const { missionData, providerData } = req.body;
 

@@ -188,6 +188,24 @@ export default function CreateMission() {
     }
   };
 
+  // Function to apply AI suggestions to the form data
+  const applySuggestions = () => {
+    if (!aiOptimization) return;
+
+    if (aiOptimization.optimizedDescription) {
+      setFormData(prev => ({ ...prev, description: aiOptimization.optimizedDescription }));
+    }
+    if (aiOptimization.estimatedComplexity) {
+      setMissionComplexity(aiOptimization.estimatedComplexity);
+    }
+    if (aiOptimization.marketInsights?.suggestedBudgetRange) {
+      // For simplicity, let's set the budget to the average of the suggested range
+      const avgBudget = (aiOptimization.marketInsights.suggestedBudgetRange.min + aiOptimization.marketInsights.suggestedBudgetRange.max) / 2;
+      setFormData(prev => ({ ...prev, budget: avgBudget.toString() }));
+    }
+    // You can add more fields to update based on AI optimization results
+  };
+
 
   if (!user) {
     return (
@@ -327,44 +345,114 @@ export default function CreateMission() {
 
             {/* AI Optimization Results */}
             {aiOptimization && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-                  <Brain className="w-4 h-4 mr-2" />
-                  Analyse IA de votre brief (Score: {aiOptimization.qualityScore}/100)
-                </h4>
-                <div className="text-sm text-blue-800">
-                  <Progress value={aiOptimization.qualityScore} className="mb-3" />
+              <Card className="mt-4 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-blue-900">
+                    <div className="flex items-center gap-2">
+                      <Brain className="w-5 h-5" />
+                      Analyse IA de votre annonce
+                    </div>
+                    <Badge variant={aiOptimization.qualityScore > 80 ? "default" : "secondary"}>
+                      {aiOptimization.qualityScore}/100
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Qualité globale</span>
+                      <span>{aiOptimization.qualityScore}%</span>
+                    </div>
+                    <Progress value={aiOptimization.qualityScore} className="h-2" />
+                  </div>
 
-                  {aiOptimization.improvements.length > 0 && (
-                    <div className="mb-3">
-                      <strong>💡 Suggestions d'amélioration:</strong>
-                      <ul className="list-disc list-inside mt-1">
+                  {/* Compétences détectées */}
+                  {aiOptimization.detectedSkills && aiOptimization.detectedSkills.length > 0 && (
+                    <div>
+                      <strong className="text-sm text-blue-900">🎯 Compétences détectées:</strong>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {aiOptimization.detectedSkills.map((skill: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Complexité estimée */}
+                  {aiOptimization.estimatedComplexity && (
+                    <div>
+                      <strong className="text-sm text-blue-900">📊 Complexité estimée:</strong>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Progress value={aiOptimization.estimatedComplexity * 10} className="flex-1 h-2" />
+                        <span className="text-sm">{aiOptimization.estimatedComplexity}/10</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Insights marché */}
+                  {aiOptimization.marketInsights && (
+                    <div className="grid grid-cols-2 gap-4 p-3 bg-white/50 rounded-lg">
+                      <div>
+                        <div className="text-xs text-gray-600">Demande</div>
+                        <div className="font-medium capitalize">{aiOptimization.marketInsights.demandLevel}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600">Concurrence</div>
+                        <div className="font-medium capitalize">{aiOptimization.marketInsights.competitionLevel}</div>
+                      </div>
+                      {aiOptimization.marketInsights.suggestedBudgetRange && (
+                        <div className="col-span-2">
+                          <div className="text-xs text-gray-600">Budget suggéré</div>
+                          <div className="font-medium">
+                            {aiOptimization.marketInsights.suggestedBudgetRange.min}€ - {aiOptimization.marketInsights.suggestedBudgetRange.max}€
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Améliorations suggérées */}
+                  {aiOptimization.improvements && aiOptimization.improvements.length > 0 && (
+                    <div>
+                      <strong className="text-sm text-blue-900">💡 Améliorations suggérées:</strong>
+                      <ul className="list-disc list-inside mt-1 text-sm space-y-1">
                         {aiOptimization.improvements.map((improvement: string, index: number) => (
-                          <li key={index}>{improvement}</li>
+                          <li key={index} className="text-blue-800">{improvement}</li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {aiOptimization.optimizedDescription && (
-                    <div className="mt-3">
-                      <strong>✨ Version optimisée:</strong>
-                      <div className="mt-2 p-3 bg-white rounded border text-gray-700">
-                        {aiOptimization.optimizedDescription}
-                      </div>
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={applySuggestions}
+                      className="bg-white/80"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Appliquer les suggestions
+                    </Button>
+
+                    {aiOptimization.optimizedDescription && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="mt-2"
                         onClick={() => setFormData({...formData, description: aiOptimization.optimizedDescription})}
+                        className="bg-white/80"
                       >
-                        Utiliser cette version
+                        <FileText className="w-4 h-4 mr-2" />
+                        Utiliser la version optimisée
                       </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Category */}
@@ -542,44 +630,114 @@ export default function CreateMission() {
 
             {/* AI Optimization Results */}
             {aiOptimization && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2 flex items-center">
-                  <Brain className="w-4 h-4 mr-2" />
-                  Analyse IA de votre brief (Score: {aiOptimization.qualityScore}/100)
-                </h4>
-                <div className="text-sm text-blue-800">
-                  <Progress value={aiOptimization.qualityScore} className="mb-3" />
+              <Card className="mt-4 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between text-blue-900">
+                    <div className="flex items-center gap-2">
+                      <Brain className="w-5 h-5" />
+                      Analyse IA de votre annonce
+                    </div>
+                    <Badge variant={aiOptimization.qualityScore > 80 ? "default" : "secondary"}>
+                      {aiOptimization.qualityScore}/100
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Qualité globale</span>
+                      <span>{aiOptimization.qualityScore}%</span>
+                    </div>
+                    <Progress value={aiOptimization.qualityScore} className="h-2" />
+                  </div>
 
-                  {aiOptimization.improvements.length > 0 && (
-                    <div className="mb-3">
-                      <strong>💡 Suggestions d'amélioration:</strong>
-                      <ul className="list-disc list-inside mt-1">
+                  {/* Compétences détectées */}
+                  {aiOptimization.detectedSkills && aiOptimization.detectedSkills.length > 0 && (
+                    <div>
+                      <strong className="text-sm text-blue-900">🎯 Compétences détectées:</strong>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {aiOptimization.detectedSkills.map((skill: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Complexité estimée */}
+                  {aiOptimization.estimatedComplexity && (
+                    <div>
+                      <strong className="text-sm text-blue-900">📊 Complexité estimée:</strong>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Progress value={aiOptimization.estimatedComplexity * 10} className="flex-1 h-2" />
+                        <span className="text-sm">{aiOptimization.estimatedComplexity}/10</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Insights marché */}
+                  {aiOptimization.marketInsights && (
+                    <div className="grid grid-cols-2 gap-4 p-3 bg-white/50 rounded-lg">
+                      <div>
+                        <div className="text-xs text-gray-600">Demande</div>
+                        <div className="font-medium capitalize">{aiOptimization.marketInsights.demandLevel}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600">Concurrence</div>
+                        <div className="font-medium capitalize">{aiOptimization.marketInsights.competitionLevel}</div>
+                      </div>
+                      {aiOptimization.marketInsights.suggestedBudgetRange && (
+                        <div className="col-span-2">
+                          <div className="text-xs text-gray-600">Budget suggéré</div>
+                          <div className="font-medium">
+                            {aiOptimization.marketInsights.suggestedBudgetRange.min}€ - {aiOptimization.marketInsights.suggestedBudgetRange.max}€
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Améliorations suggérées */}
+                  {aiOptimization.improvements && aiOptimization.improvements.length > 0 && (
+                    <div>
+                      <strong className="text-sm text-blue-900">💡 Améliorations suggérées:</strong>
+                      <ul className="list-disc list-inside mt-1 text-sm space-y-1">
                         {aiOptimization.improvements.map((improvement: string, index: number) => (
-                          <li key={index}>{improvement}</li>
+                          <li key={index} className="text-blue-800">{improvement}</li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {aiOptimization.optimizedDescription && (
-                    <div className="mt-3">
-                      <strong>✨ Version optimisée:</strong>
-                      <div className="mt-2 p-3 bg-white rounded border text-gray-700">
-                        {aiOptimization.optimizedDescription}
-                      </div>
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={applySuggestions}
+                      className="bg-white/80"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Appliquer les suggestions
+                    </Button>
+
+                    {aiOptimization.optimizedDescription && (
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        className="mt-2"
                         onClick={() => setFormData({...formData, description: aiOptimization.optimizedDescription})}
+                        className="bg-white/80"
                       >
-                        Utiliser cette version
+                        <FileText className="w-4 h-4 mr-2" />
+                        Utiliser la version optimisée
                       </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Category */}
