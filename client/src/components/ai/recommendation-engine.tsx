@@ -40,16 +40,35 @@ export function RecommendationEngine({ userId, context }: RecommendationEnginePr
   const [isAnalyzing, setIsAnalyzing] = useState(true);
 
   const generateRecommendations = () => {
-    // Algorithme de recommandation avancé avec scoring multicritères
+    // Profil utilisateur enrichi avec historique d'apprentissage
     const userProfile = {
       skills: ['React', 'Node.js', 'TypeScript'],
       rating: 4.2,
       completedProjects: 15,
-      responseTime: 2.5, // heures
+      responseTime: 2.5,
       successRate: 0.85,
       preferredBudgetRange: [1000, 5000],
       location: 'Paris',
-      availability: 0.7 // 70% disponible
+      availability: 0.7,
+      // Nouvelles métriques d'apprentissage
+      learningHistory: {
+        recommendationsAccepted: 12,
+        recommendationsIgnored: 3,
+        averageImplementationTime: 5.2, // jours
+        successfulImplementations: 10
+      },
+      behaviorPattern: {
+        prefersDetailedAnalysis: true,
+        respondsToUrgency: false,
+        focusesOnQuality: true,
+        adaptsToPricing: true
+      },
+      contextualFactors: {
+        currentWorkload: 0.7,
+        seasonalTrend: 'high',
+        recentPerformance: 'improving',
+        marketPosition: 'competitive'
+      }
     };
 
     const marketTrends = {

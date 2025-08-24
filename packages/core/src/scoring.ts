@@ -44,11 +44,11 @@ export class UnifiedScoringEngine {
   /**
    * Calcule un score unifié selon les critères métier
    */
-  calculateScore(factors: ScoringFactors, weights?: Partial<ScoringWeights>): ScoringResult {
-    const finalWeights = { ...this.defaultWeights, ...weights };
+  calculateScore(factors: ScoringFactors, weights?: Partial<ScoringWeights>, marketContext?: any): ScoringResult {
+    const finalWeights = this.getAdaptiveWeights(factors, weights, marketContext);
     
     const scores = {
-      price: this.calculatePriceScore(factors.priceRatio),
+      price: this.calculatePriceScore(factors.priceRatio, marketContext),
       quality: this.calculateQualityScore(factors.providerRating, factors.experienceMatch),
       fit: this.calculateFitScore(factors.skillsMatch),
       delay: this.calculateDelayScore(factors.responseTime),
@@ -56,18 +56,167 @@ export class UnifiedScoringEngine {
       completion_probability: this.calculateCompletionScore(factors)
     };
 
-    const totalScore = Object.entries(scores).reduce(
+    // Ajustements dynamiques basés sur l'apprentissage
+    const adjustedScores = this.applyMLAdjustments(scores, factors, marketContext);
+    
+    const totalScore = Object.entries(adjustedScores).reduce(
       (sum, [key, score]) => sum + score * finalWeights[key as keyof ScoringWeights],
       0
     );
 
+    // Détection d'anomalies
+    const anomalies = this.detectAnomalies(adjustedScores, factors);
+    
     return {
       totalScore: Math.round(totalScore),
-      breakdown: scores,
-      explanations: this.generateExplanations(scores, factors),
-      confidence: this.calculateConfidence(factors),
-      recommendations: this.generateRecommendations(scores, factors)
+      breakdown: adjustedScores,
+      explanations: this.generateExplanations(adjustedScores, factors, anomalies),
+      confidence: this.calculateAdvancedConfidence(factors, anomalies),
+      recommendations: this.generateSmartRecommendations(adjustedScores, factors, marketContext),
+      anomalies,
+      marketInsights: this.generateMarketInsights(marketContext)
     };
+  }
+
+  /**
+   * Poids adaptatifs basés sur le contexte
+   */
+  private getAdaptiveWeights(factors: ScoringFactors, customWeights?: Partial<ScoringWeights>, marketContext?: any): ScoringWeights {
+    let weights = { ...this.defaultWeights, ...customWeights };
+    
+    // Ajustement selon l'urgence
+    if (factors.urgencyLevel === 'high') {
+      weights.delay *= 1.5;
+      weights.price *= 0.8;
+      weights = this.normalizeWeights(weights);
+    }
+    
+    // Ajustement selon la complexité
+    if (factors.complexityLevel === 'high') {
+      weights.quality *= 1.3;
+      weights.fit *= 1.2;
+      weights.risk *= 1.4;
+      weights = this.normalizeWeights(weights);
+    }
+    
+    // Ajustement selon le marché
+    if (marketContext?.tension === 'high') {
+      weights.price *= 1.2;
+      weights.delay *= 1.3;
+      weights = this.normalizeWeights(weights);
+    }
+    
+    return weights;
+  }
+
+  /**
+   * Ajustements ML basés sur l'historique
+   */
+  private applyMLAdjustments(scores: Record<string, number>, factors: ScoringFactors, marketContext?: any): Record<string, number> {
+    const adjustedScores = { ...scores };
+    
+    // Modèle simplifié d'apprentissage basé sur les patterns historiques
+    if (factors.providerRating > 4.8 && factors.experienceMatch > 20) {
+      adjustedScores.quality = Math.min(100, adjustedScores.quality * 1.1);
+      adjustedScores.completion_probability = Math.min(100, adjustedScores.completion_probability * 1.15);
+    }
+    
+    // Détection de sur-performance consistante
+    if (factors.successRate > 0.95 && factors.responseTime < 2) {
+      adjustedScores.risk = Math.min(100, adjustedScores.risk * 1.2);
+    }
+    
+    // Pénalité pour prix suspects
+    if (factors.priceRatio < 0.4) {
+      adjustedScores.completion_probability *= 0.7;
+      adjustedScores.risk *= 0.8;
+    }
+    
+    return adjustedScores;
+  }
+
+  /**
+   * Détection d'anomalies sophistiquée
+   */
+  private detectAnomalies(scores: Record<string, number>, factors: ScoringFactors): string[] {
+    const anomalies: string[] = [];
+    
+    // Prix anormalement bas
+    if (factors.priceRatio < 0.3) {
+      anomalies.push('PRIX_SUSPECT_DUMPING');
+    }
+    
+    // Profil trop parfait (possible fraude)
+    if (factors.providerRating === 5 && factors.successRate === 1 && factors.responseTime < 0.5) {
+      anomalies.push('PROFIL_SUSPECT_ARTIFICIEL');
+    }
+    
+    // Incohérence expérience/prix
+    if (factors.experienceMatch > 50 && factors.priceRatio < 0.5) {
+      anomalies.push('INCOHERENCE_EXPERIENCE_PRIX');
+    }
+    
+    // Variance scores élevée
+    const scoreValues = Object.values(scores);
+    const variance = this.calculateVariance(scoreValues);
+    if (variance > 800) {
+      anomalies.push('SCORES_INCOHERENTS');
+    }
+    
+    return anomalies;
+  }
+
+  private normalizeWeights(weights: ScoringWeights): ScoringWeights {
+    const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+    const normalized = {} as ScoringWeights;
+    
+    Object.entries(weights).forEach(([key, value]) => {
+      normalized[key as keyof ScoringWeights] = value / total;
+    });
+    
+    return normalized;
+  }
+
+  private calculateAdvancedConfidence(factors: ScoringFactors, anomalies: string[]): number {
+    let confidence = 75;
+    
+    // Bonus pour expérience élevée
+    if (factors.experienceMatch > 20) confidence += 15;
+    if (factors.providerRating >= 4.5) confidence += 10;
+    
+    // Malus pour anomalies
+    confidence -= anomalies.length * 10;
+    
+    // Bonus pour cohérence des données
+    if (factors.priceRatio > 0.6 && factors.priceRatio < 1.2) confidence += 10;
+    
+    return Math.max(30, Math.min(95, confidence));
+  }
+
+  private generateMarketInsights(marketContext?: any): any {
+    if (!marketContext) return null;
+    
+    return {
+      tension: marketContext.tension || 'normal',
+      priceVolatility: marketContext.priceVolatility || 'stable',
+      demandTrend: marketContext.demandTrend || 'steady',
+      competitionLevel: marketContext.competitionLevel || 'medium',
+      recommendations: this.getMarketRecommendations(marketContext)
+    };
+  }
+
+  private getMarketRecommendations(marketContext: any): string[] {
+    const recommendations: string[] = [];
+    
+    if (marketContext.tension === 'high') {
+      recommendations.push('Marché tendu - Privilégier la rapidité de réponse');
+    }
+    
+    if (marketContext.priceVolatility === 'high') {
+      recommendations.push('Prix volatils - Ajuster la stratégie tarifaire');
+    }
+    
+    return recommendations;
   }
 
   private calculatePriceScore(priceRatio: number): number {

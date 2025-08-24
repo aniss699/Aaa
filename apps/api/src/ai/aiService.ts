@@ -67,10 +67,139 @@ interface PriceRecommendationResponse {
 class AIService {
   private baseUrl: string;
   private isOfflineMode: boolean;
+  private cache: Map<string, { data: any; timestamp: number; ttl: number }>;
+  private requestQueue: Map<string, Promise<any>>;
+  private performanceMetrics: {
+    requests: number;
+    cacheHits: number;
+    avgResponseTime: number;
+    errors: number;
+  };
 
   constructor() {
     this.baseUrl = process.env.ML_API_URL || 'http://localhost:8001';
     this.isOfflineMode = process.env.OFFLINE_MODE === 'true';
+    this.cache = new Map();
+    this.requestQueue = new Map();
+    this.performanceMetrics = {
+      requests: 0,
+      cacheHits: 0,
+      avgResponseTime: 0,
+      errors: 0
+    };
+    
+    // Nettoyage automatique du cache toutes les heures
+    setInterval(() => this.cleanCache(), 3600000);
+  }
+
+  /**
+   * Cache intelligent avec TTL adaptatif
+   */
+  private async getCachedOrFetch<T>(
+    key: string, 
+    fetchFn: () => Promise<T>, 
+    ttl: number = 300000 // 5 minutes par défaut
+  ): Promise<T> {
+    const startTime = Date.now();
+    this.performanceMetrics.requests++;
+
+    // Vérification cache
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      this.performanceMetrics.cacheHits++;
+      return cached.data;
+    }
+
+    // Déduplication des requêtes
+    if (this.requestQueue.has(key)) {
+      return this.requestQueue.get(key)!;
+    }
+
+    // Nouvelle requête
+    const request = fetchFn()
+      .then(data => {
+        // Mise en cache avec TTL adaptatif
+        const adaptiveTtl = this.calculateAdaptiveTtl(key, data);
+        this.cache.set(key, {
+          data,
+          timestamp: Date.now(),
+          ttl: adaptiveTtl
+        });
+        
+        this.updateMetrics(startTime);
+        return data;
+      })
+      .catch(error => {
+        this.performanceMetrics.errors++;
+        throw error;
+      })
+      .finally(() => {
+        this.requestQueue.delete(key);
+      });
+
+    this.requestQueue.set(key, request);
+    return request;
+  }
+
+  /**
+   * TTL adaptatif basé sur le type de données
+   */
+  private calculateAdaptiveTtl(key: string, data: any): number {
+    // TTL court pour données volatiles
+    if (key.includes('market') || key.includes('price')) {
+      return 60000; // 1 minute
+    }
+    
+    // TTL moyen pour scores
+    if (key.includes('score') || key.includes('analysis')) {
+      return 300000; // 5 minutes
+    }
+    
+    // TTL long pour données stables
+    if (key.includes('profile') || key.includes('trust')) {
+      return 1800000; // 30 minutes
+    }
+    
+    // TTL adaptatif selon la qualité des données
+    if (data.confidence && data.confidence > 90) {
+      return 600000; // 10 minutes pour données fiables
+    }
+    
+    return 300000; // Défaut 5 minutes
+  }
+
+  /**
+   * Nettoyage intelligent du cache
+   */
+  private cleanCache(): void {
+    const now = Date.now();
+    let cleaned = 0;
+    
+    for (const [key, entry] of this.cache.entries()) {
+      if (now - entry.timestamp > entry.ttl) {
+        this.cache.delete(key);
+        cleaned++;
+      }
+    }
+    
+    console.log(`Cache cleaned: ${cleaned} entries removed`);
+  }
+
+  private updateMetrics(startTime: number): void {
+    const responseTime = Date.now() - startTime;
+    this.performanceMetrics.avgResponseTime = 
+      (this.performanceMetrics.avgResponseTime + responseTime) / 2;
+  }
+
+  /**
+   * Métriques de performance
+   */
+  getPerformanceMetrics() {
+    return {
+      ...this.performanceMetrics,
+      cacheHitRate: this.performanceMetrics.cacheHits / this.performanceMetrics.requests,
+      cacheSize: this.cache.size
+    };
   }
 
   /**
