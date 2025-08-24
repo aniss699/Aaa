@@ -242,15 +242,11 @@ app.post("/api/ai/brief-analysis", (req, res) => {
     improvements.push("Pr\xE9ciser les d\xE9lais souhait\xE9s");
     missingElements.push("D\xE9lais absents");
   }
-  if (!description.toLowerCase().match(/(react|vue|angular|php|python|javascript|node)/)) {
-    improvements.push("Sp\xE9cifier les technologies pr\xE9f\xE9r\xE9es si applicables");
-    missingElements.push("Technologies non mentionn\xE9es");
-  }
-  if (!description.toLowerCase().includes("livrable")) {
-    improvements.push("D\xE9tailler les livrables attendus");
-    missingElements.push("Livrables flous");
-  }
+  const categorySpecificAnalysis = analyzeCategorySpecific(description, category);
+  improvements.push(...categorySpecificAnalysis.improvements);
+  missingElements.push(...categorySpecificAnalysis.missing);
   const optimizedDescription = generateOptimizedDescription(description, category, title);
+  const suggestedFields = generateSuggestedFields(description, category);
   const analysis = {
     qualityScore,
     improvements,
@@ -259,6 +255,8 @@ app.post("/api/ai/brief-analysis", (req, res) => {
     detectedSkills: extractSkillsFromDescription(description, category),
     estimatedComplexity: estimateComplexity(description, category),
     suggestedCategories: category ? [category] : suggestCategories(description),
+    suggestedFields,
+    // Nouveaux champs dynamiques
     marketInsights: {
       demandLevel: Math.random() > 0.5 ? "high" : "medium",
       competitionLevel: Math.random() > 0.5 ? "medium" : "low",
@@ -267,6 +265,268 @@ app.post("/api/ai/brief-analysis", (req, res) => {
   };
   res.json(analysis);
 });
+function analyzeCategorySpecific(description, category) {
+  const lowerDesc = description.toLowerCase();
+  const improvements = [];
+  const missing = [];
+  const categoryAnalysis = {
+    development: () => {
+      if (!lowerDesc.match(/(react|vue|angular|php|python|javascript|node|laravel|symfony)/)) {
+        improvements.push("Sp\xE9cifier les technologies pr\xE9f\xE9r\xE9es");
+        missing.push("Technologies non mentionn\xE9es");
+      }
+      if (!lowerDesc.includes("api") && !lowerDesc.includes("base de donn\xE9es")) {
+        improvements.push("Pr\xE9ciser les int\xE9grations techniques");
+      }
+      if (!lowerDesc.includes("responsive") && !lowerDesc.includes("mobile")) {
+        improvements.push("Indiquer si compatibilit\xE9 mobile requise");
+      }
+    },
+    mobile: () => {
+      if (!lowerDesc.includes("ios") && !lowerDesc.includes("android")) {
+        improvements.push("Pr\xE9ciser les plateformes cibles (iOS/Android)");
+        missing.push("Plateformes non sp\xE9cifi\xE9es");
+      }
+      if (!lowerDesc.includes("store") && !lowerDesc.includes("publication")) {
+        improvements.push("Indiquer si publication sur stores n\xE9cessaire");
+      }
+    },
+    construction: () => {
+      if (!lowerDesc.match(/\d+\s*m[²2]/)) {
+        improvements.push("Pr\xE9ciser la surface en m\xB2");
+        missing.push("Surface non indiqu\xE9e");
+      }
+      if (!lowerDesc.includes("\xE9tage") && !lowerDesc.includes("niveau")) {
+        improvements.push("Indiquer le nombre d'\xE9tages");
+      }
+      if (!lowerDesc.includes("acc\xE8s") && !lowerDesc.includes("parking")) {
+        improvements.push("Mentionner les contraintes d'acc\xE8s");
+      }
+    },
+    plomberie: () => {
+      if (!lowerDesc.includes("urgent") && !lowerDesc.includes("d\xE9lai")) {
+        improvements.push("Pr\xE9ciser l'urgence de l'intervention");
+      }
+      if (!lowerDesc.includes("\xE9tage") && !lowerDesc.includes("niveau")) {
+        improvements.push("Indiquer l'\xE9tage de l'intervention");
+      }
+    },
+    electricite: () => {
+      if (!lowerDesc.includes("norme") && !lowerDesc.includes("consuel")) {
+        improvements.push("Pr\xE9ciser si mise aux normes n\xE9cessaire");
+      }
+      if (!lowerDesc.includes("tableau") && !lowerDesc.includes("disjoncteur")) {
+        improvements.push("D\xE9tailler l'installation \xE9lectrique existante");
+      }
+    },
+    menage: () => {
+      if (!lowerDesc.match(/\d+\s*m[²2]/)) {
+        improvements.push("Pr\xE9ciser la surface du logement");
+        missing.push("Surface non indiqu\xE9e");
+      }
+      if (!lowerDesc.includes("fr\xE9quence") && !lowerDesc.includes("semaine")) {
+        improvements.push("Indiquer la fr\xE9quence souhait\xE9e");
+      }
+    },
+    garde_enfants: () => {
+      if (!lowerDesc.match(/\d+\s*(?:ans?|années?)/)) {
+        improvements.push("Pr\xE9ciser l'\xE2ge des enfants");
+        missing.push("\xC2ge des enfants non pr\xE9cis\xE9");
+      }
+      if (!lowerDesc.includes("horaire") && !lowerDesc.includes("heure")) {
+        improvements.push("D\xE9tailler les horaires de garde");
+      }
+    },
+    jardinage: () => {
+      if (!lowerDesc.match(/\d+\s*m[²2]/)) {
+        improvements.push("Pr\xE9ciser la surface du jardin");
+        missing.push("Surface non indiqu\xE9e");
+      }
+      if (!lowerDesc.includes("tonte") && !lowerDesc.includes("taille") && !lowerDesc.includes("entretien")) {
+        improvements.push("D\xE9tailler les travaux de jardinage souhait\xE9s");
+      }
+    },
+    comptabilite: () => {
+      if (!lowerDesc.includes("entreprise") && !lowerDesc.includes("soci\xE9t\xE9")) {
+        improvements.push("Pr\xE9ciser le type d'entreprise");
+      }
+      if (!lowerDesc.includes("mensuel") && !lowerDesc.includes("trimestre") && !lowerDesc.includes("annuel")) {
+        improvements.push("Indiquer la p\xE9riodicit\xE9 souhait\xE9e");
+      }
+    }
+  };
+  const analyzer = categoryAnalysis[category];
+  if (analyzer) {
+    analyzer();
+  }
+  return { improvements, missing };
+}
+function generateSuggestedFields(description, category) {
+  const lowerDesc = description.toLowerCase();
+  const fields = [];
+  const fieldsByCategory = {
+    development: [
+      {
+        label: "Technologies pr\xE9f\xE9r\xE9es",
+        type: "multiselect",
+        options: ["React", "Vue.js", "Angular", "PHP", "Python", "Node.js", "Laravel", "Symfony", "Django"],
+        suggested: !lowerDesc.match(/(react|vue|angular|php|python|javascript|node)/),
+        priority: "high"
+      },
+      {
+        label: "Type d'application",
+        type: "select",
+        options: ["Site vitrine", "E-commerce", "Application web", "API/Backend", "Plateforme SaaS"],
+        suggested: true,
+        priority: "medium"
+      },
+      {
+        label: "Nombre de pages/fonctionnalit\xE9s",
+        type: "number",
+        placeholder: "Ex: 5 pages principales",
+        suggested: !lowerDesc.includes("page"),
+        priority: "medium"
+      }
+    ],
+    mobile: [
+      {
+        label: "Plateformes cibles",
+        type: "multiselect",
+        options: ["iOS", "Android", "Cross-platform"],
+        suggested: !lowerDesc.includes("ios") && !lowerDesc.includes("android"),
+        priority: "high"
+      },
+      {
+        label: "Publication sur stores",
+        type: "boolean",
+        suggested: !lowerDesc.includes("store"),
+        priority: "high"
+      },
+      {
+        label: "Fonctionnalit\xE9s sp\xE9ciales",
+        type: "multiselect",
+        options: ["G\xE9olocalisation", "Push notifications", "Paiement int\xE9gr\xE9", "Mode offline", "Appareil photo"],
+        suggested: true,
+        priority: "medium"
+      }
+    ],
+    construction: [
+      {
+        label: "Surface des travaux (m\xB2)",
+        type: "number",
+        placeholder: "Surface en m\xE8tres carr\xE9s",
+        suggested: !lowerDesc.match(/\d+\s*m[²2]/),
+        priority: "high"
+      },
+      {
+        label: "Type de logement",
+        type: "select",
+        options: ["Maison individuelle", "Appartement", "Local commercial", "Bureau"],
+        suggested: true,
+        priority: "medium"
+      },
+      {
+        label: "Contraintes d'acc\xE8s",
+        type: "text",
+        placeholder: "Ex: 3\xE8me \xE9tage sans ascenseur, parking possible",
+        suggested: !lowerDesc.includes("acc\xE8s"),
+        priority: "medium"
+      }
+    ],
+    plomberie: [
+      {
+        label: "Urgence de l'intervention",
+        type: "select",
+        options: ["Urgence imm\xE9diate", "Dans la semaine", "Sous 15 jours", "Flexible"],
+        suggested: !lowerDesc.includes("urgent"),
+        priority: "high"
+      },
+      {
+        label: "Type d'intervention",
+        type: "select",
+        options: ["R\xE9paration fuite", "Installation neuve", "Maintenance", "D\xE9pannage"],
+        suggested: true,
+        priority: "high"
+      },
+      {
+        label: "\xC9tage de l'intervention",
+        type: "select",
+        options: ["Rez-de-chauss\xE9e", "1er \xE9tage", "2\xE8me \xE9tage", "Plus haut"],
+        suggested: !lowerDesc.includes("\xE9tage"),
+        priority: "medium"
+      }
+    ],
+    electricite: [
+      {
+        label: "Mise aux normes n\xE9cessaire",
+        type: "boolean",
+        suggested: !lowerDesc.includes("norme"),
+        priority: "high"
+      },
+      {
+        label: "Type d'installation",
+        type: "multiselect",
+        options: ["\xC9clairage", "Prises \xE9lectriques", "Tableau \xE9lectrique", "Domotique", "Borne de recharge"],
+        suggested: true,
+        priority: "high"
+      },
+      {
+        label: "Certification Consuel requise",
+        type: "boolean",
+        suggested: !lowerDesc.includes("consuel"),
+        priority: "medium"
+      }
+    ],
+    menage: [
+      {
+        label: "Surface du logement (m\xB2)",
+        type: "number",
+        placeholder: "Surface en m\xE8tres carr\xE9s",
+        suggested: !lowerDesc.match(/\d+\s*m[²2]/),
+        priority: "high"
+      },
+      {
+        label: "Fr\xE9quence souhait\xE9e",
+        type: "select",
+        options: ["Hebdomadaire", "Bi-mensuelle", "Mensuelle", "Ponctuelle"],
+        suggested: !lowerDesc.includes("fr\xE9quence"),
+        priority: "high"
+      },
+      {
+        label: "T\xE2ches sp\xE9cifiques",
+        type: "multiselect",
+        options: ["Repassage", "M\xE9nage int\xE9rieur", "Vitres", "Cuisine", "Sanitaires"],
+        suggested: true,
+        priority: "medium"
+      }
+    ],
+    garde_enfants: [
+      {
+        label: "\xC2ge des enfants",
+        type: "text",
+        placeholder: "Ex: 3 et 7 ans",
+        suggested: !lowerDesc.match(/\d+\s*(?:ans?|années?)/),
+        priority: "high"
+      },
+      {
+        label: "Horaires de garde",
+        type: "text",
+        placeholder: "Ex: 8h-18h du lundi au vendredi",
+        suggested: !lowerDesc.includes("horaire"),
+        priority: "high"
+      },
+      {
+        label: "Activit\xE9s souhait\xE9es",
+        type: "multiselect",
+        options: ["Aide aux devoirs", "Activit\xE9s cr\xE9atives", "Sorties parc", "Jeux \xE9ducatifs", "Cuisine simple"],
+        suggested: true,
+        priority: "medium"
+      }
+    ]
+  };
+  const categoryFields = fieldsByCategory[category] || [];
+  return categoryFields.filter((field) => field.suggested && field.priority !== "low").sort((a, b) => a.priority === "high" ? -1 : 1).slice(0, 4);
+}
 function generateOptimizedDescription(description, category, title) {
   const baseDesc = description || "Description du projet";
   const categoryTemplates = {
