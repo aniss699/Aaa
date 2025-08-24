@@ -24,6 +24,11 @@ from services.taxonomizer import taxonomizer_service
 from services.text_normalizer import text_normalizer_service
 from services.market_intelligence import get_market_suggestions
 
+# Import for new enhancement endpoints
+from services.template_rewriter import template_rewriter
+from services.price_time_suggester import price_time_suggester
+from services.loc_uplift import loc_uplift_calculator
+
 # Configuration offline obligatoire
 os.environ['OFFLINE_MODE'] = 'true'
 os.environ['NO_EXTERNAL_CALLS'] = 'true'
@@ -82,6 +87,23 @@ class PriceRecommendationRequest(BaseModel):
     mission: MissionData
     market_data: Dict[str, Any]
     competition_level: str
+
+# Models for new enhancement endpoints
+class ProjectStandardizeRequest(BaseModel):
+    title: str
+    description: str
+    category: Optional[str] = None
+    budget: Optional[float] = None
+    location: Optional[str] = None
+
+class ProjectImproveRequest(BaseModel):
+    project: Dict[str, Any]
+    context: Optional[Dict[str, Any]] = None
+
+class BriefRecomputeRequest(BaseModel):
+    project_id: str
+    answers: List[Dict[str, Any]]
+    project_data: Optional[Dict[str, Any]] = None
 
 # Stockage des modèles locaux
 class ModelStorage:
@@ -517,6 +539,185 @@ async def semantic_matching(mission_text: str, provider_profiles: List[str]):
 
         return sorted(matches, key=lambda x: x['similarity_score'], reverse=True)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# New endpoints for enhancement
+@app.post("/improve")
+async def improve_project(request: ProjectImproveRequest):
+    """Améliore complètement un projet avec réécriture, standardisation, prix et LOC"""
+    try:
+        project = request.project
+        context = request.context or {}
+
+        # 1. Réécriture structurée
+        rewrite_result = template_rewriter.rewrite_project(
+            title=project.get('title', ''),
+            description=project.get('description', ''),
+            category=project.get('category', '')
+        )
+
+        # 2. Normalisation et taxonomie
+        normalized = text_normalizer.normalize_text(
+            f"{project.get('title', '')} {project.get('description', '')}"
+        )
+
+        taxonomy_result = taxonomizer.classify_and_extract(
+            project.get('description', ''), 
+            project.get('category', '')
+        )
+
+        # 3. Analyse qualité du brief
+        quality_analysis = brief_quality_analyzer.analyze_brief_quality(
+            project.get('description', '')
+        )
+
+        # 4. Suggestions de prix et délais
+        price_time_result = price_time_suggester.suggest_price_time(
+            title=project.get('title', ''),
+            description=project.get('description', ''),
+            category=project.get('category', ''),
+            location=project.get('location'),
+            brief_quality_score=quality_analysis.get('overall_score', 70) / 100
+        )
+
+        # 5. Calcul LOC et uplift
+        market_context = {
+            'heat_score': context.get('market_heat', 0.7),
+            'price_suggested_med': price_time_result.price_suggested_med
+        }
+
+        standardization_data = {
+            'brief_quality_score': quality_analysis.get('overall_score', 70) / 100,
+            'price_suggested_min': price_time_result.price_suggested_min,
+            'price_suggested_med': price_time_result.price_suggested_med,
+            'price_suggested_max': price_time_result.price_suggested_max,
+            'delay_suggested_days': price_time_result.delay_suggested_days,
+            'missing_info': quality_analysis.get('missing_info', [])
+        }
+
+        loc_result = loc_uplift_calculator.calculate_loc_with_uplift(
+            project_data=project,
+            standardization_data=standardization_data,
+            market_context=market_context
+        )
+
+        # 6. Assemblage de la réponse complète
+        return {
+            # Réécriture
+            "title_std": rewrite_result.title_std,
+            "summary_std": rewrite_result.summary_std,
+            "acceptance_criteria": rewrite_result.acceptance_criteria,
+            "tasks_std": rewrite_result.tasks_std,
+            "deliverables_std": rewrite_result.deliverables_std,
+
+            # Standardisation
+            "category_std": taxonomy_result.get('category_std', project.get('category', 'other')),
+            "sub_category_std": taxonomy_result.get('sub_category_std', 'general'),
+            "tags_std": taxonomy_result.get('tags', []),
+            "skills_std": taxonomy_result.get('skills', []),
+            "constraints_std": normalized.get('constraints', []),
+
+            # Scores et analyse
+            "brief_quality_score": quality_analysis.get('overall_score', 70) / 100,
+            "richness_score": min(1.0, len(project.get('description', '').split()) / 100),
+            "missing_info": quality_analysis.get('missing_info', []),
+
+            # Prix et délais
+            "price_suggested_min": price_time_result.price_suggested_min,
+            "price_suggested_med": price_time_result.price_suggested_med, 
+            "price_suggested_max": price_time_result.price_suggested_max,
+            "delay_suggested_days": price_time_result.delay_suggested_days,
+            "price_rationale": price_time_result.rationale,
+            "price_confidence": price_time_result.confidence,
+
+            # LOC et uplift
+            "loc_base": loc_result.loc_base,
+            "loc_uplift_reco": loc_result.loc_uplift_reco,
+            "improvement_potential": loc_result.improvement_potential,
+            "loc_recommendations": loc_result.recommendations,
+
+            # Métadonnées
+            "rewrite_version": rewrite_result.rewrite_version,
+            "model_version": "v2.0",
+            "generated_at": "2024-01-01T00:00:00Z"
+        }
+
+    except Exception as e:
+        print(f"Erreur amélioration projet: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/brief/recompute")
+async def recompute_brief(request: BriefRecomputeRequest):
+    """Recalcule la standardisation après réponses aux questions manquantes"""
+    try:
+        # Mise à jour du projet avec les réponses
+        updated_project = request.project_data or {}
+
+        # Intégration des réponses dans la description
+        answers_text = []
+        for answer in request.answers:
+            question_id = answer.get('question_id', '')
+            value = answer.get('value', '')
+            if value:
+                answers_text.append(f"{question_id}: {value}")
+
+        enhanced_description = updated_project.get('description', '')
+        if answers_text:
+            enhanced_description += "\n\nInformations complémentaires:\n" + "\n".join(answers_text)
+
+        # Nouveau calcul d'amélioration
+        improve_request = ProjectImproveRequest(
+            project={
+                **updated_project,
+                'description': enhanced_description
+            }
+        )
+
+        return await improve_project(improve_request)
+
+    except Exception as e:
+        print(f"Erreur recalcul brief: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/standardize")
+async def standardize_project(request: ProjectStandardizeRequest):
+    """Standardise un projet en extrayant informations structurées"""
+    try:
+        # Redirection vers le nouveau endpoint d'amélioration
+        improve_request = ProjectImproveRequest(
+            project={
+                'title': request.title,
+                'description': request.description,
+                'category': request.category,
+                'budget': request.budget,
+                'location': request.location
+            }
+        )
+
+        result = await improve_project(improve_request)
+
+        # Retour du format attendu par l'ancien endpoint
+        return {
+            "title_std": result.get('title_std'),
+            "summary_std": result.get('summary_std'),
+            "category_std": result.get('category_std'),
+            "sub_category_std": result.get('sub_category_std'),
+            "tags_std": result.get('tags_std'),
+            "skills_std": result.get('skills_std'),
+            "constraints_std": result.get('constraints_std'),
+            "acceptance_criteria": result.get('acceptance_criteria'),
+            "brief_quality_score": result.get('brief_quality_score'),
+            "richness_score": result.get('richness_score'),
+            "missing_info": result.get('missing_info'),
+            "price_suggested_min": result.get('price_suggested_min'),
+            "price_suggested_med": result.get('price_suggested_med'),
+            "price_suggested_max": result.get('price_suggested_max'),
+            "delay_suggested_days": result.get('delay_suggested_days'),
+            "loc_uplift_reco": result.get('loc_uplift_reco')
+        }
+
+    except Exception as e:
+        print(f"Erreur standardisation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/health")

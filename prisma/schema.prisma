@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,7 +22,7 @@ model User {
   provider_bids     Bid[]     @relation("ProviderBids")
   provider_profile  ProviderProfile?
   client_profile    ClientProfile?
-  
+
   @@map("users")
 }
 
@@ -36,7 +35,7 @@ model ProviderProfile {
   location    String?
   bio         String?
   portfolio   Json?
-  
+
   @@map("provider_profiles")
 }
 
@@ -46,7 +45,7 @@ model ClientProfile {
   user        User   @relation(fields: [user_id], references: [id])
   company     String?
   industry    String?
-  
+
   @@map("client_profiles")
 }
 

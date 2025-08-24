@@ -513,6 +513,315 @@ app.post('/api/ai/optimize-brief', (req, res) => {
   res.json(optimizedBrief);
 });
 
+// ============ NOUVEAUX ENDPOINTS AMÉLIORATION IA 2.0 ============
+
+// POST /ai/projects/:id/improve - Amélioration complète d'un projet
+app.post('/api/ai/projects/:id/improve', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Récupérer la mission
+    const mission = missions.find(m => m.id === id);
+    if (!mission) {
+      return res.status(404).json({ error: 'Mission non trouvée' });
+    }
+
+    // Appel au service ML d'amélioration
+    const mlResponse = await fetch('http://localhost:8001/improve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project: {
+          title: mission.title,
+          description: mission.description,
+          category: mission.category,
+          budget: parseFloat(mission.budget || '0'),
+          location: mission.location,
+          client_id: mission.clientId
+        },
+        context: {
+          market_heat: 0.7 // Simulation contexte marché
+        }
+      })
+    });
+
+    if (!mlResponse.ok) {
+      throw new Error('Service ML indisponible');
+    }
+
+    const improvement = await mlResponse.json();
+    
+    // Persistance en base (simulation avec stockage en mémoire)
+    const standardizationId = `std_${Date.now()}`;
+    const standardization = {
+      id: standardizationId,
+      projectId: id,
+      ...improvement,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Stockage simulation (remplacer par vraie DB)
+    if (!global.projectStandardizations) {
+      global.projectStandardizations = new Map();
+    }
+    global.projectStandardizations.set(id, standardization);
+
+    res.json({
+      success: true,
+      standardization,
+      improvements: {
+        title_diff: mission.title !== improvement.title_std,
+        description_diff: mission.description !== improvement.summary_std,
+        price_suggestions: {
+          min: improvement.price_suggested_min,
+          med: improvement.price_suggested_med,
+          max: improvement.price_suggested_max,
+          current: parseFloat(mission.budget || '0')
+        },
+        delay_suggestion: improvement.delay_suggested_days,
+        loc_improvement: improvement.improvement_potential
+      }
+    });
+
+  } catch (error) {
+    console.error('Erreur amélioration projet:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'amélioration du projet' });
+  }
+});
+
+// GET /ai/projects/:id/preview - Prévisualisation des améliorations
+app.get('/api/ai/projects/:id/preview', (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Récupérer la mission et sa standardisation
+    const mission = missions.find(m => m.id === id);
+    if (!mission) {
+      return res.status(404).json({ error: 'Mission non trouvée' });
+    }
+
+    const standardization = global.projectStandardizations?.get(id);
+    if (!standardization) {
+      return res.status(404).json({ error: 'Analyse IA non disponible - lancez d\'abord l\'amélioration' });
+    }
+
+    // Calcul des différences
+    const preview = {
+      original: {
+        title: mission.title,
+        description: mission.description,
+        budget: parseFloat(mission.budget || '0'),
+        category: mission.category
+      },
+      improved: {
+        title: standardization.title_std,
+        description: standardization.summary_std,
+        acceptance_criteria: standardization.acceptance_criteria,
+        tasks: standardization.tasks_std,
+        deliverables: standardization.deliverables_std,
+        skills: standardization.skills_std,
+        constraints: standardization.constraints_std
+      },
+      pricing: {
+        current: parseFloat(mission.budget || '0'),
+        suggested_min: standardization.price_suggested_min,
+        suggested_med: standardization.price_suggested_med,
+        suggested_max: standardization.price_suggested_max,
+        rationale: standardization.price_rationale
+      },
+      timing: {
+        suggested_days: standardization.delay_suggested_days
+      },
+      quality_scores: {
+        brief_quality: standardization.brief_quality_score,
+        richness: standardization.richness_score,
+        loc_base: standardization.loc_base,
+        improvement_potential: standardization.improvement_potential
+      },
+      missing_info: standardization.missing_info,
+      loc_uplift: standardization.loc_uplift_reco,
+      recommendations: standardization.loc_recommendations
+    };
+
+    res.json(preview);
+
+  } catch (error) {
+    console.error('Erreur prévisualisation:', error);
+    res.status(500).json({ error: 'Erreur lors de la prévisualisation' });
+  }
+});
+
+// POST /ai/projects/:id/brief/complete - Compléter les informations manquantes
+app.post('/api/ai/projects/:id/brief/complete', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { answers, apply = false } = req.body;
+
+    const mission = missions.find(m => m.id === id);
+    if (!mission) {
+      return res.status(404).json({ error: 'Mission non trouvée' });
+    }
+
+    // Appel au service ML pour recalcul
+    const mlResponse = await fetch('http://localhost:8001/brief/recompute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project_id: id,
+        answers,
+        project_data: {
+          title: mission.title,
+          description: mission.description,
+          category: mission.category,
+          budget: parseFloat(mission.budget || '0'),
+          location: mission.location
+        }
+      })
+    });
+
+    if (!mlResponse.ok) {
+      throw new Error('Service ML indisponible');
+    }
+
+    const updatedStandardization = await mlResponse.json();
+    
+    // Mise à jour du stockage
+    global.projectStandardizations?.set(id, {
+      ...global.projectStandardizations.get(id),
+      ...updatedStandardization,
+      updatedAt: new Date().toISOString()
+    });
+
+    // Application automatique si demandée
+    if (apply) {
+      // Mise à jour de la mission avec les nouvelles données
+      const missionIndex = missions.findIndex(m => m.id === id);
+      if (missionIndex !== -1) {
+        missions[missionIndex] = {
+          ...missions[missionIndex],
+          description: updatedStandardization.summary_std,
+          updatedAt: new Date().toISOString()
+        };
+
+        // Log du changement
+        if (!global.projectChangeLogs) {
+          global.projectChangeLogs = [];
+        }
+        global.projectChangeLogs.push({
+          id: `log_${Date.now()}`,
+          projectId: id,
+          before: { description: mission.description },
+          after: { description: updatedStandardization.summary_std },
+          appliedBy: 'system',
+          reason: 'Réponses aux questions manquantes intégrées',
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      updated_standardization: updatedStandardization,
+      applied: apply
+    });
+
+  } catch (error) {
+    console.error('Erreur complétion brief:', error);
+    res.status(500).json({ error: 'Erreur lors de la complétion du brief' });
+  }
+});
+
+// POST /ai/projects/:id/apply - Appliquer les suggestions IA
+app.post('/api/ai/projects/:id/apply', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { apply_budget, apply_delay, apply_title, apply_summary } = req.body;
+
+    const mission = missions.find(m => m.id === id);
+    if (!mission) {
+      return res.status(404).json({ error: 'Mission non trouvée' });
+    }
+
+    const standardization = global.projectStandardizations?.get(id);
+    if (!standardization) {
+      return res.status(404).json({ error: 'Standardisation non disponible' });
+    }
+
+    const before = { ...mission };
+    const changes = {};
+
+    // Application du budget
+    if (apply_budget && ['min', 'med', 'max'].includes(apply_budget)) {
+      const budgetKey = `price_suggested_${apply_budget}`;
+      const newBudget = standardization[budgetKey];
+      if (newBudget) {
+        mission.budget = newBudget.toString();
+        changes.budget = { from: before.budget, to: mission.budget };
+      }
+    }
+
+    // Application du titre
+    if (apply_title && standardization.title_std) {
+      mission.title = standardization.title_std;
+      changes.title = { from: before.title, to: mission.title };
+    }
+
+    // Application du résumé
+    if (apply_summary && standardization.summary_std) {
+      mission.description = standardization.summary_std;
+      changes.description = { from: before.description, to: mission.description };
+    }
+
+    mission.updatedAt = new Date().toISOString();
+
+    // Enregistrement du changelog
+    if (!global.projectChangeLogs) {
+      global.projectChangeLogs = [];
+    }
+    
+    global.projectChangeLogs.push({
+      id: `log_${Date.now()}`,
+      projectId: id,
+      before,
+      after: { ...mission },
+      appliedBy: 'user',
+      reason: `Application suggestions IA: ${Object.keys(changes).join(', ')}`,
+      createdAt: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      updated_mission: mission,
+      changes_applied: changes,
+      changelog_entry: global.projectChangeLogs[global.projectChangeLogs.length - 1]
+    });
+
+  } catch (error) {
+    console.error('Erreur application suggestions:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'application des suggestions' });
+  }
+});
+
+// GET /projects/:id/changelog - Historique des modifications
+app.get('/api/projects/:id/changelog', (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const changeLogs = global.projectChangeLogs?.filter(log => log.projectId === id) || [];
+    
+    res.json({
+      project_id: id,
+      total_changes: changeLogs.length,
+      changes: changeLogs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    });
+
+  } catch (error) {
+    console.error('Erreur récupération changelog:', error);
+    res.status(500).json({ error: 'Erreur lors de la récupération de l\'historique' });
+  }
+});
+
 // Endpoint pour l'analyse de brief IA (utilisé dans create-mission.tsx)
 app.post('/api/ai/brief-analysis', (req, res) => {
   const { description, category, title } = req.body;
