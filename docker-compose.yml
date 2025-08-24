@@ -117,3 +117,106 @@ volumes:
 networks:
   default:
     driver: bridge
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: marketplace
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - marketplace_network
+
+  # Redis pour cache et jobs
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - marketplace_network
+
+  # API Node.js
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/marketplace
+      - REDIS_URL=redis://redis:6379
+      - ML_API_URL=http://ml:8001
+      - OFFLINE_MODE=false
+      - FEATURE_SOURCING=true
+      - FEATURE_CRAWLER=true
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - marketplace_network
+
+  # Service ML Python
+  ml:
+    build:
+      context: ./apps/ml
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/marketplace
+      - EMBEDDINGS_ENABLED=false
+      - BM25_ENABLED=true
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+    volumes:
+      - ./infra/data:/app/data
+    networks:
+      - marketplace_network
+
+  # Worker pour jobs asynchrones
+  worker:
+    build:
+      context: ./apps/worker
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/marketplace
+      - REDIS_URL=redis://redis:6379
+      - ML_API_URL=http://ml:8001
+    depends_on:
+      - postgres
+      - redis
+      - ml
+    networks:
+      - marketplace_network
+
+  # Service d'ingestion (optionnel, peut être intégré dans worker)
+  ingestion:
+    build:
+      context: ./apps/ingestion
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/marketplace
+      - REDIS_URL=redis://redis:6379
+      - DOMAIN_WHITELIST=*.gouv.fr,*.insee.fr,*.cci.fr
+      - RATE_LIMIT_PER_DOMAIN_RPS=1
+      - USER_AGENT=TestMarketplaceBot/0.1 (+contact@exemple.fr)
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - marketplace_network
+
+volumes:
+  postgres_data:
+
+networks:
+  marketplace_network:
+    driver: bridge
