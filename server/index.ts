@@ -24,7 +24,7 @@ let missions = [
     id: "mission1",
     title: "Développement d'une application mobile de e-commerce",
     description: "Je recherche un développeur expérimenté pour créer une application mobile complète de vente en ligne avec système de paiement intégré.",
-    category: "development",
+    category: "developpement",
     budget: "5000",
     location: "Paris, France",
     clientId: "client1",
@@ -85,7 +85,7 @@ app.get('/api/missions-demo', (req, res) => {
       id: "mission1",
       title: "Développement d'une application mobile de e-commerce",
       description: "Je recherche un développeur expérimenté pour créer une application mobile complète de vente en ligne avec système de paiement intégré.",
-      category: "development",
+      category: "developpement",
       budget: "5000",
       location: "Paris, France",
       clientId: "client1",
@@ -124,7 +124,7 @@ app.get('/api/missions-demo', (req, res) => {
       id: "mission4",
       title: "Développement d'une plateforme SaaS",
       description: "Création d'une plateforme SaaS complète avec tableau de bord, API, authentification et facturation.",
-      category: "development",
+      category: "developpement",
       budget: "15000",
       location: "Remote",
       clientId: "client4",
@@ -339,7 +339,7 @@ function analyzeCategorySpecific(description, category) {
         improvements.push("Indiquer si compatibilité mobile requise");
       }
     },
-    
+
     mobile: () => {
       if (!lowerDesc.includes('ios') && !lowerDesc.includes('android')) {
         improvements.push("Préciser les plateformes cibles (iOS/Android)");
@@ -359,7 +359,7 @@ function analyzeCategorySpecific(description, category) {
         improvements.push("Indiquer le nombre d'étages");
       }
       if (!lowerDesc.includes('accès') && !lowerDesc.includes('parking')) {
-        improvements.push("Mentionner les contraintes d'accès");
+        improvements.push("Mentionner les contraintes d\'accès");
       }
     },
 
@@ -601,7 +601,7 @@ function generateSuggestedFields(description, category) {
   };
 
   const categoryFields = fieldsByCategory[category] || [];
-  
+
   // Retourner seulement les champs suggérés avec priorité high ou medium
   return categoryFields
     .filter(field => field.suggested && field.priority !== 'low')
@@ -614,7 +614,7 @@ function generateOptimizedDescription(description, category, title) {
 
   // Templates spécifiques par catégorie
   const categoryTemplates = {
-    'development': {
+    development: {
       title: 'Développement Logiciel',
       livrables: [
         '• Code source propre et documenté',
@@ -636,7 +636,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Capacité à respecter les délais'
       ]
     },
-    'design': {
+    design: {
       title: 'Projet Design',
       livrables: [
         '• Maquettes graphiques haute fidélité',
@@ -658,7 +658,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Capacité d\'adaptation et d\'écoute'
       ]
     },
-    'marketing': {
+    marketing: {
       title: 'Campagne Marketing',
       livrables: [
         '• Stratégie marketing documentée',
@@ -680,7 +680,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Créativité et innovation'
       ]
     },
-    'mobile': {
+    mobile: {
       title: 'Application Mobile',
       livrables: [
         '• Application native ou cross-platform',
@@ -702,7 +702,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Connaissance des bonnes pratiques mobiles'
       ]
     },
-    'ai': {
+    ai: {
       title: 'Projet Intelligence Artificielle',
       livrables: [
         '• Modèle IA entraîné et optimisé',
@@ -724,7 +724,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Capacité d\'innovation technique'
       ]
     },
-    'construction': {
+    construction: {
       title: 'Travaux de Construction',
       livrables: [
         '• Réalisation des travaux selon les règles de l\'art',
@@ -746,7 +746,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Respect des délais et devis transparent'
       ]
     },
-    'renovation': {
+    renovation: {
       title: 'Travaux de Rénovation',
       livrables: [
         '• Rénovation complète selon cahier des charges',
@@ -768,7 +768,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Transparence sur les coûts additionnels'
       ]
     },
-    'plomberie': {
+    plomberie: {
       title: 'Travaux de Plomberie',
       livrables: [
         '• Installation ou réparation selon normes DTU',
@@ -790,7 +790,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Respect des normes sanitaires'
       ]
     },
-    'electricite': {
+    electricite: {
       title: 'Travaux d\'Électricité',
       livrables: [
         '• Installation électrique aux normes NF C 15-100',
@@ -812,7 +812,7 @@ function generateOptimizedDescription(description, category, title) {
         '• Assurance décennale électricité'
       ]
     },
-    'peinture': {
+    peinture: {
       title: 'Travaux de Peinture',
       livrables: [
         '• Préparation soignée des supports',
@@ -867,7 +867,7 @@ function extractSkillsFromDescription(description, category) {
   const skillsByCategory = {
     'development': {
       'react': 'React.js',
-      'vue': 'Vue.js', 
+      'vue': 'Vue.js',
       'angular': 'Angular',
       'php': 'PHP',
       'python': 'Python',
@@ -990,7 +990,7 @@ function estimateComplexity(description, category) {
 
   // Facteurs spécifiques par catégorie
   const categoryComplexityFactors = {
-    'development': [
+    development: [
       { keywords: ['microservices', 'architecture'], points: 2 },
       { keywords: ['ia', 'intelligence artificielle', 'ml'], points: 3 },
       { keywords: ['blockchain', 'crypto'], points: 3 },
@@ -998,35 +998,35 @@ function estimateComplexity(description, category) {
       { keywords: ['base de données', 'database'], points: 1 },
       { keywords: ['sécurité', 'authentification'], points: 2 }
     ],
-    'mobile': [
+    mobile: [
       { keywords: ['ios', 'android'], points: 1 },
       { keywords: ['cross-platform', 'hybride'], points: 2 },
       { keywords: ['push notification', 'géolocalisation'], points: 1 },
       { keywords: ['ar', 'réalité augmentée'], points: 3 },
       { keywords: ['offline', 'synchronisation'], points: 2 }
     ],
-    'design': [
+    design: [
       { keywords: ['logo', 'identité visuelle'], points: 1 },
       { keywords: ['site web', 'interface'], points: 2 },
       { keywords: ['animation', 'motion'], points: 2 },
       { keywords: ['3d', 'modélisation'], points: 3 },
       { keywords: ['print', 'impression'], points: 1 }
     ],
-    'marketing': [
+    marketing: [
       { keywords: ['campagne', 'stratégie'], points: 1 },
       { keywords: ['multicanal', 'omnicanal'], points: 2 },
       { keywords: ['automation', 'automatisation'], points: 2 },
       { keywords: ['influencer', 'partenariat'], points: 2 },
       { keywords: ['international', 'multilingue'], points: 2 }
     ],
-    'ai': [
+    ai: [
       { keywords: ['deep learning', 'neural'], points: 3 },
       { keywords: ['nlp', 'computer vision'], points: 2 },
       { keywords: ['chatbot', 'assistant'], points: 2 },
       { keywords: ['big data', 'données massives'], points: 3 },
       { keywords: ['temps réel', 'streaming'], points: 2 }
     ],
-    'construction': [
+    construction: [
       { keywords: ['rénovation complète', 'gros œuvre'], points: 3 },
       { keywords: ['extension', 'agrandissement'], points: 2 },
       { keywords: ['isolation', 'énergétique'], points: 2 },
@@ -1095,7 +1095,7 @@ function suggestCategories(description) {
 
 function suggestBudgetRange(description, category, complexity) {
   const baseBudgets = {
-    'development': {
+    development: {
       ranges: [2000, 8000],
       factors: {
         'frontend': 1.0,
@@ -1106,7 +1106,7 @@ function suggestBudgetRange(description, category, complexity) {
         'e-commerce': 1.5
       }
     },
-    'mobile': {
+    mobile: {
       ranges: [3000, 12000],
       factors: {
         'native': 1.5,
@@ -1116,7 +1116,7 @@ function suggestBudgetRange(description, category, complexity) {
         'publication': 1.1
       }
     },
-    'design': {
+    design: {
       ranges: [800, 3000],
       factors: {
         'logo': 0.8,
@@ -1126,7 +1126,7 @@ function suggestBudgetRange(description, category, complexity) {
         'print': 1.0
       }
     },
-    'marketing': {
+    marketing: {
       ranges: [1000, 5000],
       factors: {
         'seo': 1.1,
@@ -1136,7 +1136,7 @@ function suggestBudgetRange(description, category, complexity) {
         'stratégie': 1.4
       }
     },
-    'ai': {
+    ai: {
       ranges: [5000, 20000],
       factors: {
         'machine learning': 1.3,
@@ -1146,7 +1146,7 @@ function suggestBudgetRange(description, category, complexity) {
         'nlp': 1.3
       }
     },
-    'construction': {
+    construction: {
       ranges: [1500, 15000],
       factors: {
         'peinture': 0.8,
@@ -1320,7 +1320,7 @@ app.post('/api/auth/register', (req, res) => {
     type: type || 'client'
   };
 
-  res.status(201).json({ 
+  res.status(201).json({
     user,
     message: 'Compte créé avec succès'
   });
