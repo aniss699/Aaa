@@ -58,9 +58,9 @@ const CATEGORIES = [
 ];
 
 export default function CreateMission() {
-  const [, setLocation] = useRouterLocation();
+  const [location, setLocation] = useRouterLocation();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState<MissionFormData>({
     title: '',
     description: '',
@@ -88,7 +88,7 @@ export default function CreateMission() {
     const title = params.get('title');
     const description = params.get('description');
     const budget = params.get('budget');
-    
+
     if (title || description || budget) {
       setFormData(prev => ({
         ...prev,
@@ -163,7 +163,7 @@ export default function CreateMission() {
 
       const data = await response.json();
       setAiSuggestion(data.suggestion);
-      
+
       toast({
         title: "Suggestions IA générées",
         description: "L'IA a analysé votre mission et propose des améliorations",
@@ -216,7 +216,7 @@ export default function CreateMission() {
 
     setFormData(prev => ({ ...prev, ...updates }));
     setAppliedPatches(prev => ({ ...prev, ...currentAppliedPatches }));
-    
+
     toast({
       title: "Suggestions appliquées",
       description: "Les suggestions IA ont été appliquées au formulaire",
@@ -225,7 +225,7 @@ export default function CreateMission() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast({
         title: "Erreurs de validation",
@@ -238,7 +238,7 @@ export default function CreateMission() {
     setIsSubmitting(true);
     try {
       const idempotencyKey = `mission-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const submissionData = {
         ...formData,
         missing_info_answers: missingInfoAnswers,
@@ -275,11 +275,11 @@ export default function CreateMission() {
 
       toast({
         title: "Mission créée avec succès",
-        description: "Votre mission a été publiée et est maintenant visible par les prestataires",
+        description: `Mission "${formData.title}" créée et publiée`,
       });
 
-      setLocation('/missions');
-      
+      setLocation(`/missions/${data.id}`);
+
     } catch (error) {
       toast({
         title: "Erreur",
@@ -586,8 +586,8 @@ export default function CreateMission() {
 
                       <div className="space-y-2">
                         <Label className="text-sm">Budget suggéré</Label>
-                        <Select 
-                          value={applySettings.budget} 
+                        <Select
+                          value={applySettings.budget}
                           onValueChange={(value) => setApplySettings(prev => ({ ...prev, budget: value }))}
                         >
                           <SelectTrigger className="h-8">

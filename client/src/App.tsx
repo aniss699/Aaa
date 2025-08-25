@@ -35,9 +35,9 @@ function App() {
               <Route path="/ai-test" component={AITest} />
               <Route path="/features" component={Features} />
               <Route path="/profile" component={Profile} />
+              <Route path="/missions/:id" component={Missions} />
               <Route path="/missions" component={Missions} />
               <Route path="/create-mission" component={CreateMission} />
-              <Route path="/missions/:id" component={Missions} />
               <Route path="/messages" component={Messages} />
               <Route path="/legal" component={Legal} />
               <Route path="/dashboard" component={Dashboard} />

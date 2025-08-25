@@ -400,6 +400,29 @@ export async function routes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: 'Erreur lors de la récupération des logs' });
     }
   });
+
+  // Middleware de gestion des erreurs 404 pour les API
+  fastify.setNotFoundHandler(async (request, reply) => {
+    if (request.url.startsWith('/api/')) {
+      return reply.status(404).send({
+        error: 'Route API non trouvée',
+        path: request.url,
+        method: request.method,
+        available_routes: [
+          'GET /api/missions',
+          'POST /api/missions',
+          'GET /api/missions/:id',
+          'POST /api/ai/missions/suggest',
+          'POST /api/ai/missions/apply',
+          'POST /api/ai/missions/answer-questions',
+          'GET /api/admin/diagnostics'
+        ]
+      });
+    }
+    
+    // Pour les autres routes, laisser le serveur Vite gérer
+    return reply.code(404).send('Not Found');
+  });
 }
 
 // Fonctions utilitaires

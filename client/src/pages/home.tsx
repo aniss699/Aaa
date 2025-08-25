@@ -111,7 +111,18 @@ export default function Home() {
 
   const recentMissions = missions.slice(0, 6);
 
-  
+  // Dummy AI analysis function and state for demonstration
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const analyzeWithAI = () => {
+    setIsAnalyzing(true);
+    // Simulate AI analysis
+    setTimeout(() => {
+      setAiAnalysis("Analyse IA: Le projet semble bien défini. Considérer l'ajout d'un budget détaillé.");
+      setIsAnalyzing(false);
+    }, 2000);
+  };
 
   // Handler for the quick mission submission
   const handleQuickSubmit = (e: React.FormEvent) => {
@@ -140,7 +151,7 @@ export default function Home() {
       description: quickMission.description,
       budget: quickMission.budget
     });
-    setLocation(`/create-mission?${params.toString()}`);ing()}`);
+    setLocation(`/create-mission?${params.toString()}`);
   };
 
   return (
@@ -225,16 +236,16 @@ export default function Home() {
               </div>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/marketplace">
-                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                    Voir les projets
+                <Button asChild size="lg">
+                    <Link href="/missions">
+                      Découvrir les missions
+                    </Link>
                   </Button>
-                </Link>
-                <Link href="/available-providers">
-                  <Button size="lg" variant="outline" className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                    Prestataires disponibles
+                  <Button asChild variant="outline" size="lg">
+                    <Link href="/create-mission">
+                      Poster une mission
+                    </Link>
                   </Button>
-                </Link>
               </div>
           </div>
         </div>
