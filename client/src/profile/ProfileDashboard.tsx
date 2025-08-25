@@ -297,18 +297,37 @@ export function ProfileDashboard() {
               <div className="space-y-4">
                 {profile.keywords?.length ? (
                   <div>
-                    <h4 className="font-medium mb-2">Mots-clés</h4>
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-blue-500" />
+                      Mots-clés
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {profile.keywords.slice(0, 8).map((keyword, index) => (
-                        <Badge key={index} variant="secondary">{keyword}</Badge>
+                        <Badge 
+                          key={index} 
+                          className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 font-medium"
+                        >
+                          {keyword}
+                        </Badge>
                       ))}
                       {profile.keywords.length > 8 && (
-                        <Badge variant="outline">+{profile.keywords.length - 8}</Badge>
+                        <Badge 
+                          variant="outline" 
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                        >
+                          +{profile.keywords.length - 8} autres
+                        </Badge>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-gray-500 text-sm">Aucun mot-clé défini</div>
+                  <div className="text-gray-500 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>Aucun mot-clé défini</span>
+                    </div>
+                    <p className="text-xs mt-1">Ajoutez des mots-clés pour améliorer votre visibilité</p>
+                  </div>
                 )}
 
                 {profile.role === 'provider' && profile.skills?.length ? (

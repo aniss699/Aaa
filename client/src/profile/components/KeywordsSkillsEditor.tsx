@@ -153,23 +153,35 @@ export function KeywordsSkillsEditor({
             {/* Mots-clés actuels */}
             <div className="flex flex-wrap gap-2">
               {keywords.map((keyword, index) => (
-                <Badge key={index} variant="secondary" className="px-3 py-1">
-                  {keyword}
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors duration-200 group"
+                >
+                  <span className="font-medium">{keyword}</span>
                   <button
                     onClick={() => removeKeyword(keyword)}
-                    className="ml-2 hover:text-red-500"
+                    className="ml-2 hover:text-red-500 opacity-60 group-hover:opacity-100 transition-opacity"
                     aria-label={`Supprimer ${keyword}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
               ))}
+              {keywords.length === 0 && (
+                <div className="text-gray-400 italic text-sm py-2">
+                  Aucun mot-clé ajouté. Utilisez l'IA pour des suggestions !
+                </div>
+              )}
             </div>
 
             {/* Suggestions mots-clés */}
             {showSuggestions && (
-              <div>
-                <p className="text-sm text-gray-600 mb-2">Suggestions populaires :</p>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm font-medium text-blue-800">Suggestions populaires :</p>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {commonSuggestions
                     .filter(s => !keywords.includes(s))
@@ -180,11 +192,15 @@ export function KeywordsSkillsEditor({
                         variant="outline"
                         size="sm"
                         onClick={() => handleSuggestionClick(suggestion, 'keyword')}
-                        className="text-xs"
+                        className="text-xs bg-white hover:bg-blue-100 border-blue-200 text-blue-700 hover:border-blue-300 transition-all duration-200"
                       >
-                        + {suggestion}
+                        <Plus className="h-3 w-3 mr-1" />
+                        {suggestion}
                       </Button>
                     ))}
+                </div>
+                <div className="mt-3 text-xs text-blue-600">
+                  💡 Cliquez pour ajouter rapidement ces mots-clés pertinents
                 </div>
               </div>
             )}
@@ -220,36 +236,39 @@ export function KeywordsSkillsEditor({
               {/* Compétences actuelles avec niveaux */}
               <div className="space-y-3">
                 {skills.map((skill, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <span className="font-medium">{skill.name}</span>
-                      <Badge className={getSkillLevelColor(skill.level)}>
+                  <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors duration-200 group">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="font-semibold text-gray-800">{skill.name}</span>
+                      </div>
+                      <Badge className={`${getSkillLevelColor(skill.level)} px-3 py-1 font-medium`}>
                         {getSkillLevelText(skill.level)}
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      {/* Sélecteur de niveau */}
+                    <div className="flex items-center space-x-3">
+                      {/* Sélecteur de niveau visuel amélioré */}
                       <div className="flex space-x-1">
                         {[1, 2, 3, 4, 5].map((level) => (
                           <button
                             key={level}
                             onClick={() => updateSkillLevel(skill.name, level as 1|2|3|4|5)}
-                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs transition-all duration-200 ${
                               (skill.level || 3) >= level
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-200 text-gray-400 hover:bg-gray-300'
+                                ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-md transform scale-110'
+                                : 'bg-gray-200 text-gray-400 hover:bg-gray-300 hover:scale-105'
                             }`}
                             aria-label={`Niveau ${level}`}
                           >
-                            <Star className="h-3 w-3" />
+                            <Star className={`h-3 w-3 ${(skill.level || 3) >= level ? 'fill-current' : ''}`} />
                           </button>
                         ))}
                       </div>
                       
                       <button
                         onClick={() => removeSkill(skill.name)}
-                        className="text-red-500 hover:text-red-700"
+                        className="text-red-400 hover:text-red-600 opacity-60 group-hover:opacity-100 transition-all duration-200 p-1 rounded-full hover:bg-red-50"
                         aria-label={`Supprimer ${skill.name}`}
                       >
                         <X className="h-4 w-4" />
@@ -257,12 +276,22 @@ export function KeywordsSkillsEditor({
                     </div>
                   </div>
                 ))}
+                {skills.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <Star className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">Aucune compétence ajoutée.</p>
+                    <p className="text-xs">Ajoutez vos compétences pour améliorer votre profil !</p>
+                  </div>
+                )}
               </div>
 
               {/* Suggestions compétences depuis mots-clés */}
               {keywords.length > 0 && (
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Ajouter depuis vos mots-clés :</p>
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Star className="h-4 w-4 text-green-600" />
+                    <p className="text-sm font-medium text-green-800">Transformer vos mots-clés en compétences :</p>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {keywords
                       .filter(k => !skills.some(s => s.name === k))
@@ -273,11 +302,15 @@ export function KeywordsSkillsEditor({
                           variant="outline"
                           size="sm"
                           onClick={() => handleSuggestionClick(keyword, 'skill')}
-                          className="text-xs"
+                          className="text-xs bg-white hover:bg-green-100 border-green-200 text-green-700 hover:border-green-300 transition-all duration-200"
                         >
-                          + {keyword}
+                          <Plus className="h-3 w-3 mr-1" />
+                          {keyword}
                         </Button>
                       ))}
+                  </div>
+                  <div className="mt-3 text-xs text-green-600">
+                    🎯 Niveau par défaut : Intermédiaire (modifiable après ajout)
                   </div>
                 </div>
               )}
