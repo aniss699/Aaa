@@ -140,7 +140,7 @@ export default function Home() {
       description: quickMission.description,
       budget: quickMission.budget
     });
-    setLocation(`/create-mission?${params.toString()}`);
+    setLocation(`/create-mission?${params.toString()}`);ing()}`);
   };
 
   return (

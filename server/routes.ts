@@ -214,37 +214,30 @@ export async function routes(fastify: FastifyInstance) {
       const suggestion = generateRichSuggestion(data, mlResult);
       
       return reply.send({
+        suggestion: {
+          title: suggestion.rewrite.title,
+          summary: suggestion.rewrite.summary,
+          acceptance_criteria: suggestion.rewrite.acceptance_criteria,
+          category_std: suggestion.structure.category_std,
+          sub_category_std: suggestion.structure.sub_category_std,
+          skills_std: suggestion.structure.skills,
+          tags_std: [],
+          brief_quality_score: suggestion.scores.quality,
+          richness_score: suggestion.scores.richness,
+          missing_info: suggestion.questions,
+          price_suggested_min: suggestion.economics.price_suggested_min,
+          price_suggested_med: suggestion.economics.price_suggested_med,
+          price_suggested_max: suggestion.economics.price_suggested_max,
+          delay_suggested_days: suggestion.economics.delay_suggested_days,
+          loc_base: suggestion.loc.base,
+          loc_uplift_reco: suggestion.loc.uplift_reco,
+          reasons: suggestion.reasons
+        },
         scores: {
           quality: suggestion.scores.quality,
           richness: suggestion.scores.richness,
           confidence: suggestion.scores.confidence
         },
-        rewrite: {
-          title: suggestion.rewrite.title,
-          summary: suggestion.rewrite.summary,
-          acceptance_criteria: suggestion.rewrite.acceptance_criteria
-        },
-        structure: {
-          category_std: suggestion.structure.category_std,
-          sub_category_std: suggestion.structure.sub_category_std,
-          tasks: suggestion.structure.tasks,
-          deliverables: suggestion.structure.deliverables,
-          skills: suggestion.structure.skills,
-          constraints: suggestion.structure.constraints
-        },
-        economics: {
-          price_suggested_min: suggestion.economics.price_suggested_min,
-          price_suggested_med: suggestion.economics.price_suggested_med,
-          price_suggested_max: suggestion.economics.price_suggested_max,
-          delay_suggested_days: suggestion.economics.delay_suggested_days,
-          rationale: suggestion.economics.rationale
-        },
-        loc: {
-          base: suggestion.loc.base,
-          uplift_reco: suggestion.loc.uplift_reco
-        },
-        questions: suggestion.questions,
-        reasons: suggestion.reasons,
         version: "ai.suggest.v2"
       });
 
@@ -341,6 +334,17 @@ export async function routes(fastify: FastifyInstance) {
 
     } catch (error) {
       fastify.log.error('Erreur récupération mission:', error);
+      return reply.status(500).send({ error: 'Erreur interne' });
+    }
+  });
+
+  // GET /api/missions - Liste des missions
+  fastify.get('/api/missions', async (request, reply) => {
+    try {
+      const missions = storage.getProjects();
+      return reply.send(missions);
+    } catch (error) {
+      fastify.log.error('Erreur récupération missions:', error);
       return reply.status(500).send({ error: 'Erreur interne' });
     }
   });

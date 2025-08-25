@@ -8,6 +8,7 @@ import { Navbar } from "@/components/layout/navbar";
 import Home from "@/pages/home";
 import Marketplace from "@/pages/marketplace";
 import Missions from '@/pages/missions';
+import CreateMission from '@/pages/create-mission';
 import Legal from '@/pages/legal';
 import Features from '@/pages/features';
 import Profile from '@/pages/profile';
@@ -35,6 +36,8 @@ function App() {
               <Route path="/features" component={Features} />
               <Route path="/profile" component={Profile} />
               <Route path="/missions" component={Missions} />
+              <Route path="/create-mission" component={CreateMission} />
+              <Route path="/missions/:id" component={Missions} />
               <Route path="/messages" component={Messages} />
               <Route path="/legal" component={Legal} />
               <Route path="/dashboard" component={Dashboard} />

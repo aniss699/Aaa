@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation as useRouterLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -58,7 +58,7 @@ const CATEGORIES = [
 ];
 
 export default function CreateMission() {
-  const navigate = useNavigate();
+  const [, setLocation] = useRouterLocation();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState<MissionFormData>({
@@ -81,6 +81,23 @@ export default function CreateMission() {
     delay: false
   });
   const [appliedPatches, setAppliedPatches] = useState({}); // State to track applied patches
+
+  // Pré-remplissage depuis les paramètres URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get('title');
+    const description = params.get('description');
+    const budget = params.get('budget');
+    
+    if (title || description || budget) {
+      setFormData(prev => ({
+        ...prev,
+        ...(title && { title }),
+        ...(description && { description }),
+        ...(budget && { budget_max: parseInt(budget) || prev.budget_max })
+      }));
+    }
+  }, []);
 
   const handleInputChange = (field: keyof MissionFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -261,7 +278,7 @@ export default function CreateMission() {
         description: "Votre mission a été publiée et est maintenant visible par les prestataires",
       });
 
-      navigate(`/missions/${data.id}`);
+      setLocation('/missions');
       
     } catch (error) {
       toast({

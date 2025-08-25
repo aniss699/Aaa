@@ -1,5 +1,8 @@
 
 const request = require('supertest');
+
+
+const request = require('supertest');
 const { app } = require('./index');
 
 describe('Mission Creation Routes', () => {
@@ -13,13 +16,39 @@ describe('Mission Creation Routes', () => {
     server.close();
   });
 
-  describe('GET /missions/new', () => {
-    it('should return form page with AI improvement button', async () => {
-      const response = await request(server).get('/missions/new');
+  describe('GET /api/missions', () => {
+    it('should return missions list', async () => {
+      const response = await request(server).get('/api/missions');
       expect(response.status).toBe(200);
-      expect(response.text).toContain('Améliorer avec l\'IA');
-      expect(response.text).toContain('name="title"');
-      expect(response.text).toContain('name="description"');
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+  });
+
+  describe('POST /api/missions routing', () => {
+    it('should create mission and return valid ID for redirection', async () => {
+      const missionData = {
+        title: 'Test Mission',
+        description: 'Test description for routing',
+        category: 'développement',
+        budget_min: 2000,
+        budget_max: 5000
+      };
+
+      const response = await request(server)
+        .post('/api/missions')
+        .set('Idempotency-Key', 'test-routing-001')
+        .send(missionData)
+        .expect(201);
+
+      expect(response.body.id).toBeDefined();
+      expect(response.body.status).toBe('PUBLISHED');
+      
+      // Vérifier que la mission peut être récupérée
+      const getResponse = await request(server)
+        .get(`/api/missions/${response.body.id}`)
+        .expect(200);
+      
+      expect(getResponse.body.mission.title).toBe(missionData.title);
     });
   });
 
@@ -42,6 +71,8 @@ describe('Mission Creation Routes', () => {
       expect(response.body.suggestion.price_suggested_min).toBeGreaterThan(0);
       expect(response.body.suggestion.missing_info).toBeInstanceOf(Array);
       expect(response.body.suggestion.brief_quality_score).toBeGreaterThan(0);
+      expect(response.body.scores).toBeDefined();
+      expect(response.body.scores.quality).toBeGreaterThan(0);
     });
 
     it('should return 422 for invalid data', async () => {
