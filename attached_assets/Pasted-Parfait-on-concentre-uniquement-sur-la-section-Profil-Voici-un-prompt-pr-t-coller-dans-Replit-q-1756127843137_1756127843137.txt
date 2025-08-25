@@ -1,0 +1,218 @@
+Parfait — on concentre uniquement sur la section Profil. Voici un prompt prêt à coller dans Replit qui cadre strictement le périmètre (profil clients + prestataires), ajoute l’IA de complétude et les mots-clés/compétences pour le matching, sans toucher au reste de l’app.
+
+⸻
+
+PROMPT REPLIT — Refonte SECTION PROFIL uniquement
+
+(Clients & Prestataires) avec IA de complétude + tags compétences
+
+🎯 Périmètre & contraintes (très important)
+	•	Ne modifier que la section Profil et les fichiers partagés strictement nécessaires (types/utilitaires).
+	•	Aucun changement sur les pages Missions/Marketplace/Accueil, aucune suppression d’existants.
+	•	Pas de refonte globale du router : ajouter seulement les routes Profil si manquantes.
+	•	Zéro régression : pas de rename de composants globaux, pas d’upgrade de dépendances.
+	•	Fonctions IA encapsulées et optionnelles (fallback local). Ne pas réintroduire d’erreur analyzeWithAI non définie.
+
+⸻
+
+🗃️ Types & utilitaires (additifs, non-cassants)
+
+Créer/mettre à jour (additif uniquement) :
+	•	shared/types/profile.ts
+	•	shared/utils/profileScore.ts
+	•	shared/utils/keywords.ts
+
+shared/types/profile.ts
+
+export type UserRole = "client" | "provider";
+
+export interface BaseProfile {
+  userId: string;
+  role: UserRole;
+  displayName: string;
+  avatarUrl?: string;
+  headline?: string;
+  bio?: string;
+  location?: { city?: string; country?: string; lat?: number; lng?: number };
+  languages?: string[];               // ex: ["fr","en"]
+  keywords?: string[];                // mots-clés libres
+  skills?: Array<{ name: string; level?: 1|2|3|4|5 }>;
+  industries?: string[];
+  portfolio?: Array<{ title: string; url?: string; image?: string; description?: string }>;
+  certifications?: Array<{ name: string; issuer?: string; year?: number }>;
+  availability?: { modes?: ("on-site"|"remote")[]; hoursPerWeek?: number; timezones?: string[]; earliestStartDate?: string };
+  rates?: { currency: "EUR"; rateType?: "hourly"|"fixed"; min?: number; max?: number };
+  preferences?: { visibility?: "public"|"private"|"anonymized"; gdprConsent?: boolean };
+  completeness?: number;              // calculé
+  badges?: string[];
+  createdAt: string; updatedAt: string;
+}
+
+export interface ClientProfile extends BaseProfile {
+  company?: { name?: string; siret?: string; size?: "solo"|"TPE"|"PME"|"ETI"|"GE" };
+  pastBudgets?: number[];
+}
+
+export interface ProviderProfile extends BaseProfile {
+  yearsExperience?: number;
+  serviceAreas?: string[];
+  equipment?: string[];
+}
+
+export type AnyProfile = ClientProfile | ProviderProfile;
+
+shared/utils/profileScore.ts
+	•	Exporter computeProfileCompleteness(p: Partial<AnyProfile>): number
+Règles simples (pondérations) : avatar (5), displayName (5), headline (10), bio (15), location (5), languages (5), keywords (10), skills (20), portfolio/certifs (10), availability/rates (10), preferences.gdprConsent (5). Clamp 0–100.
+
+shared/utils/keywords.ts
+	•	normalizeTags(input: string[]): string[] → trim, lower, dédoublonne.
+	•	expandSynonyms(tags: string[]): string[] → petit dictionnaire interne (FR) pour rapprocher les variantes (“dev web”→“développement web”, “seo”→“référencement naturel”, etc.).
+	•	Ne pas appeler d’API externe.
+
+⸻
+
+🧭 UI Profil (nouveaux écrans, dans un dossier dédié)
+
+Créer uniquement sous client/src/profile/ :
+	•	ProfileDashboard.tsx
+	•	Affiche résumé profil + ProgressBar de complétude (utilise computeProfileCompleteness).
+	•	Cartes “section incomplète” avec CTA “Compléter” (mène vers l’étape du wizard).
+	•	ProfileWizard.tsx (assistant multi-étapes, sauvegarde par étape)
+Étapes :
+	1.	Infos générales (photo, nom affiché, rôle, headline, bio)
+	2.	Localisation & Langues
+	3.	Compétences & Mots-clés (éditeur de tags, auto-complétion locale, normalisation)
+	4.	Portfolio & Certifications
+	5.	Disponibilité & Tarifs (prestataire) / Société & Historique budgets (client)
+	6.	Préférences & Confidentialité (visibilité, consentement)
+	•	KeywordsSkillsEditor.tsx
+	•	Input tags (ajout/suppression), suggestions locales (listes statiques FR), appelle normalizeTags + expandSynonyms.
+	•	AIAssistButtons.tsx
+	•	Boutons : “Proposer avec l’IA”, “Compléter avec l’IA”, “Améliorer mon texte”.
+	•	Appelle des helpers safe (voir section IA). Afficher skeleton/loading + résultat diffable avant d’appliquer.
+	•	ProfilePublicView.tsx
+	•	Vue publique (respecte preferences.visibility).
+
+Styles & accessibilité
+	•	Mobile-first, FR, ARIA labels, navigation clavier.
+	•	Ne pas modifier le design global hors profil.
+
+⸻
+
+🔗 Routes (profil uniquement)
+
+Ajouter uniquement si absentes, puis enregistrer dans le router sans toucher aux autres routes :
+	•	/profil → ProfileDashboard
+	•	/profil/editer → ProfileWizard
+	•	/profil/:userId → ProfilePublicView
+
+Si le projet utilise Wouter/React Router, ajouter les <Route> correspondantes dans le fichier router existant, sans retirer/modifier les routes actuelles.
+
+⸻
+
+🤖 Intégration IA (encapsulée, sans dépendance externe obligatoire)
+
+Créer client/src/ai/profileAssist.ts :
+
+import { AnyProfile } from "../../shared/types/profile";
+import { normalizeTags, expandSynonyms } from "../../shared/utils/keywords";
+
+type AIResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+async function callExistingAICore<T>(fn: string, payload: unknown): Promise<AIResult<T>> {
+  // 1) Si une fonction globale/SDK existe déjà, l’utiliser prudemment (try/catch)
+  // 2) Sinon, fallback local déterministe
+  try {
+    // @ts-ignore
+    if (typeof window !== "undefined" && typeof window.aiCore?.[fn] === "function") {
+      // @ts-ignore
+      const data = await window.aiCore[fn](payload);
+      return { ok: true, data };
+    }
+  } catch (e: any) {
+    return { ok: false, error: e?.message || "AI core error" };
+  }
+  return { ok: false, error: "AI core unavailable" };
+}
+
+export async function aiEnhanceText(input: string): Promise<string> {
+  const res = await callExistingAICore<string>("enhanceText", { input });
+  if (res.ok) return res.data;
+  // Fallback simple : capitalisation + suppression doublons espaces
+  return input.replace(/\s+/g, " ").replace(/(^\w|\.\s+\w)/g, s => s.toUpperCase());
+}
+
+export async function aiSuggestProfileImprovements(p: Partial<AnyProfile>): Promise<Partial<AnyProfile>> {
+  const res = await callExistingAICore<Partial<AnyProfile>>("suggestProfile", p);
+  if (res.ok) return res.data;
+  // Fallback heuristique local : ajoute headline si vide, propose tags depuis bio
+  const out: Partial<AnyProfile> = { ...p };
+  if (!out.headline && p.role === "provider") {
+    out.headline = "Prestataire expérimenté — réactif et orienté résultats";
+  }
+  if (!out.keywords?.length && p.bio) {
+    const seed = (p.bio.match(/\b(seo|wordpress|peinture|ménage|dépannage|plomberie|électricité|data|flutter|react)\b/gi) || []);
+    out.keywords = expandSynonyms(normalizeTags(seed));
+  }
+  return out;
+}
+
+export async function aiGenerateKeywordsSkills(texts: { bio?: string; headline?: string }): Promise<{keywords: string[]; skills: string[]}> {
+  const res = await callExistingAICore<{keywords: string[]; skills: string[]}>("extractTags", texts);
+  if (res.ok) return res.data;
+  const base = (texts.bio || "" + " " + (texts.headline || "")).toLowerCase();
+  const dict = ["seo","référencement naturel","wordpress","react","flutter","plomberie","électricité","peinture","nettoyage","data","excel","audit"];
+  const found = dict.filter(d => base.includes(d));
+  return { keywords: expandSynonyms(normalizeTags(found)), skills: expandSynonyms(normalizeTags(found)) };
+}
+
+Objectif : aucune erreur Can't find variable: analyzeWithAI. Tout est encapsulé, avec fallback local.
+
+⸻
+
+💾 Persistance (non-intrusive)
+	•	Créer des hooks dans client/src/profile/useProfile.ts qui utilisent le store/fetch existant (TanStack Query si présent).
+	•	Si l’API n’existe pas encore, mock local (localStorage) uniquement pour le profil, sans impacter le reste.
+
+⸻
+
+🧪 Tests & vérifs ciblés
+	•	Unit : computeProfileCompleteness, normalizeTags, expandSynonyms.
+	•	Smoke UI : montage ProfileDashboard & ProfileWizard sans erreurs.
+	•	Non-régression : build Vite OK, aucune 404 nouvelle hors /profil*.
+
+⸻
+
+✅ Critères d’acceptation (doit être vérifiable à la main)
+	1.	Naviguer vers /profil affiche le dashboard avec une barre de complétude (0–100).
+	2.	Bouton “Compléter” ouvre /profil/editer (wizard) avec 6 étapes décrites plus haut.
+	3.	Dans l’étape Compétences & Mots-clés, je peux ajouter/supprimer des tags, voir des suggestions, et ils sont normalisés.
+	4.	Les boutons IA proposent :
+	•	une amélioration de texte (headline/bio) sans casser l’UI,
+	•	des mots-clés/compétences suggérés,
+	•	une complétion automatique de certains champs vides.
+En cas d’indisponibilité de l’IA, un fallback local fournit une proposition basique (pas d’erreur).
+	5.	La vue publique /profil/:userId respecte la visibilité (public/private/anonymized).
+	6.	Aucune régression sur les autres pages (missions, accueil, marketplace). Build OK.
+
+⸻
+
+📝 Notes d’implémentation rapides
+	•	Utiliser un ProgressBar simple (calcul à chaque sauvegarde d’étape).
+	•	Enregistrer la progression par étape (prévenir la perte de saisie).
+	•	Mettre des labels FR + aria-* pour l’accessibilité.
+	•	Ne pas modifier les composants ou styles non liés au profil.
+
+⸻
+
+Livrables attendus dans ce MR interne :
+	•	Dossier client/src/profile/ complet + hooks.
+	•	Fichiers shared/types/profile.ts, shared/utils/profileScore.ts, shared/utils/keywords.ts.
+	•	Tests unitaires sur les utilitaires.
+	•	Ajout minimal des routes /profil, /profil/editer, /profil/:userId.
+	•	README court client/src/profile/README.md (comment lancer, où brancher l’API si disponible).
+
+⸻
+
+Merci d’appliquer ces changements exclusivement à la section Profil, avec le strict minimum de couplage vers le reste de l’app.
