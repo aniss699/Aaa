@@ -1,0 +1,157 @@
+Parfait, on muscle vraiment ton encadré bleu “Analyse IA” pour qu’il apporte de la valeur visible pendant la création de mission : une réécriture complète & structurée, prix/délais actionnables, critères d’acceptation, tâches & livrables, questions manquantes avec auto‑remplissage, diff côte‑à‑côte, bouton appliquer granulaire, undo/redo, et un score dynamique qui bouge quand on applique.
+
+Colle ce prompt dans Replit 👇
+
+⸻
+
+🧠 PROMPT REPLIT — Upgrade “Analyse IA” (réécriture profonde + actions concrètes)
+
+Tu es un assistant IA full‑stack.
+Dans mon repo, améliore radicalement le widget “Analyse IA” affiché lors de la création d’une mission. L’objectif : que l’IA produise une version exploitable (texte, structure, prix, délais) et que l’utilisateur puisse l’appliquer finement depuis l’encadré bleu (sans quitter la page).
+
+1) Back‑end (API) — suggestions riches & actionnables
+
+Créer/mettre à jour ces endpoints (Fastify/Express, TS) :
+	•	POST /ai/missions/suggest
+Entrée (brouillon du formulaire) :
+{ title, description, category?, budget_min?, budget_max?, deadline_ts?, location?, onsite? }
+Sortie (complète) :
+
+{
+  "scores": {
+    "quality": 0.76,
+    "richness": 0.72,
+    "confidence": 0.68
+  },
+  "rewrite": {
+    "title": "Titre clair & normé",
+    "summary": "5–7 phrases (Contexte→Objectif→Contraintes→Livrables→Critères).",
+    "acceptance_criteria": [
+      "Critère SMART #1",
+      "Critère SMART #2",
+      "Critère SMART #3"
+    ]
+  },
+  "structure": {
+    "category_std": "travaux.intérieur",
+    "sub_category_std": "peinture",
+    "tasks": [{"id":"prep","label":"Préparation surfaces (rebouchage/ponçage)","qty":"45 m²"}],
+    "deliverables": [{"id":"paint","label":"2 couches finition satin","qty":"45 m²"}],
+    "skills": ["peinture intérieure","finitions satin"],
+    "constraints": ["protection sols","délais 10j","présence en journée"]
+  },
+  "economics": {
+    "price_suggested_min": 65000,
+    "price_suggested_med": 78000,
+    "price_suggested_max": 98000,
+    "delay_suggested_days": 10,
+    "rationale": "Basé sur PRM + complexité (45 m², 2 couches, finition satin)."
+  },
+  "loc": {
+    "base": 0.61,
+    "uplift_reco": {"new_budget": 82000, "new_delay": 12, "delta_loc": 0.08}
+  },
+  "questions": [
+    {"id":"surface_m2","q":"Quelle surface exacte à peindre (m²) ?","type":"number"},
+    {"id":"type_peinture","q":"Mat, satin ou velours ?","type":"enum","options":["mat","satin","velours"]},
+    {"id":"contraintes_horaires","q":"Contraintes horaires ?","type":"text"}
+  ],
+  "reasons": [
+    "Brief trop court → ajout critères SMART",
+    "Uplift budget +5k€ → +8 points de probabilité d’aboutissement"
+  ],
+  "version": "ai.suggest.v2"
+}
+
+
+	•	POST /ai/missions/apply
+Entrée :
+{ missionDraft, suggestion, apply: { text?: boolean, criteria?: boolean, tasks?: boolean, deliverables?: boolean, budget?: 'min'|'med'|'max', delay?: boolean } }
+Sortie : un patch prêt à injecter dans le formulaire :
+{ fields: { title, description, budget_min, budget_max, deadline_ts }, meta: { acceptance_criteria, tasks, deliverables }, diffs: [...] }
+	•	POST /ai/missions/answer-questions
+Entrée : { suggestionVersion, answers: [{id,value}, ...] }
+Sortie : nouvelle suggestion recalculée (scores/economics/loc/rewrites mis à jour).
+
+Implémentation IA : offline (règles + BM25/TF‑IDF). Pas d’API payante.
+Générer critères SMART, tâches/livrables et rationales FR.
+Fournir breakdown/scores pour l’UI.
+
+2) Front — encadré bleu “Analyse IA” utile
+
+Dans la page création de mission (ex : /missions/new ou /projects/new) :
+	•	Bouton violet “Analyser avec l’IA” → appelle POST /ai/missions/suggest avec le brouillon actuel.
+	•	Encadré bleu mis à jour pour afficher 4 blocs :
+	1.	Qualité & Score
+	•	Barre Qualité de l’annonce avec quality/100 et sous‑libellé “Richesse : X%, Confiance : Y%”.
+	•	Badge “+ΔLOC possible : +8% (avec budget/délais proposés)”.
+	2.	Réécriture & Critères
+	•	Diff côte‑à‑côte : à gauche ton texte, à droite “Version optimisée par l’IA” (titre + résumé).
+	•	Liste Critères d’acceptation (checkbox pour appliquer/ignorer critère par critère).
+	3.	Structure & Économie
+	•	Tasks/Livrables générés (checkbox par item).
+	•	Carte Prix & Délais : radio Min / Médian / Max, toggle “Appliquer délais suggérés”.
+	4.	Questions manquantes (inline)
+	•	Rendre les 2–3 premières répondables directement (input/enum/number).
+	•	Bouton “Recalculer” qui rappelle /ai/missions/answer-questions et rafraîchit scores/prix/délais.
+	•	Bouton vert “Appliquer l’amélioration” → appelle POST /ai/missions/apply, puis met à jour le formulaire (sans submit).
+	•	Appliquer finement : switches “Texte”, “Critères”, “Tâches/Livrables”, “Budget (min/med/max)”, “Délais”.
+	•	Undo/Redo (local state) : historique des patches appliqués.
+	•	UX micro‑copies FR :
+	•	“Nous avons clarifié votre annonce (tâches, livrables, critères) et proposé budget/délais réalistes.”
+	•	“Impact estimé si vous appliquez tout : +8 pts de probabilité d’aboutissement.”
+
+3) Persistance & auditable
+	•	À la soumission de la mission, si l’utilisateur a appliqué l’IA :
+	•	Créer/mettre à jour ProjectStandardization (mission_id FK) avec : rewrite, acceptance_criteria, tasks, deliverables, skills, constraints, price_suggested_*, delay_suggested_days, scores, loc, version.
+	•	Créer une entrée ChangeLog (avant/après, ce qui a été appliqué).
+	•	Index GIN sur skills/tags/tasks/deliverables.
+
+4) Qualité & modèles (server/ML)
+	•	Réécriture : templates par category_std + snippets dynamiques (quantités, finitions, délai).
+	•	Critères d’acceptation : au moins 3 critères SMART pertinents (mesurable, délai, tolérance défauts, etc.).
+	•	Tasks/Livrables : 2–6 items max, avec qty déduite (ex : “45 m²”).
+	•	Prix/Délais : q25/q50/q75 (PRM) + ajustements complexité/finition/onsite.
+	•	LOC : base + uplift si budget/délais appliqués.
+
+5) Tests (obligatoires)
+	•	E2E (supertest)
+	1.	POST /ai/missions/suggest → répond avec rewrite/criteria/tasks/deliverables/economics/questions/scores/loc.
+	2.	POST /ai/missions/answer-questions (surface=45, finition=satin) → prix/délais changent & scores montent.
+	3.	POST /ai/missions/apply (text+criteria+budget=med+delay) → renvoie patch cohérent ; champ description enrichi.
+	4.	POST /missions ensuite → persiste ProjectStandardization + ChangeLog.
+	•	Unit
+	•	Génération critères SMART (structure/compte ≥3, pas de doublons).
+	•	Tasks/Livrables : présence qty si surface connue.
+	•	Rationales : contient mention de complexité (surface/finition).
+	•	Patch builder : applique sélectivement (texte/critères/tasks/budget/delay) et produit diffs.
+
+6) UI/UX — détails attendus
+	•	Visuel de diff : surligner ajouts (vert) et suppressions (rouge pâle).
+	•	Scores dynamiques : si l’utilisateur coche/décoche des éléments, recalcul léger côté front (ex : +2 pts si critères cochés ≥3).
+	•	État sticky : garder l’encadré bleu ouvert lors du scroll.
+	•	Mode compact : bouton “Masquer la version optimisée” qui réduit à une ligne avec score + CTA “Appliquer”.
+
+7) Definition of Done
+	•	Le bloc Analyse IA devient opérationnel et puissant :
+	•	Réécriture claire + critères d’acceptation concrets,
+	•	Tasks/Livrables exploitables,
+	•	Prix & Délais actionnables (min/med/max + toggle délais),
+	•	Questions inline + Recalcul,
+	•	Appliquer granularité + Undo/Redo,
+	•	Scores & LOC uplift visibles.
+	•	À l’enregistrement, tout est persisté (standardisation + changelog).
+	•	Tests e2e/unit verts.
+
+⸻
+
+(Option) micro‑copy FR prêtes à l’emploi
+	•	Titre carte : Analyse IA
+	•	Sous‑titre : “Qualité de l’annonce : 76% • Richesse : 72% • Confiance : 68%”
+	•	Carte prix : “Budget recommandé : 78 000 € (10 j) — médian basé sur projets similaires.”
+	•	Badge : “+8 pts de probabilité d’aboutissement si vous appliquez tout.”
+
+⸻
+
+Implémente exactement ce qui précède.
+L’objectif est que le bloc bleu amène une vraie transformation de la mission, pas juste des conseils vagues : on veut texte prêt, critères prêts, tâches/livrables structurés, prix/délais cliquables, et application en 1 clic avec undo.
