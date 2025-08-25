@@ -17,6 +17,7 @@ import { MissionStandardizer } from '@/components/ai/mission-standardizer';
 import { CategorySelector } from '@/components/missions/category-selector';
 import { MarketHeatIndicator } from '@/components/ai/market-heat-indicator';
 import { Progress } from '@/components/ui/progress';
+import { analyzeWithAI } from '@/services/aiService';
 
 // Utility function for debouncing
 function debounce<T extends (...args: any[]) => any>(func: T, delay: number): T {
@@ -68,7 +69,7 @@ export default function CreateMission() {
 
   // Get URL parameters for pre-filled data
   const urlParams = new URLSearchParams(window.location.search);
-  
+
   const [formData, setFormData] = useState({
     title: urlParams.get('title') || '',
     description: urlParams.get('description') || '',
@@ -303,7 +304,7 @@ export default function CreateMission() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Connexion requise</h2>
           <p className="text-gray-600 mb-8">Veuillez vous connecter pour créer une mission</p>
           <Button onClick={() => setLocation('/')}>
-            Retour à l'accueil
+            Retour à l\'accueil
           </Button>
         </div>
       </div>
