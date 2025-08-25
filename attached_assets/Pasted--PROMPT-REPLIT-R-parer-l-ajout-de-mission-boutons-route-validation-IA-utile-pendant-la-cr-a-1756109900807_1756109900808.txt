@@ -1,0 +1,218 @@
+🛠️ PROMPT REPLIT — Réparer l’ajout de mission (boutons/route/validation) + IA utile pendant la création (réécriture, prix/délais, questions, “appliquer” en 1 clic)
+
+Tu es un assistant IA full‑stack.
+Dans mon repo, corrige toutes les pages et actions qui ajoutent une mission/projet (création via boutons/ formulaires/UI) et rends l’IA vraiment utile au moment de créer la mission : réécriture/standardisation de l’annonce, suggestions prix/délais, questions manquantes, aperçu LOC, bouton “Appliquer les suggestions”.
+Livre code, migrations, tests, et doc. (Ignore les sujets Preview.)
+
+⸻
+
+0) Cible & vocabulaire
+	•	“Mission” = enregistrement principal (table Project ou Mission).
+	•	Front : pages SSR existantes (templates) et/ou composants client légers (fetch).
+	•	API : Fastify/Express (TypeScript).
+
+⸻
+
+1) Corriger les pages d’ajout de mission (UI + routes)
+
+A. Pages à (re)créer/fiabiliser
+	•	GET /missions/new (ou /projects/new) : formulaire de création.
+	•	Champs : title, description, category, budget_min, budget_max, deadline_ts?, geo_required?, onsite_radius_km?.
+	•	Boutons :
+	1.	Créer la mission (soumet vers POST)
+	2.	Améliorer avec l’IA (AJAX → /ai/missions/suggest), affiche un panneau latéral avec propositions.
+	3.	Appliquer les suggestions (patch des champs du formulaire depuis la suggestion IA).
+	•	GET /missions/:id : détail mission (affiche ce qui a été appliqué).
+	•	GET /missions/:id/edit : édition (repropose le panneau IA).
+
+B. Actions/boutons qui échouaient
+	•	Réparer tous les boutons “Créer/Publier/Enregistrer” qui renvoient 404/500 :
+	•	Vérifier les form action + method + name/id des inputs.
+	•	Si SPA partielle : vérifier les URLs de fetch() et les headers (Content-Type: application/json).
+	•	Si CSRF en place : inclure le token (meta + header).
+	•	Ajouter un champ caché Idempotency-Key (uuid v4) côté formulaire.
+
+C. UX erreurs
+	•	En cas d’erreur, rester sur la page et afficher :
+	•	bandeau global (message FR clair),
+	•	erreurs field-level (sous le champ),
+	•	hint (“budget_min doit être ≤ budget_max”).
+	•	Ne jamais rendre un 500 brut à l’utilisateur : log interne + message FR.
+
+⸻
+
+2) API — POST/PUT robustes (création/édition de mission)
+
+A. POST /missions
+	•	Validation Zod (alignée Prisma) :
+
+title: string(min 3)
+description: string(min 10)
+category: enum(Category)
+budget_min: number ≥ 1000
+budget_max: number ≥ budget_min
+deadline_ts?: ISO future
+geo_required?: boolean
+onsite_radius_km?: number ≥ 0 (si geo_required)
+
+
+	•	Transaction DB (Prisma) : créer Mission + EventLog.
+	•	Idempotence (header ou champ caché Idempotency-Key) : si rejoué <15 min → renvoyer la même ressource.
+	•	Réponse : 201 {id, status:'DRAFT'|'PUBLISHED'} + validation:{warnings[], infos[]}.
+
+B. PUT /missions/:id
+	•	Même Zod + transaction + idempotence (clé différente).
+
+C. Erreurs uniformes
+	•	422 {code:'VALIDATION_ERROR', field, message, hint}
+	•	409 idempotence déjà utilisée
+	•	500 {code:'INTERNAL_ERROR', trace_id} (log pino)
+
+⸻
+
+3) IA pendant la création (utile et actionnable)
+
+A. Endpoint suggestion : POST /ai/missions/suggest
+	•	Entrée : le brouillon du formulaire { title, description, category?, budget_min?, budget_max?, deadline_ts? }.
+	•	Traitements (offline, pas d’API payante) :
+	•	Réécriture/standardisation : title_suggest, summary_suggest, acceptance_criteria[].
+	•	Taxonomie & skills : category_std, sub_category_std, skills_std[], tags_std[].
+	•	Qualité du brief : brief_quality_score, richness_score, missing_info[] (questions concrètes).
+	•	Prix/délais : price_suggested_min/med/max, delay_suggested_days, rationale.
+	•	LOC (approx) : loc_base + uplift_reco {new_budget, new_delay, delta_loc}.
+	•	Sortie :
+
+{
+  "suggestion": {
+    "title": "...",
+    "summary": "...",
+    "acceptance_criteria": ["..."],
+    "category_std": "...",
+    "sub_category_std": "...",
+    "skills_std": ["..."],
+    "tags_std": ["..."],
+    "brief_quality_score": 0.78,
+    "richness_score": 0.72,
+    "missing_info": [{"id":"surface_m2","q":"Quelle surface ?"}],
+    "price_suggested_min": 65000,
+    "price_suggested_med": 78000,
+    "price_suggested_max": 98000,
+    "delay_suggested_days": 10,
+    "loc_base": 0.61,
+    "loc_uplift_reco": {"new_budget": 82000, "new_delay": 12, "delta_loc": +0.08},
+    "reasons": ["Brief peu précis → proposer critères SMART", "Budget médian basé sur PRM travaux intérieurs"]
+  }
+}
+
+
+
+B. Endpoint application (pré‑création) : POST /ai/missions/apply-suggestion
+	•	Entrée : suggestion retournée + apply params {budget:'min'|'med'|'max', delay:boolean, text:boolean}.
+	•	Sortie : payload “patch” à injecter dans le formulaire (front remplit les champs automatiquement).
+
+C. Enregistrement de la standardisation si l’utilisateur soumet
+	•	À la création réussie (POST /missions) : stocker ProjectStandardization (liée à la mission) avec la suggestion retenue (si utilisée).
+
+⸻
+
+4) Front : panneau IA réactif (léger)
+	•	Dans /missions/new :
+	•	Bouton “Améliorer avec l’IA” → fetch('/ai/missions/suggest', {body: JSON du formulaire}).
+	•	Afficher côte à côte :
+	•	Colonne gauche : Saisie utilisateur (éditable).
+	•	Colonne droite : Proposition IA (readonly) + Appliquer cases :
+	•	☐ Titre + résumé
+	•	☐ Prix médian (radio min/med/max)
+	•	☐ Délais
+	•	Liste Questions manquantes (inputs légers).
+	•	Bouton “Appliquer les suggestions” → remplit les champs du formulaire (sans submit).
+	•	Lorsque l’utilisateur soumet, inclure les réponses aux questions manquantes si fournies.
+	•	Gestion erreurs réseau : toast FR clair, pas de crash.
+
+⸻
+
+5) Modèle & migration DB
+	•	Ajouter table ProjectStandardization si absente :
+mission_id FK, title_std, summary_std, acceptance_criteria text[],
+category_std, sub_category_std, tags_std string[], skills_std string[],
+brief_quality_score float, richness_score float, missing_info jsonb[],
+price_suggested_min/med/max int, delay_suggested_days int,
+loc_base float, loc_uplift_reco jsonb, rewrite_version string, timestamps.
+	•	Index GIN sur skills_std, tags_std.
+
+⸻
+
+6) Intégration scoring (optionnel mais recommandé)
+	•	Au moment du preview (après création), exposer un endpoint :
+	•	GET /ai/missions/:id/preview-scoring → GlobalScore breakdown avec bonus :
+
+QualityScore' = QualityScore * (1 + 0.20*(brief_quality_score - 0.5))
+FitScore'     = FitScore     * (1 + 0.15*(richness_score      - 0.5))
+if missing_info_count > 0: Risk += 0.05; TimeScore -= 0.03
+
+
+
+⸻
+
+7) Tests (doivent échouer avant fix, puis passer)
+
+E2E (supertest)
+	1.	Form page : GET /missions/new → 200 et présence des champs + bouton “Améliorer avec l’IA”.
+	2.	Suggestion IA : POST /ai/missions/suggest avec un brief simple → 200 + champs attendus (price_suggested_*, missing_info).
+	3.	Appliquer : POST /ai/missions/apply-suggestion → renvoie patch cohérent (titre/summary, budget/délais).
+	4.	Création mission : POST /missions → 201 + mission créée, ProjectStandardization persistée si suggestion appliquée.
+	5.	Rouge : budget inversé → 422 avec field:'budget_min'.
+	6.	Idempotence : POST /missions avec même Idempotency-Key → même id.
+
+Unit (Vitest/Jest)
+	•	Valideurs Zod (success/fail).
+	•	Helpers idempotence (snapshot).
+	•	Mapper “apply suggestion” (front utilitaire).
+
+⸻
+
+8) Diagnostics
+	•	GET /admin/diagnostics : { routes_ok:true, forms_ok:true, db_ok, migrations_applied[], last_5_errors[] }
+	•	GET /logs/errors?since=... (dev) : 50 dernières erreurs.
+
+⸻
+
+9) README (FR)
+	•	“Créer une mission” pas à pas (avec IA).
+	•	Exemples cURL : création OK, KO, idempotence, suggestion IA.
+
+⸻
+
+10) cURL de vérification rapide
+
+# 1) Suggestion IA à partir d’un brouillon
+curl -X POST http://localhost:3000/ai/missions/suggest \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Peinture salon","description":"Peindre murs 40 m², 2 couches satin","category":"travaux","budget_min":60000,"budget_max":120000}'
+
+# 2) Appliquer la suggestion (budget médian + délais + texte)
+curl -X POST http://localhost:3000/ai/missions/apply-suggestion \
+  -H "Content-Type: application/json" \
+  -d '{"suggestion":{ ... }, "apply":{"budget":"med","delay":true,"text":true}}'
+
+# 3) Création mission (avec idempotence)
+curl -X POST http://localhost:3000/missions \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: mission-abc-001" \
+  -d '{"title":"Peinture salon (amélioré)","description":"...","category":"travaux","budget_min":70000,"budget_max":120000,"deadline_ts":"2025-10-01"}'
+
+# 4) Rejeu idempotent
+curl -X POST http://localhost:3000/missions \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: mission-abc-001" \
+  -d '{"title":"Peinture salon (amélioré)","description":"...","category":"travaux","budget_min":70000,"budget_max":120000,"deadline_ts":"2025-10-01"}'
+
+
+⸻
+
+Implémente exactement ce qui précède :
+	•	Boutons de création fonctionnels (plus d’erreur),
+	•	Panneau “Améliorer avec l’IA” qui réécrit, structure, propose prix/délais, pose des questions,
+	•	Appliquer en 1 clic dans le formulaire,
+	•	Création qui persiste la standardisation si utilisée,
+	•	Tests e2e verts, diagnostics disponibles, doc à jour.
