@@ -1,4 +1,3 @@
-
 // Types
 interface User {
   id: string;
@@ -20,6 +19,9 @@ interface Project {
   clientId: string;
   createdAt: Date;
   updatedAt: Date;
+  deadline?: string | null;
+  location?: string;
+  tags?: string[];
 }
 
 interface Bid {
@@ -64,15 +66,33 @@ export const storage = {
   getUsers: () => storage.users,
 
   // Project methods
-  createProject: (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const project: Project = {
+  createProject: (data: {
+    title: string;
+    description: string;
+    category: string;
+    budget: string;
+    status: string;
+    clientId: string;
+    deadline?: string | null;
+    location?: string;
+    tags?: string[];
+  }) => {
+    const project = {
       id: `project_${Date.now()}`,
+      title: data.title,
+      description: data.description,
+      category: data.category,
+      budget: data.budget,
+      status: data.status,
+      clientId: data.clientId,
+      deadline: data.deadline || null,
+      location: data.location || 'Remote',
+      tags: data.tags || [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      ...projectData
     };
-    storage.projects.push(project);
-    return project;
+    storage.projects.push(project as Project);
+    return project as Project;
   },
 
   getProject: (id: string) => storage.projects.find(p => p.id === id),
@@ -119,7 +139,7 @@ export const storage = {
     return standardization;
   },
 
-  getProjectStandardization: (projectId: string) => 
+  getProjectStandardization: (projectId: string) =>
     storage.projectStandardizations.find(s => s.projectId === projectId),
 
   getProjectStandardizations: () => storage.projectStandardizations,
@@ -127,10 +147,10 @@ export const storage = {
   updateProjectStandardization: (projectId: string, updates: any) => {
     const index = storage.projectStandardizations.findIndex(s => s.projectId === projectId);
     if (index !== -1) {
-      storage.projectStandardizations[index] = { 
-        ...storage.projectStandardizations[index], 
-        ...updates, 
-        updatedAt: new Date() 
+      storage.projectStandardizations[index] = {
+        ...storage.projectStandardizations[index],
+        ...updates,
+        updatedAt: new Date()
       };
       return storage.projectStandardizations[index];
     }
@@ -143,10 +163,10 @@ export const storage = {
     if (existing !== -1) {
       storage.webSources[existing] = { ...source, updatedAt: new Date() };
     } else {
-      storage.webSources.push({ 
-        ...source, 
+      storage.webSources.push({
+        ...source,
         id: `src_${Date.now()}`,
-        createdAt: new Date() 
+        createdAt: new Date()
       });
     }
     return source;
@@ -161,10 +181,10 @@ export const storage = {
     if (existing !== -1) {
       storage.webDocs[existing] = { ...doc, updatedAt: new Date() };
     } else {
-      storage.webDocs.push({ 
-        ...doc, 
+      storage.webDocs.push({
+        ...doc,
         id: `doc_${Date.now()}`,
-        createdAt: new Date() 
+        createdAt: new Date()
       });
     }
     return doc;
@@ -175,10 +195,10 @@ export const storage = {
 
   // ExternalCompany methods
   saveExternalCompany: (company: any) => {
-    const existing = storage.externalCompanies.findIndex(c => 
+    const existing = storage.externalCompanies.findIndex(c =>
       c.name === company.name || (c.email && c.email === company.email)
     );
-    
+
     if (existing !== -1) {
       storage.externalCompanies[existing] = {
         ...storage.externalCompanies[existing],
@@ -215,15 +235,15 @@ export const storage = {
     return newSignal;
   },
 
-  getExternalCompanySignals: (companyId: string) => 
+  getExternalCompanySignals: (companyId: string) =>
     storage.externalCompanySignals.filter(s => s.companyId === companyId),
 
   // SourcingMatch methods
   saveSourcingMatch: (match: any) => {
-    const existing = storage.sourcingMatches.findIndex(m => 
+    const existing = storage.sourcingMatches.findIndex(m =>
       m.projectId === match.projectId && m.companyId === match.companyId
     );
-    
+
     if (existing !== -1) {
       storage.sourcingMatches[existing] = {
         ...storage.sourcingMatches[existing],
@@ -245,22 +265,22 @@ export const storage = {
 
   getSourcingMatches: (projectId: string, filters: any = {}) => {
     let matches = storage.sourcingMatches.filter(m => m.projectId === projectId);
-    
+
     if (filters.minScore) {
       matches = matches.filter(m => m.leadScore >= filters.minScore);
     }
-    
+
     if (filters.status) {
       matches = matches.filter(m => m.status === filters.status);
     }
-    
+
     // Tri par score décroissant
     matches.sort((a, b) => b.leadScore - a.leadScore);
-    
+
     if (filters.limit) {
       matches = matches.slice(0, filters.limit);
     }
-    
+
     return matches;
   },
 
@@ -272,16 +292,16 @@ export const storage = {
       createdAt: log.createdAt || new Date()
     };
     storage.projectChangeLogs.push(newLog);
-    
+
     // Garder seulement les 1000 derniers logs
     if (storage.projectChangeLogs.length > 1000) {
       storage.projectChangeLogs = storage.projectChangeLogs.slice(-1000);
     }
-    
+
     return newLog;
   },
 
-  getProjectChangeLogs: (projectId: string) => 
+  getProjectChangeLogs: (projectId: string) =>
     storage.projectChangeLogs.filter(l => l.projectId === projectId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
 
@@ -295,14 +315,14 @@ export const storage = {
       stack: error.stack,
       context: error.context || {}
     };
-    
+
     storage.recentErrors.push(errorLog);
-    
+
     // Garder seulement les 100 dernières erreurs
     if (storage.recentErrors.length > 100) {
       storage.recentErrors = storage.recentErrors.slice(-100);
     }
-    
+
     return errorLog;
   },
 
@@ -325,17 +345,17 @@ export const storage = {
   cleanup: () => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+
     // Nettoyer les logs anciens
     storage.projectChangeLogs = storage.projectChangeLogs.filter(
       log => new Date(log.createdAt) > oneWeekAgo
     );
-    
+
     // Nettoyer les erreurs anciennes
     storage.recentErrors = storage.recentErrors.filter(
       error => new Date(error.timestamp) > oneWeekAgo
     );
-    
+
     console.log('Cleanup completed');
   }
 };
@@ -346,9 +366,9 @@ if (storage.users.length === 0) {
     email: 'client@test.com',
     role: 'CLIENT'
   });
-  
+
   storage.createUser({
-    email: 'pro@test.com', 
+    email: 'pro@test.com',
     role: 'PRO',
     rating_mean: 4.5,
     rating_count: 12

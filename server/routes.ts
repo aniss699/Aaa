@@ -67,6 +67,9 @@ export async function routes(fastify: FastifyInstance) {
         return reply.status(201).send(stored.result);
       }
 
+      // Log pour debugging
+      fastify.log.info('Creating mission with data:', request.body);
+
       // Validation des données
       const validatedData = createMissionSchema.parse(request.body);
 
@@ -90,7 +93,10 @@ export async function routes(fastify: FastifyInstance) {
         category: validatedData.category,
         budget: `${validatedData.budget_min}-${validatedData.budget_max}`,
         status: 'PUBLISHED',
-        clientId: 'user_1' // TODO: récupérer de l'auth
+        clientId: 'user_1', // TODO: récupérer de l'auth
+        deadline: validatedData.deadline_ts || null,
+        location: validatedData.geo_required ? 'Sur site' : 'Remote',
+        tags: []
       });
 
       // Sauvegarde de la standardisation si appliquée

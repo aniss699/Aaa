@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation as useRouterLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Separator } from '../components/ui/separator';
 import { Brain, Wand2, CheckCircle, AlertCircle, Loader2, Euro, Calendar } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
-import { paths } from '@/routes/paths';
+import { paths } from '../routes/paths';
 
 interface MissionFormData {
   title: string;
@@ -59,7 +59,7 @@ const CATEGORIES = [
 ];
 
 export default function CreateMission() {
-  const [location, setLocation] = useRouterLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<MissionFormData>({
