@@ -1,0 +1,164 @@
+Parfait. Voici le prompt Replit focalisé uniquement sur l’IA (amélioration profonde des annonces, standardisation, suggestions prix/délais, LOC uplift, sourcing web “éco”, intégration scoring, explicabilité, tests). Aucun réglage Preview.
+
+⸻
+
+🧠 PROMPT REPLIT — IA d’amélioration d’annonces + Standardisation + Sourcing “éco” + Intégration Scoring (sans preview)
+
+Tu es un assistant IA full‑stack.
+Dans mon repo, améliore le moteur IA pour qu’il fournisse une version améliorée, exploitable et mesurable des annonces publiées : réécriture/standardisation, suggestions prix/délais, LOC uplift, questions manquantes, sourcing web “éco” (gratuit, sans API payantes par défaut), intégration au scoring et à la mise en relation. Livre code, migrations, tests, doc. (Ignore tout ce qui concerne le Preview.)
+
+⸻
+
+0) Contraintes & mode “éco”
+	•	Par défaut : pas d’API payantes. Découverte via RSS/Sitemap + crawler conforme (robots.txt, rate‑limit, ETag).
+	•	Flags ENV :
+
+FEATURE_STANDARDIZE=true
+FEATURE_SOURCING=true
+FEATURE_API_CONNECTORS=false   # pourra passer à true plus tard
+BM25_ENABLED=true
+EMBEDDINGS_ENABLED=false
+DOMAIN_WHITELIST="*.gouv.fr, *.cci.fr, *.github.io, *.notion.site, *.wordpress.com"
+RATE_LIMIT_GLOBAL_RPS=2
+RATE_LIMIT_PER_DOMAIN_RPS=1
+USER_AGENT="MarketplaceBot/0.1 (+contact@exemple.fr)"
+
+
+
+⸻
+
+1) Schéma DB (Prisma) — ajouts
+	•	ProjectStandardization
+project_id FK, title_std, summary_std, acceptance_criteria text[],
+category_std, sub_category_std, tags_std string[],
+tasks_std jsonb[], deliverables_std jsonb[],
+skills_std string[], constraints_std string[],
+brief_quality_score float, richness_score float,
+missing_info jsonb[],
+price_suggested_min/med/max int, delay_suggested_days int,
+loc_base float, loc_uplift_reco jsonb,
+rewrite_version string, timestamps.
+	•	WebSource, WebDoc, ExternalCompany, ExternalCompanySignal, SourcingMatch
+(comme défini précédemment : URL unique, meta, skills[], signals PRICE/PORTFOLIO…, lead_score, reasons, status).
+
+Migrations + index (btree + GIN) fournis.
+
+⸻
+
+2) Microservice ML (FastAPI) — modules IA
+
+Créer/renforcer apps/ml/ :
+	•	text_normalizer.py : nettoyage FR, normalisation unités (m², h, pages, km), extraction quantités/contraintes (on‑site/remote).
+	•	taxonomizer.py : mapping category_std/sub_category_std/skills_std/tags_std (règles + BM25).
+	•	template_rewriter.py : génération offline (templates) : title_std, summary_std (5–7 phrases), acceptance_criteria (SMART).
+	•	brief_quality.py : brief_quality_score, richness_score, missing_info (questions concrètes).
+	•	price_time_suggester.py : price_suggested_{min,med,max}, delay_suggested_days, rationale (PRM quantiles + ajustements qualité/on‑site/rareté/market_heat).
+	•	loc_uplift.py : calcule loc_base et propose {new_budget,new_delay,delta_loc}.
+	•	Sourcing éco :
+	•	connectors/rss_sitemap.py (découverte),
+	•	crawler/fetcher.py (ETag/Last‑Modified + robots),
+	•	parser/reader.py (Readability),
+	•	extractors/company.py (nom, email RFC, tel E.164, adresse, NAF si présent),
+	•	enrich/skills_bm25.py, enrich/price_signals.py, enrich/geo_lookup.py (CSV CP↔coords).
+	•	scoring/lead.py : SupplierLeadScore + reasons[].
+
+Endpoints ML
+	•	POST /improve {project} → renvoie standardisation complète + prix/délais + loc + questions + reasons.
+	•	POST /brief/recompute {project_id, answers[]} → met à jour standardisation & suggestions.
+	•	POST /sourcing/discover {project_id, strategy:'rss|sitemap', max?} → pipeline découverte→extraction→enrich→score.
+
+Chaque réponse inclut breakdown/reasons + model_version.
+
+⸻
+
+3) API (Fastify) — actions tangibles
+
+Créer/mettre à jour :
+	•	POST /ai/projects/:id/improve
+↳ appelle ML /improve, persiste ProjectStandardization, retourne diffs vs original.
+	•	GET /ai/projects/:id/preview
+↳ renvoie : texte réécrit, critères, brief_quality/richness, price_suggested_*, delay_suggested_days, loc_base + loc_uplift_reco, missing_info, diff titre/desc.
+	•	POST /ai/projects/:id/brief/complete {answers:[{question_id,value}], apply?:boolean}
+↳ recalcule standardisation/prix/délais/LOC.
+	•	POST /ai/projects/:id/apply {apply_budget:'min'|'med'|'max', apply_delay?:boolean, apply_title?:boolean, apply_summary?:boolean}
+↳ applique au Project (budget/délais/titre/desc), log dans ProjectChangeLog.
+	•	Sourcing (éco)
+	•	POST /sourcing/discover {project_id, strategy:'rss|sitemap', max?}
+	•	GET  /sourcing/project/:id/candidates?min_score=0.4&limit=20 → ExternalCompany triées par SupplierLeadScore + reasons[].
+	•	Candidats unifiés
+	•	GET /ai/projects/:id/candidates?diversity=true → fusion internes (GlobalScore) + externes (SupplierLeadScore normalisé) avec MMR si demandé.
+
+OpenAPI FR avec exemples pour toutes les routes.
+
+⸻
+
+4) Intégration Scoring (packages/core)
+	•	Ajuster le scoring global pour intégrer la qualité du brief :
+
+QualityScore' = QualityScore * (1 + 0.20*(brief_quality_score - 0.5))
+FitScore'     = FitScore     * (1 + 0.15*(richness_score      - 0.5))
+if missing_info_count > 0: Risk += 0.05; TimeScore -= 0.03
+
+
+	•	Côté sourcing :
+
+SupplierLeadScore =
+    0.40*FitBM25(project_std.skills_std, company.skills)
+  + 0.15*Geo(distance vs onsite_radius or remote_ok)
+  + 0.15*PriceAlign(price_signals, project.price_ref)
+  + 0.15*ReputationSignal(PORTFOLIO|SERVICES)
+  + 0.10*Freshness(last_seen_at)
+  - 0.05*RiskPenalty(dup/incohérences)
+
+
+	•	GET /ai/projects/:id/candidates : retour breakdown + reasons[] (explicabilité).
+
+⸻
+
+5) Données locales /infra/data
+	•	cp_city_coords.csv (CP ↔ ville ↔ lat/lng)
+	•	taxonomy_skills_fr.csv (catégories/sous‑catégories/skills)
+	•	price_terms_fr.csv (€/h, €/jour, forfait, “à partir de”)
+Charge ces CSV au démarrage des modules concernés.
+
+⸻
+
+6) Tests (obligatoires)
+
+Unit (pytest + vitest)
+	•	standardisation : normalizer/taxonomizer/template_rewriter/brief_quality/price_time/loc_uplift
+	•	sourcing : robots/rate‑limit/parser/BM25/price_signals/lead_scoring
+	•	scoring : QualityScore', FitScore', pénalités missing_info
+
+E2E (supertest)
+	1.	POST /ai/projects/:id/improve → persiste ProjectStandardization, renvoie suggestions + questions.
+	2.	GET /ai/projects/:id/preview → montre diffs + scores.
+	3.	POST /ai/projects/:id/apply (budget=med + delay + title/summary) → Project modifié + ProjectChangeLog.
+	4.	POST /sourcing/discover → GET /sourcing/project/:id/candidates → ≥1 candidat avec SupplierLeadScore.
+	5.	GET /ai/projects/:id/candidates?diversity=true → fusion interne+externe + MMR.
+
+Couverture ≥80% sur core IA standardisation + sourcing + scoring.
+
+⸻
+
+7) README (FR)
+	•	“Utiliser l’IA d’amélioration” :
+	1.	POST /ai/projects/:id/improve
+	2.	GET  /ai/projects/:id/preview
+	3.	POST /ai/projects/:id/apply
+	•	“Lancer le sourcing éco” :
+	1.	POST /sourcing/discover
+	2.	GET  /sourcing/project/:id/candidates
+	•	“Candidats unifiés” : GET /ai/projects/:id/candidates?diversity=true
+	•	Conformité (robots.txt, whitelist, provenance), limites.
+
+⸻
+
+8) Definition of Done
+	•	Une annonce améliorée et standardisée est produite avec prix/délais réalistes, questions manquantes, LOC uplift, persistés.
+	•	Boutons/endpoints pour appliquer les suggestions (budget/délais/texte) et voir les diffs.
+	•	Sourcing éco trouve des prestataires externes pertinents et les score ; fusion avec les candidats internes.
+	•	Scoring global reflète brief_quality/richness/missing_info et explique ses décisions.
+	•	Tests unit/e2e verts, doc à jour.
+
+Implémente tout ci‑dessus, sans rien changer au système de Preview.
