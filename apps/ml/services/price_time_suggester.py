@@ -1,299 +1,438 @@
 
-"""
-Price Time Suggester - Suggestions intelligentes de prix et délais
-"""
-
-import json
-import numpy as np
+import csv
+import logging
 from typing import Dict, List, Optional, Tuple
+from pathlib import Path
 from dataclasses import dataclass
+import statistics
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class PriceTimeSuggestion:
     price_suggested_min: int
-    price_suggested_med: int 
+    price_suggested_med: int
     price_suggested_max: int
     delay_suggested_days: int
-    rationale: List[str]
+    rationale: Dict[str, any]
     confidence: float
 
 class PriceTimeSuggester:
-    def __init__(self):
-        # Base de données des prix par catégorie (en centimes)
-        self.category_base_prices = {
-            'web_development': {
-                'simple': {'min': 150000, 'med': 300000, 'max': 500000, 'days': 21},
-                'medium': {'min': 300000, 'med': 600000, 'max': 900000, 'days': 35},
-                'complex': {'min': 600000, 'med': 1200000, 'max': 2000000, 'days': 56}
+    def __init__(self, data_path: str = "/infra/data"):
+        self.data_path = Path(data_path)
+        self.price_data = {}
+        self.time_factors = {}
+        self._load_pricing_data()
+
+    def _load_pricing_data(self):
+        """Charge les données de prix depuis les fichiers CSV"""
+        try:
+            price_file = self.data_path / "price_terms_fr.csv"
+            if price_file.exists():
+                with open(price_file, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        category = row['category']
+                        sub_category = row['sub_category']
+                        
+                        if category not in self.price_data:
+                            self.price_data[category] = {}
+                        
+                        self.price_data[category][sub_category] = {
+                            'hourly_min': float(row.get('hourly_min', 25)),
+                            'hourly_med': float(row.get('hourly_med', 45)),
+                            'hourly_max': float(row.get('hourly_max', 80)),
+                            'daily_min': float(row.get('daily_min', 200)),
+                            'daily_med': float(row.get('daily_med', 350)),
+                            'daily_max': float(row.get('daily_max', 600)),
+                            'complexity_factor': float(row.get('complexity_factor', 1.0)),
+                            'avg_days': int(row.get('avg_days', 15))
+                        }
+            
+            self._init_time_factors()
+            logger.info(f"Données de prix chargées pour {len(self.price_data)} catégories")
+            
+        except Exception as e:
+            logger.error(f"Erreur lors du chargement des prix: {e}")
+            self._init_default_pricing()
+
+    def _init_default_pricing(self):
+        """Initialise une grille de prix par défaut"""
+        self.price_data = {
+            'développement': {
+                'web': {
+                    'hourly_min': 30, 'hourly_med': 50, 'hourly_max': 90,
+                    'daily_min': 240, 'daily_med': 400, 'daily_max': 720,
+                    'complexity_factor': 1.2, 'avg_days': 20
+                },
+                'mobile': {
+                    'hourly_min': 35, 'hourly_med': 60, 'hourly_max': 100,
+                    'daily_min': 280, 'daily_med': 480, 'daily_max': 800,
+                    'complexity_factor': 1.4, 'avg_days': 30
+                }
             },
-            'mobile_development': {
-                'simple': {'min': 250000, 'med': 500000, 'max': 800000, 'days': 28},
-                'medium': {'min': 500000, 'med': 1000000, 'max': 1500000, 'days': 42},
-                'complex': {'min': 1000000, 'med': 2000000, 'max': 3500000, 'days': 70}
+            'design': {
+                'ui_ux': {
+                    'hourly_min': 25, 'hourly_med': 45, 'hourly_max': 80,
+                    'daily_min': 200, 'daily_med': 360, 'daily_max': 640,
+                    'complexity_factor': 1.1, 'avg_days': 12
+                },
+                'graphique': {
+                    'hourly_min': 20, 'hourly_med': 35, 'hourly_max': 60,
+                    'daily_min': 160, 'daily_med': 280, 'daily_max': 480,
+                    'complexity_factor': 0.9, 'avg_days': 8
+                }
             },
-            'design_graphique': {
-                'simple': {'min': 50000, 'med': 120000, 'max': 200000, 'days': 7},
-                'medium': {'min': 120000, 'med': 250000, 'max': 400000, 'days': 14},
-                'complex': {'min': 250000, 'med': 500000, 'max': 800000, 'days': 21}
+            'marketing': {
+                'digital': {
+                    'hourly_min': 30, 'hourly_med': 55, 'hourly_max': 100,
+                    'daily_min': 240, 'daily_med': 440, 'daily_max': 800,
+                    'complexity_factor': 1.0, 'avg_days': 15
+                },
+                'contenu': {
+                    'hourly_min': 20, 'hourly_med': 35, 'hourly_max': 65,
+                    'daily_min': 160, 'daily_med': 280, 'daily_max': 520,
+                    'complexity_factor': 0.8, 'avg_days': 10
+                }
             },
-            'marketing_digital': {
-                'simple': {'min': 80000, 'med': 180000, 'max': 300000, 'days': 14},
-                'medium': {'min': 180000, 'med': 400000, 'max': 700000, 'days': 28},
-                'complex': {'min': 400000, 'med': 800000, 'max': 1500000, 'days': 42}
-            },
-            'construction': {
-                'simple': {'min': 200000, 'med': 500000, 'max': 800000, 'days': 14},
-                'medium': {'min': 500000, 'med': 1200000, 'max': 2000000, 'days': 28},
-                'complex': {'min': 1200000, 'med': 3000000, 'max': 6000000, 'days': 56}
-            },
-            'services_personne': {
-                'simple': {'min': 2000, 'med': 4000, 'max': 6000, 'days': 1},
-                'medium': {'min': 4000, 'med': 8000, 'max': 12000, 'days': 2},
-                'complex': {'min': 8000, 'med': 15000, 'max': 25000, 'days': 3}
+            'conseil': {
+                'stratégie': {
+                    'hourly_min': 50, 'hourly_med': 80, 'hourly_max': 150,
+                    'daily_min': 400, 'daily_med': 640, 'daily_max': 1200,
+                    'complexity_factor': 1.3, 'avg_days': 25
+                }
             }
         }
 
-        # Facteurs d'ajustement
-        self.adjustment_factors = {
-            'urgency': {'urgent': 1.3, 'normal': 1.0, 'flexible': 0.9},
-            'location': {'paris': 1.2, 'grande_ville': 1.1, 'petite_ville': 0.9, 'rural': 0.8},
-            'client_type': {'entreprise': 1.1, 'particulier': 0.95, 'association': 0.85},
-            'season': {'high': 1.1, 'normal': 1.0, 'low': 0.9},
-            'quality_requirement': {'premium': 1.4, 'standard': 1.0, 'budget': 0.7}
+    def _init_time_factors(self):
+        """Initialise les facteurs d'ajustement temporel"""
+        self.time_factors = {
+            'urgency': {
+                'urgent': 0.6,      # -40% de temps mais +prix
+                'normal': 1.0,
+                'flexible': 1.4     # +40% de temps mais -prix
+            },
+            'complexity': {
+                'simple': 0.7,
+                'medium': 1.0,
+                'complex': 1.6,
+                'very_complex': 2.2
+            },
+            'team_size': {
+                'solo': 1.0,
+                'small_team': 0.8,  # Plus efficace
+                'large_team': 1.2   # Coordination overhead
+            },
+            'quality_level': {
+                'basic': 0.8,
+                'professional': 1.0,
+                'premium': 1.3,
+                'enterprise': 1.6
+            }
         }
 
-        # Mots-clés de complexité
-        self.complexity_keywords = {
-            'simple': ['simple', 'basique', 'standard', 'classique'],
-            'medium': ['personnalisé', 'spécifique', 'adapté', 'intégration'],
-            'complex': ['complexe', 'avancé', 'sur-mesure', 'architecture', 'scalable', 'enterprise']
-        }
-
-        # Mots-clés d'urgence
-        self.urgency_keywords = {
-            'urgent': ['urgent', 'rapide', 'vite', 'asap', 'pressé', 'immédiat'],
-            'flexible': ['flexible', 'pas pressé', 'quand possible']
-        }
-
-    def suggest_price_time(self, 
-                          title: str, 
-                          description: str, 
-                          category: str,
-                          location: Optional[str] = None,
-                          brief_quality_score: float = 0.7) -> PriceTimeSuggestion:
-        """Suggère prix et délais basés sur l'analyse du projet"""
+    def suggest(self, 
+                category: str,
+                sub_category: str = None,
+                estimated_hours: int = None,
+                complexity: str = 'medium',
+                urgency: str = 'normal',
+                quality_level: str = 'professional',
+                brief_quality_score: float = 0.5,
+                market_heat: float = 1.0,
+                constraints: List[str] = None) -> PriceTimeSuggestion:
+        """Suggère des prix et délais optimaux"""
         
-        # 1. Déterminer la complexité
-        complexity = self._analyze_complexity(description)
+        # Récupération des données de base
+        base_pricing = self._get_base_pricing(category, sub_category)
         
-        # 2. Récupérer les prix de base
-        base_prices = self._get_base_prices(category, complexity)
+        # Estimation des heures si non fournie
+        if estimated_hours is None:
+            estimated_hours = self._estimate_hours(category, sub_category, complexity)
         
-        # 3. Analyser les facteurs d'ajustement
-        adjustments = self._analyze_adjustments(description, location)
+        # Calcul des facteurs d'ajustement
+        adjustments = self._calculate_adjustments(
+            complexity, urgency, quality_level, 
+            brief_quality_score, market_heat, constraints
+        )
         
-        # 4. Calculer les prix ajustés
-        final_prices = self._apply_adjustments(base_prices, adjustments, brief_quality_score)
+        # Calcul des prix
+        prices = self._calculate_prices(base_pricing, estimated_hours, adjustments)
         
-        # 5. Générer la justification
-        rationale = self._generate_rationale(category, complexity, adjustments, brief_quality_score)
+        # Calcul des délais
+        delay_days = self._calculate_delay(base_pricing, estimated_hours, adjustments)
         
-        # 6. Calculer la confiance
-        confidence = self._calculate_confidence(brief_quality_score, adjustments)
+        # Génération de la justification
+        rationale = self._generate_rationale(
+            base_pricing, estimated_hours, adjustments, 
+            category, sub_category, complexity, urgency
+        )
+        
+        # Calcul de la confiance
+        confidence = self._calculate_confidence(brief_quality_score, category, sub_category)
         
         return PriceTimeSuggestion(
-            price_suggested_min=final_prices['min'],
-            price_suggested_med=final_prices['med'],
-            price_suggested_max=final_prices['max'],
-            delay_suggested_days=final_prices['days'],
+            price_suggested_min=int(prices['min']),
+            price_suggested_med=int(prices['med']),
+            price_suggested_max=int(prices['max']),
+            delay_suggested_days=delay_days,
             rationale=rationale,
             confidence=confidence
         )
 
-    def _analyze_complexity(self, description: str) -> str:
-        """Analyse la complexité du projet"""
-        desc_lower = description.lower()
-        
-        # Comptage des mots-clés par niveau
-        complexity_scores = {}
-        for level, keywords in self.complexity_keywords.items():
-            score = sum(1 for keyword in keywords if keyword in desc_lower)
-            complexity_scores[level] = score
-        
-        # Facteurs additionnels de complexité
-        complexity_indicators = {
-            'integrations': len([w for w in ['api', 'intégration', 'webhook', 'sync'] if w in desc_lower]),
-            'custom_features': len([w for w in ['personnalisé', 'spécifique', 'unique'] if w in desc_lower]),
-            'technical_terms': len([w for w in ['architecture', 'scalable', 'performance', 'sécurité'] if w in desc_lower]),
-            'platforms': len([w for w in ['ios', 'android', 'web', 'desktop'] if w in desc_lower])
-        }
-        
-        # Score de complexité global
-        total_complexity = (
-            complexity_scores.get('complex', 0) * 3 +
-            complexity_scores.get('medium', 0) * 2 +
-            complexity_scores.get('simple', 0) * 1 +
-            sum(complexity_indicators.values())
-        )
-        
-        if total_complexity >= 6:
-            return 'complex'
-        elif total_complexity >= 3:
-            return 'medium'
-        else:
-            return 'simple'
-
-    def _get_base_prices(self, category: str, complexity: str) -> Dict:
-        """Récupère les prix de base pour la catégorie et complexité"""
+    def _get_base_pricing(self, category: str, sub_category: str = None) -> Dict[str, any]:
+        """Récupère les données de prix de base"""
+        category_lower = category.lower()
         
         # Mapping des catégories
         category_mapping = {
-            'developpement': 'web_development',
-            'web-development': 'web_development',
-            'mobile': 'mobile_development',
-            'design': 'design_graphique',
-            'marketing': 'marketing_digital',
-            'construction': 'construction',
-            'travaux': 'construction',
-            'plomberie': 'construction',
-            'electricite': 'construction',
-            'menage': 'services_personne',
-            'garde_enfants': 'services_personne',
-            'jardinage': 'services_personne'
+            'développement': 'développement',
+            'dev': 'développement',
+            'web': 'développement',
+            'mobile': 'développement',
+            'design': 'design',
+            'marketing': 'marketing',
+            'conseil': 'conseil'
         }
         
-        mapped_category = category_mapping.get(category, 'web_development')
+        mapped_category = category_mapping.get(category_lower, 'développement')
         
-        if mapped_category in self.category_base_prices:
-            return self.category_base_prices[mapped_category][complexity].copy()
-        else:
-            # Fallback sur web_development
-            return self.category_base_prices['web_development'][complexity].copy()
-
-    def _analyze_adjustments(self, description: str, location: Optional[str]) -> Dict:
-        """Analyse les facteurs d'ajustement"""
-        desc_lower = description.lower()
-        adjustments = {}
-        
-        # Urgence
-        if any(keyword in desc_lower for keyword in self.urgency_keywords['urgent']):
-            adjustments['urgency'] = 'urgent'
-        elif any(keyword in desc_lower for keyword in self.urgency_keywords['flexible']):
-            adjustments['urgency'] = 'flexible'
-        else:
-            adjustments['urgency'] = 'normal'
-        
-        # Localisation
-        if location:
-            location_lower = location.lower()
-            if 'paris' in location_lower:
-                adjustments['location'] = 'paris'
-            elif any(city in location_lower for city in ['lyon', 'marseille', 'lille', 'toulouse', 'bordeaux']):
-                adjustments['location'] = 'grande_ville'
+        if mapped_category in self.price_data:
+            # Sélection de la sous-catégorie
+            if sub_category and sub_category.lower() in self.price_data[mapped_category]:
+                return self.price_data[mapped_category][sub_category.lower()]
             else:
-                adjustments['location'] = 'petite_ville'
-        else:
-            adjustments['location'] = 'normal'
+                # Prendre la première sous-catégorie disponible
+                first_sub = next(iter(self.price_data[mapped_category].values()))
+                return first_sub
         
-        # Type de client
-        if any(word in desc_lower for word in ['entreprise', 'société', 'business', 'corporate']):
-            adjustments['client_type'] = 'entreprise'
-        elif any(word in desc_lower for word in ['association', 'ong', 'bénévole']):
-            adjustments['client_type'] = 'association'
-        else:
-            adjustments['client_type'] = 'particulier'
+        # Valeurs par défaut
+        return {
+            'hourly_min': 25, 'hourly_med': 45, 'hourly_max': 75,
+            'daily_min': 200, 'daily_med': 360, 'daily_max': 600,
+            'complexity_factor': 1.0, 'avg_days': 15
+        }
+
+    def _estimate_hours(self, category: str, sub_category: str = None, complexity: str = 'medium') -> int:
+        """Estime le nombre d'heures nécessaires"""
+        base_hours = {
+            'développement': {'web': 40, 'mobile': 60, 'api': 30},
+            'design': {'ui_ux': 25, 'graphique': 15, 'logo': 8},
+            'marketing': {'digital': 20, 'contenu': 15, 'strategy': 30},
+            'conseil': {'stratégie': 35, 'audit': 20}
+        }
         
-        # Exigences de qualité
-        if any(word in desc_lower for word in ['premium', 'haut de gamme', 'luxe', 'excellence']):
-            adjustments['quality_requirement'] = 'premium'
-        elif any(word in desc_lower for word in ['budget', 'économique', 'pas cher']):
-            adjustments['quality_requirement'] = 'budget'
-        else:
-            adjustments['quality_requirement'] = 'standard'
+        category_lower = category.lower()
+        sub_category_lower = sub_category.lower() if sub_category else None
+        
+        # Récupération des heures de base
+        hours = 30  # Défaut
+        if category_lower in base_hours:
+            category_hours = base_hours[category_lower]
+            if sub_category_lower and sub_category_lower in category_hours:
+                hours = category_hours[sub_category_lower]
+            else:
+                hours = list(category_hours.values())[0]
+        
+        # Ajustement par complexité
+        complexity_multipliers = {
+            'simple': 0.6,
+            'medium': 1.0,
+            'complex': 1.8,
+            'very_complex': 2.5
+        }
+        
+        multiplier = complexity_multipliers.get(complexity, 1.0)
+        return int(hours * multiplier)
+
+    def _calculate_adjustments(self, 
+                             complexity: str,
+                             urgency: str,
+                             quality_level: str,
+                             brief_quality_score: float,
+                             market_heat: float,
+                             constraints: List[str] = None) -> Dict[str, float]:
+        """Calcule les facteurs d'ajustement"""
+        adjustments = {
+            'complexity_factor': self.time_factors['complexity'].get(complexity, 1.0),
+            'urgency_factor': self.time_factors['urgency'].get(urgency, 1.0),
+            'quality_factor': self.time_factors['quality_level'].get(quality_level, 1.0),
+            'brief_quality_bonus': max(0.8, min(1.2, brief_quality_score * 1.5)),
+            'market_heat_factor': market_heat,
+            'constraint_penalty': 1.0
+        }
+        
+        # Pénalités pour contraintes spéciales
+        constraints = constraints or []
+        if 'on_site_required' in constraints:
+            adjustments['constraint_penalty'] *= 1.15
+        if 'urgent' in constraints:
+            adjustments['urgency_factor'] *= 0.8  # Moins de temps
+        if 'tight_budget' in constraints:
+            adjustments['brief_quality_bonus'] *= 0.9  # Signal de budget serré
+        if 'certification_required' in constraints:
+            adjustments['quality_factor'] *= 1.2
         
         return adjustments
 
-    def _apply_adjustments(self, base_prices: Dict, adjustments: Dict, brief_quality: float) -> Dict:
-        """Applique les facteurs d'ajustement aux prix de base"""
+    def _calculate_prices(self, base_pricing: Dict, estimated_hours: int, adjustments: Dict) -> Dict[str, float]:
+        """Calcule les prix min/med/max ajustés"""
         
-        adjustment_factor = 1.0
-        
-        # Application des facteurs
-        for factor_type, factor_value in adjustments.items():
-            if factor_type in self.adjustment_factors and factor_value in self.adjustment_factors[factor_type]:
-                adjustment_factor *= self.adjustment_factors[factor_type][factor_value]
-        
-        # Ajustement qualité du brief
-        quality_adjustment = 0.9 + (brief_quality * 0.2)  # Entre 0.9 et 1.1
-        adjustment_factor *= quality_adjustment
-        
-        # Application aux prix
-        adjusted_prices = {
-            'min': int(base_prices['min'] * adjustment_factor * 0.8),
-            'med': int(base_prices['med'] * adjustment_factor),
-            'max': int(base_prices['max'] * adjustment_factor * 1.2),
-            'days': int(base_prices['days'] * (adjustment_factor if adjustments.get('urgency') == 'urgent' else 1.0))
+        # Calcul du prix horaire ajusté
+        hourly_rates = {
+            'min': base_pricing['hourly_min'],
+            'med': base_pricing['hourly_med'],
+            'max': base_pricing['hourly_max']
         }
         
-        # Ajustement des délais selon l'urgence
-        if adjustments.get('urgency') == 'urgent':
-            adjusted_prices['days'] = max(1, int(adjusted_prices['days'] * 0.7))
-        elif adjustments.get('urgency') == 'flexible':
-            adjusted_prices['days'] = int(adjusted_prices['days'] * 1.3)
+        # Application des ajustements
+        total_adjustment = (
+            adjustments['complexity_factor'] * 
+            adjustments['quality_factor'] * 
+            adjustments['brief_quality_bonus'] * 
+            adjustments['market_heat_factor'] * 
+            adjustments['constraint_penalty']
+        )
         
-        return adjusted_prices
+        # Ajustement urgence (augmente le prix si urgent)
+        if adjustments['urgency_factor'] < 1.0:  # Urgent
+            urgency_price_boost = 1.3
+        else:
+            urgency_price_boost = adjustments['urgency_factor']
+        
+        total_adjustment *= urgency_price_boost
+        
+        # Calcul des prix finaux
+        prices = {}
+        for level, rate in hourly_rates.items():
+            adjusted_rate = rate * total_adjustment
+            prices[level] = adjusted_rate * estimated_hours
+        
+        # Arrondissement intelligent
+        for level in prices:
+            price = prices[level]
+            if price < 500:
+                prices[level] = round(price / 50) * 50  # Arrondi à 50€
+            elif price < 2000:
+                prices[level] = round(price / 100) * 100  # Arrondi à 100€
+            else:
+                prices[level] = round(price / 250) * 250  # Arrondi à 250€
+        
+        return prices
 
-    def _generate_rationale(self, category: str, complexity: str, adjustments: Dict, brief_quality: float) -> List[str]:
-        """Génère la justification des prix suggérés"""
-        rationale = []
+    def _calculate_delay(self, base_pricing: Dict, estimated_hours: int, adjustments: Dict) -> int:
+        """Calcule le délai en jours"""
         
-        # Base de calcul
-        rationale.append(f"Prix de base pour {category} de complexité {complexity}")
+        # Heures de travail par jour (moyenne 6h productives)
+        hours_per_day = 6
         
-        # Ajustements appliqués
-        if adjustments.get('urgency') == 'urgent':
-            rationale.append("Majoration urgence (+30%) pour délai accéléré")
-        elif adjustments.get('urgency') == 'flexible':
-            rationale.append("Réduction flexibilité (-10%) pour planning souple")
+        # Calcul de base
+        base_days = estimated_hours / hours_per_day
         
-        if adjustments.get('location') == 'paris':
-            rationale.append("Majoration localisation Paris (+20%)")
-        elif adjustments.get('location') == 'grande_ville':
-            rationale.append("Majoration grande ville (+10%)")
+        # Application des ajustements temporels
+        time_adjustment = (
+            adjustments['complexity_factor'] * 
+            adjustments['urgency_factor'] * 
+            adjustments['quality_factor']
+        )
         
-        if adjustments.get('client_type') == 'entreprise':
-            rationale.append("Majoration client entreprise (+10%)")
-        elif adjustments.get('client_type') == 'association':
-            rationale.append("Réduction client associatif (-15%)")
+        # Bonus brief de qualité (réduit l'incertitude donc le temps)
+        brief_bonus = 2 - adjustments['brief_quality_bonus']  # Plus le brief est bon, moins d'aller-retours
         
-        if adjustments.get('quality_requirement') == 'premium':
-            rationale.append("Majoration exigences premium (+40%)")
-        elif adjustments.get('quality_requirement') == 'budget':
-            rationale.append("Réduction budget contraint (-30%)")
+        adjusted_days = base_days * time_adjustment * brief_bonus
         
-        # Qualité du brief
-        if brief_quality > 0.8:
-            rationale.append("Bonus brief détaillé et clair (+10%)")
-        elif brief_quality < 0.6:
-            rationale.append("Ajustement brief incomplet (-10%)")
+        # Minimum 1 jour, maximum raisonnable
+        return max(1, min(int(adjusted_days), 90))
+
+    def _generate_rationale(self, 
+                          base_pricing: Dict,
+                          estimated_hours: int,
+                          adjustments: Dict,
+                          category: str,
+                          sub_category: str,
+                          complexity: str,
+                          urgency: str) -> Dict[str, any]:
+        """Génère la justification des prix et délais"""
         
-        # Conseils
-        rationale.append("Fourchette adaptée au marché français actuel")
+        rationale = {
+            'base_info': {
+                'category': category,
+                'sub_category': sub_category,
+                'estimated_hours': estimated_hours,
+                'base_hourly_rate': f"{base_pricing['hourly_min']}-{base_pricing['hourly_max']}€/h"
+            },
+            'adjustments_applied': [],
+            'market_factors': [],
+            'recommendations': []
+        }
+        
+        # Explication des ajustements
+        if adjustments['complexity_factor'] > 1.2:
+            rationale['adjustments_applied'].append(f"Complexité {complexity} : +{int((adjustments['complexity_factor']-1)*100)}%")
+        elif adjustments['complexity_factor'] < 0.8:
+            rationale['adjustments_applied'].append(f"Projet simple : {int((1-adjustments['complexity_factor'])*100)}% de réduction")
+        
+        if adjustments['urgency_factor'] < 1.0:
+            rationale['adjustments_applied'].append(f"Urgence : délai réduit, prix majoré de 30%")
+        
+        if adjustments['quality_factor'] > 1.1:
+            rationale['adjustments_applied'].append(f"Qualité premium demandée : +{int((adjustments['quality_factor']-1)*100)}%")
+        
+        if adjustments['brief_quality_bonus'] > 1.1:
+            rationale['adjustments_applied'].append("Brief de qualité : moins d'aller-retours, prix optimisé")
+        elif adjustments['brief_quality_bonus'] < 0.9:
+            rationale['adjustments_applied'].append("Brief à améliorer : majoration risque d'incompréhension")
+        
+        # Facteurs de marché
+        if adjustments['market_heat_factor'] > 1.1:
+            rationale['market_factors'].append("Marché tendu : tarifs légèrement majorés")
+        elif adjustments['market_heat_factor'] < 0.9:
+            rationale['market_factors'].append("Marché détendu : tarifs compétitifs")
+        
+        # Recommandations
+        if urgency == 'urgent':
+            rationale['recommendations'].append("Considérer une équipe plus large pour respecter les délais")
+        
+        if complexity == 'complex':
+            rationale['recommendations'].append("Prévoir des jalons intermédiaires pour validation")
+        
+        if adjustments['brief_quality_bonus'] < 0.9:
+            rationale['recommendations'].append("Améliorer le brief pour optimiser les coûts et délais")
         
         return rationale
 
-    def _calculate_confidence(self, brief_quality: float, adjustments: Dict) -> float:
-        """Calcule le niveau de confiance de l'estimation"""
-        base_confidence = 0.7
+    def _calculate_confidence(self, brief_quality_score: float, category: str, sub_category: str = None) -> float:
+        """Calcule la confiance dans l'estimation"""
         
-        # Bonus qualité du brief
-        confidence_boost = brief_quality * 0.2
+        # Confiance de base selon la qualité du brief
+        base_confidence = brief_quality_score
         
-        # Ajustement selon les informations disponibles
-        info_completeness = len([adj for adj in adjustments.values() if adj != 'normal']) / 4
-        confidence_boost += info_completeness * 0.1
+        # Bonus selon la précision des données disponibles
+        category_bonus = 0.1 if category.lower() in ['développement', 'design', 'marketing'] else 0.0
+        subcategory_bonus = 0.1 if sub_category else 0.0
         
-        return min(0.95, base_confidence + confidence_boost)
+        # Confiance finale
+        confidence = min(base_confidence + category_bonus + subcategory_bonus, 0.95)
+        
+        return max(confidence, 0.3)  # Minimum 30% de confiance
 
-# Instance principale
-price_time_suggester = PriceTimeSuggester()
+    def get_market_insights(self, category: str, sub_category: str = None) -> Dict[str, any]:
+        """Retourne des insights sur le marché"""
+        base_pricing = self._get_base_pricing(category, sub_category)
+        
+        return {
+            'category': category,
+            'sub_category': sub_category,
+            'market_range': {
+                'hourly': f"{base_pricing['hourly_min']}-{base_pricing['hourly_max']}€/h",
+                'daily': f"{base_pricing['daily_min']}-{base_pricing['daily_max']}€/jour"
+            },
+            'typical_duration': f"{base_pricing['avg_days']} jours",
+            'complexity_impact': f"×{base_pricing['complexity_factor']} pour projets complexes",
+            'recommendations': [
+                "Spécifier le niveau de qualité attendu",
+                "Détailler les contraintes techniques",
+                "Préciser l'urgence et la flexibilité",
+                "Fournir un brief complet pour optimiser les coûts"
+            ]
+        }

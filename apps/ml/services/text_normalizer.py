@@ -1,164 +1,173 @@
 
 import re
-import unicodedata
-from typing import Dict, List, Tuple, Optional
+import logging
+from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class NormalizedText:
+    clean_text: str
+    quantities: Dict[str, float]
+    constraints: List[str]
+    keywords: List[str]
 
 class TextNormalizer:
-    """Normalisation et extraction d'informations structurées depuis du texte français"""
-    
     def __init__(self):
-        # Patterns pour unités et quantités
-        self.unit_patterns = {
-            'surface': r'(\d+(?:[\.,]\d+)?)\s*(?:m²|m2|mètres?\s*carrés?|métres?\s*carrés?)',
-            'hours': r'(\d+(?:[\.,]\d+)?)\s*(?:h|heures?|hrs?)',
-            'pages': r'(\d+(?:[\.,]\d+)?)\s*(?:pages?|p\.)',
-            'distance': r'(\d+(?:[\.,]\d+)?)\s*(?:km|kilomètres?|mètres?|m\b)',
-            'duration_days': r'(\d+)\s*(?:jours?|j\b)',
-            'duration_weeks': r'(\d+)\s*(?:semaines?|sem\.)',
-            'duration_months': r'(\d+)\s*(?:mois\b)',
-        }
+        self.surface_patterns = [
+            (r'(\d+(?:[.,]\d+)?)\s*m²?', 'surface_m2'),
+            (r'(\d+(?:[.,]\d+)?)\s*mètres?\s*carrés?', 'surface_m2'),
+            (r'(\d+(?:[.,]\d+)?)\s*hectares?', 'surface_hectare'),
+        ]
         
-        # Patterns pour contraintes géographiques
-        self.geo_patterns = {
-            'onsite': r'(?:sur\s*site|présentiel|en\s*personne|dans?\s*(?:nos|mes)\s*locaux)',
-            'remote': r'(?:télétravail|remote|à\s*distance|depuis\s*chez)',
-            'hybrid': r'(?:hybride|mixte|partiellement?\s*(?:sur\s*site|remote))',
-        }
+        self.time_patterns = [
+            (r'(\d+(?:[.,]\d+)?)\s*heures?', 'duration_hours'),
+            (r'(\d+(?:[.,]\d+)?)\s*jours?', 'duration_days'),
+            (r'(\d+(?:[.,]\d+)?)\s*semaines?', 'duration_weeks'),
+            (r'(\d+(?:[.,]\d+)?)\s*mois', 'duration_months'),
+        ]
         
-        # Patterns pour prix
-        self.price_patterns = {
-            'hourly': r'(\d+(?:[\.,]\d+)?)\s*€?\s*(?:/h|par\s*heure|€/h|euros?\s*par\s*heure)',
-            'daily': r'(\d+(?:[\.,]\d+)?)\s*€?\s*(?:/jour|par\s*jour|€/j|euros?\s*par\s*jour)',
-            'fixed': r'(?:forfait|prix\s*fixe|montant\s*global).*?(\d+(?:[\.,]\d+)?)\s*€?',
-            'starting': r'(?:à\s*partir\s*de|dès|minimum).*?(\d+(?:[\.,]\d+)?)\s*€?',
-        }
+        self.distance_patterns = [
+            (r'(\d+(?:[.,]\d+)?)\s*km', 'distance_km'),
+            (r'(\d+(?:[.,]\d+)?)\s*kilomètres?', 'distance_km'),
+            (r'(\d+(?:[.,]\d+)?)\s*m(?:\s|$)', 'distance_m'),
+        ]
+        
+        self.constraint_patterns = [
+            r'(?:sur\s+site|en\s+présentiel|physiquement)',
+            r'(?:à\s+distance|en\s+remote|télétravail)',
+            r'(?:urgent|rapidement|immédiatement)',
+            r'(?:budget\s+serré|petit\s+budget)',
+        ]
 
-    def normalize_text(self, text: str) -> str:
-        """Normalisation basique du texte"""
-        if not text:
-            return ""
+    def normalize(self, text: str) -> NormalizedText:
+        """Normalise le texte français et extrait les informations structurées"""
         
-        # Normalisation Unicode
-        text = unicodedata.normalize('NFKD', text)
+        # Nettoyage du texte
+        clean_text = self._clean_text(text)
         
-        # Suppression caractères de contrôle
-        text = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', text)
+        # Extraction des quantités
+        quantities = self._extract_quantities(clean_text)
         
-        # Normalisation espaces
+        # Extraction des contraintes
+        constraints = self._extract_constraints(clean_text)
+        
+        # Extraction des mots-clés
+        keywords = self._extract_keywords(clean_text)
+        
+        return NormalizedText(
+            clean_text=clean_text,
+            quantities=quantities,
+            constraints=constraints,
+            keywords=keywords
+        )
+
+    def _clean_text(self, text: str) -> str:
+        """Nettoie et normalise le texte"""
+        # Suppression des caractères spéciaux
+        text = re.sub(r'[^\w\s.,!?;:-]', ' ', text)
+        
+        # Normalisation des espaces
         text = re.sub(r'\s+', ' ', text)
         
-        return text.strip()
-
-    def extract_quantities(self, text: str) -> Dict[str, List[float]]:
-        """Extraction des quantités et unités"""
-        quantities = {}
-        text_lower = text.lower()
+        # Conversion en minuscules
+        text = text.lower().strip()
         
-        for unit_type, pattern in self.unit_patterns.items():
-            matches = re.findall(pattern, text_lower, re.IGNORECASE)
-            if matches:
-                # Conversion des virgules en points pour les nombres
-                values = [float(m.replace(',', '.')) for m in matches]
-                quantities[unit_type] = values
+        return text
+
+    def _extract_quantities(self, text: str) -> Dict[str, float]:
+        """Extrait les quantités du texte"""
+        quantities = {}
+        
+        all_patterns = self.surface_patterns + self.time_patterns + self.distance_patterns
+        
+        for pattern, key in all_patterns:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                value_str = match.group(1).replace(',', '.')
+                try:
+                    value = float(value_str)
+                    quantities[key] = value
+                except ValueError:
+                    continue
         
         return quantities
 
-    def extract_geo_constraints(self, text: str) -> Dict[str, bool]:
-        """Extraction des contraintes géographiques"""
-        constraints = {
-            'onsite_required': False,
-            'remote_ok': False,
-            'hybrid_ok': False
+    def _extract_constraints(self, text: str) -> List[str]:
+        """Extrait les contraintes du texte"""
+        constraints = []
+        
+        constraint_mapping = {
+            r'(?:sur\s+site|en\s+présentiel|physiquement)': 'on_site_required',
+            r'(?:à\s+distance|en\s+remote|télétravail)': 'remote_ok',
+            r'(?:urgent|rapidement|immédiatement)': 'urgent',
+            r'(?:budget\s+serré|petit\s+budget)': 'tight_budget',
+            r'(?:expérience\s+requise|expérimenté)': 'experience_required',
+            r'(?:certification|certifié|agréé)': 'certification_required',
         }
         
-        text_lower = text.lower()
-        
-        if re.search(self.geo_patterns['onsite'], text_lower):
-            constraints['onsite_required'] = True
-        if re.search(self.geo_patterns['remote'], text_lower):
-            constraints['remote_ok'] = True
-        if re.search(self.geo_patterns['hybrid'], text_lower):
-            constraints['hybrid_ok'] = True
+        for pattern, constraint in constraint_mapping.items():
+            if re.search(pattern, text, re.IGNORECASE):
+                constraints.append(constraint)
         
         return constraints
 
-    def extract_price_signals(self, text: str) -> Dict[str, List[float]]:
-        """Extraction des signaux de prix"""
-        prices = {}
-        text_lower = text.lower()
+    def _extract_keywords(self, text: str) -> List[str]:
+        """Extrait les mots-clés pertinents"""
+        # Mots vides français
+        stop_words = {
+            'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'mais',
+            'car', 'si', 'ce', 'se', 'que', 'qui', 'quoi', 'dont', 'où', 'quand',
+            'comment', 'pourquoi', 'je', 'tu', 'il', 'elle', 'nous', 'vous', 'ils',
+            'elles', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses',
+            'notre', 'nos', 'votre', 'vos', 'leur', 'leurs', 'dans', 'sur', 'avec',
+            'par', 'pour', 'sans', 'sous', 'vers', 'chez', 'contre', 'entre',
+            'pendant', 'avant', 'après', 'depuis', 'jusqu', 'avoir', 'être',
+            'faire', 'aller', 'venir', 'voir', 'savoir', 'pouvoir', 'vouloir',
+            'devoir', 'falloir', 'très', 'plus', 'moins', 'bien', 'mal', 'beaucoup'
+        }
         
-        for price_type, pattern in self.price_patterns.items():
-            matches = re.findall(pattern, text_lower, re.IGNORECASE)
-            if matches:
-                values = [float(m.replace(',', '.')) for m in matches if m]
-                if values:
-                    prices[price_type] = values
+        # Tokenisation simple
+        words = re.findall(r'\b\w{3,}\b', text.lower())
         
-        return prices
+        # Filtrage des mots vides et extraction des mots-clés
+        keywords = [word for word in words if word not in stop_words]
+        
+        # Déduplication en gardant l'ordre
+        seen = set()
+        unique_keywords = []
+        for keyword in keywords:
+            if keyword not in seen:
+                seen.add(keyword)
+                unique_keywords.append(keyword)
+        
+        return unique_keywords[:20]  # Limite à 20 mots-clés
 
-    def extract_urgency_signals(self, text: str) -> Dict[str, any]:
-        """Extraction des signaux d'urgence"""
-        text_lower = text.lower()
+    def extract_price_indicators(self, text: str) -> List[Dict[str, any]]:
+        """Extrait les indicateurs de prix du texte"""
+        price_patterns = [
+            (r'(\d+(?:[.,]\d+)?)\s*€?\s*(?:/\s*h|par\s+heure|de\s+l[\'']heure)', 'hourly'),
+            (r'(\d+(?:[.,]\d+)?)\s*€?\s*(?:/\s*jour|par\s+jour)', 'daily'),
+            (r'(\d+(?:[.,]\d+)?)\s*€?\s*(?:forfait|global|total)', 'fixed'),
+            (r'budget\s*:?\s*(\d+(?:[.,]\d+)?)\s*€?', 'budget_max'),
+            (r'à\s+partir\s+de\s+(\d+(?:[.,]\d+)?)\s*€?', 'price_from'),
+        ]
         
-        urgency_keywords = {
-            'high': ['urgent', 'rapidement', 'asap', 'priorité', 'immédiat'],
-            'medium': ['sous peu', 'prochainement', 'bientôt'],
-            'low': ['pas urgent', 'quand vous pouvez', 'flexible']
-        }
+        price_indicators = []
         
-        urgency_level = 'medium'  # default
-        urgency_score = 0.5
+        for pattern, price_type in price_patterns:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                value_str = match.group(1).replace(',', '.')
+                try:
+                    value = float(value_str)
+                    price_indicators.append({
+                        'type': price_type,
+                        'value': value,
+                        'currency': 'EUR'
+                    })
+                except ValueError:
+                    continue
         
-        for level, keywords in urgency_keywords.items():
-            for keyword in keywords:
-                if keyword in text_lower:
-                    urgency_level = level
-                    if level == 'high':
-                        urgency_score = 0.9
-                    elif level == 'low':
-                        urgency_score = 0.1
-                    break
-        
-        return {
-            'level': urgency_level,
-            'score': urgency_score,
-            'detected_keywords': [kw for level_kws in urgency_keywords.values() 
-                                 for kw in level_kws if kw in text_lower]
-        }
-
-    def extract_quality_requirements(self, text: str) -> Dict[str, any]:
-        """Extraction des exigences de qualité"""
-        text_lower = text.lower()
-        
-        quality_keywords = {
-            'high': ['excellence', 'parfait', 'irréprochable', 'top qualité', 'premium'],
-            'medium': ['bonne qualité', 'professionnel', 'soigné'],
-            'low': ['basique', 'simple', 'budget serré']
-        }
-        
-        quality_level = 'medium'  # default
-        
-        for level, keywords in quality_keywords.items():
-            for keyword in keywords:
-                if keyword in text_lower:
-                    quality_level = level
-                    break
-        
-        return {
-            'level': quality_level,
-            'detected_keywords': [kw for level_kws in quality_keywords.values() 
-                                 for kw in level_kws if kw in text_lower]
-        }
-
-    def normalize_complete(self, text: str) -> Dict[str, any]:
-        """Normalisation complète avec extraction de toutes les informations"""
-        normalized_text = self.normalize_text(text)
-        
-        return {
-            'normalized_text': normalized_text,
-            'quantities': self.extract_quantities(text),
-            'geo_constraints': self.extract_geo_constraints(text),
-            'price_signals': self.extract_price_signals(text),
-            'urgency': self.extract_urgency_signals(text),
-            'quality_requirements': self.extract_quality_requirements(text)
-        }
+        return price_indicators

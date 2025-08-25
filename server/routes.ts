@@ -1,492 +1,565 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { insertUserSchema, insertMissionSchema, insertBidSchema } from "@shared/schema";
-import { z } from "zod";
-import { Router } from "express";
-import crypto from 'crypto'; // Import crypto for UUID generation
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { storage } from './storage';
+
+const improveProjectSchema = z.object({
+  projectId: z.string()
 });
 
-// Mock AI Service (replace with your actual AI service implementation)
-const aiService = {
-  standardizeProject: async (projectData: any) => {
-    console.log('Standardizing project:', projectData);
-    // Simulate standardization logic
-    return {
-      standardized_title: `Standardized: ${projectData.title}`,
-      standardized_description: `Standardized Description: ${projectData.description}`,
-      standardized_category: `Standardized: ${projectData.category}`,
-      suggested_budget: projectData.budget * 1.1, // Example: Suggest 10% more
-    };
-  },
-  recomputeStandardization: async (projectId: string, updatedData: any) => {
-    console.log(`Recomputing standardization for project ${projectId} with data:`, updatedData);
-    // Simulate recomputation
-    return {
-      project_id: projectId,
-      ...updatedData,
-      recomputed_at: new Date(),
-    };
-  },
-  getPreviewScoring: async (projectId: string) => {
-    console.log(`Getting preview scoring for project ${projectId}`);
-    // Simulate scoring logic
-    return {
-      project_id: projectId,
-      score: Math.random(),
-      recommendation: Math.random() > 0.5 ? 'approve' : 'review',
-    };
-  }
-};
+const applyStandardizationSchema = z.object({
+  projectId: z.string(),
+  apply_budget: z.enum(['min', 'med', 'max']).optional(),
+  apply_delay: z.boolean().optional(),
+  apply_title: z.boolean().optional(),
+  apply_summary: z.boolean().optional()
+});
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  const router = Router();
+const completeBriefSchema = z.object({
+  projectId: z.string(),
+  answers: z.array(z.object({
+    question_id: z.string(),
+    value: z.string()
+  })),
+  apply: z.boolean().optional()
+});
 
-  // Auth routes
-  router.post("/api/auth/login", async (req, res) => {
+const sourcingDiscoverSchema = z.object({
+  projectId: z.string(),
+  strategy: z.enum(['rss', 'sitemap']).optional(),
+  max: z.number().optional()
+});
+
+export async function routes(fastify: FastifyInstance) {
+  // Routes existantes...
+  
+  // === Routes IA d'amélioration ===
+  
+  // Amélioration complète d'un projet
+  fastify.post('/ai/projects/:id/improve', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    
     try {
-      const { email, password } = loginSchema.parse(req.body);
-      const user = await storage.getUserByEmail(email);
-
-      if (!user || user.password !== password) {
-        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+      const project = storage.getProject(id);
+      if (!project) {
+        return reply.status(404).send({ error: 'Projet non trouvé' });
       }
 
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
-    } catch (error) {
-      res.status(400).json({ message: "Données invalides" });
-    }
-  });
-
-  router.post("/api/auth/register", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-
-      // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
-      if (existingUser) {
-        return res.status(400).json({ message: "Un compte avec cet email existe déjà" });
-      }
-
-      const user = await storage.createUser(userData);
-
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword });
-    } catch (error) {
-      res.status(400).json({ message: "Données invalides" });
-    }
-  });
-
-  // Mission routes
-  router.get("/api/missions", async (req, res) => {
-    try {
-      const missions = await storage.getAllMissionsWithBids();
-      res.json(missions);
-    } catch (error) {
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  });
-
-  router.get("/api/missions/:id", async (req, res) => {
-    try {
-      const mission = await storage.getMissionWithBids(req.params.id);
-      if (!mission) {
-        return res.status(404).json({ message: "Mission non trouvée" });
-      }
-      res.json(mission);
-    } catch (error) {
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  });
-
-  router.post("/api/missions", async (req, res) => {
-    try {
-      const missionData = insertMissionSchema.parse(req.body);
-      const mission = await storage.createMission(missionData);
-      res.json(mission);
-    } catch (error) {
-      res.status(400).json({ message: "Données invalides" });
-    }
-  });
-
-  router.get("/api/users/:id/missions", async (req, res) => {
-    try {
-      const missions = await storage.getUserMissions(req.params.id);
-      res.json(missions);
-    } catch (error) {
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  });
-
-  // Bid routes
-  router.post("/api/bids", async (req, res) => {
-    try {
-      const bidData = insertBidSchema.parse(req.body);
-
-      // Check if user already bid on this mission
-      const existingBids = await storage.getMissionBids(bidData.missionId);
-      const userAlreadyBid = existingBids.some(bid => bid.providerId === bidData.providerId);
-
-      if (userAlreadyBid) {
-        return res.status(400).json({ message: "Vous avez déjà fait une offre pour cette mission" });
-      }
-
-      const bid = await storage.createBid(bidData);
-      res.json(bid);
-    } catch (error) {
-      res.status(400).json({ message: "Données invalides" });
-    }
-  });
-
-  // Respond to a bid
-  router.post("/api/bids/respond", async (req, res) => {
-    try {
-      const { bidId, action, message } = req.body;
-
-      if (!bidId || !action) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      // Here you would typically update the bid status and send a notification
-      // For now, we'll just return success
-      res.json({ 
-        success: true, 
-        message: `Response sent for bid ${bidId}`,
-        action,
-        responseMessage: message 
-      });
-    } catch (error) {
-      console.error("Error responding to bid:", error);
-      res.status(400).json({ error: "Error processing response" });
-    }
-  });
-
-  router.get("/api/users/:id/bids", async (req, res) => {
-    try {
-      const bids = await storage.getUserBids(req.params.id);
-      res.json(bids);
-    } catch (error) {
-      res.status(500).json({ message: "Erreur serveur" });
-    }
-  });
-
-  // Get provider profile
-  router.get('/api/providers/:id/profile', (req, res) => {
-    const { id } = req.params;
-
-    // Simulation d'un profil prestataire détaillé
-    const profile = {
-      id,
-      name: "Jean Dupont",
-      email: "jean.dupont@email.com",
-      rating: "4.8",
-      location: "Paris, France",
-      joinedAt: "2023-01-15",
-      description: "Développeur full-stack passionné avec plus de 8 ans d'expérience. Spécialisé dans React, Node.js et les architectures cloud. J'aime créer des solutions élégantes et performantes pour mes clients.",
-      skills: ["React", "Node.js", "TypeScript", "AWS", "Docker", "PostgreSQL"],
-      totalProjects: 47,
-      availability: [
-        {
-          date: '2024-12-20T00:00:00.000Z',
-          slots: [
-            { start: '09:00', end: '12:00', rate: 75 },
-            { start: '14:00', end: '18:00', rate: 75 }
-          ]
-        },
-        {
-          date: '2024-12-21T00:00:00.000Z',
-          slots: [
-            { start: '10:00', end: '16:00', rate: 80 }
-          ]
-        },
-        {
-          date: '2024-12-23T00:00:00.000Z',
-          slots: [
-            { start: '08:00', end: '12:00', rate: 85 },
-            { start: '13:00', end: '17:00', rate: 85 }
-          ]
-        },
-        {
-          date: '2024-12-24T00:00:00.000Z',
-          slots: [
-            { start: '09:00', end: '13:00', rate: 90 }
-          ]
-        }
-      ],
-      evaluations: [
-        {
-          id: "eval1",
-          rating: 5,
-          comment: "Excellent travail ! Jean a livré le projet en avance et la qualité dépasse nos attentes. Communication parfaite tout au long du projet.",
-          clientName: "Marie Martin",
-          createdAt: "2024-11-15",
-          photos: []
-        },
-        {
-          id: "eval2",
-          rating: 5,
-          comment: "Très professionnel et réactif. Le site développé fonctionne parfaitement et respecte toutes nos spécifications.",
-          clientName: "Pierre Leblanc",
-          createdAt: "2024-10-28",
-          photos: []
-        },
-        {
-          id: "eval3",
-          rating: 4,
-          comment: "Bon développeur, travail de qualité. Quelques retards mineurs mais le résultat final est satisfaisant.",
-          clientName: "Sophie Chen",
-          createdAt: "2024-09-12",
-          photos: []
-        }
-      ],
-      portfolio: [
-        {
-          id: "project1",
-          title: "E-commerce Platform",
-          description: "Développement d'une plateforme e-commerce complète avec React et Node.js. Intégration de Stripe pour les paiements.",
-          images: ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400"],
-          category: "Développement web",
-          completedAt: "2024-11-01"
-        },
-        {
-          id: "project2",
-          title: "Application Mobile",
-          description: "Application React Native pour la gestion d'inventaire avec synchronisation cloud temps réel.",
-          images: ["https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=400"],
-          category: "Développement mobile",
-          completedAt: "2024-09-15"
-        },
-        {
-          id: "project3",
-          title: "Dashboard Analytics",
-          description: "Tableau de bord interactif avec D3.js pour visualiser des données complexes en temps réel.",
-          images: ["https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400"],
-          category: "Data Visualization",
-          completedAt: "2024-08-20"
-        },
-        {
-          id: "project4",
-          title: "API REST",
-          description: "API scalable avec Node.js, Express et PostgreSQL pour une application fintech.",
-          images: ["https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=400"],
-          category: "Backend",
-          completedAt: "2024-07-10"
-        }
-      ]
-    };
-
-    res.json(profile);
-  });
-
-  // Standardisation d'annonces (NOUVEAU)
-  app.post('/api/ai/projects/:id/standardize', async (request, reply) => {
-    try {
-      const { id } = request.params as { id: string };
-      const projectData = request.body;
-
-      // Appel au service de standardisation
-      const standardizationResult = await aiService.standardizeProject({
-        title: projectData.title,
-        description: projectData.description,
-        category: projectData.category,
-        budget: projectData.budget
+      // Appel au service ML pour amélioration complète
+      const mlResponse = await fetch('http://localhost:8001/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: project.title,
+          description: project.description,
+          category: project.category,
+          budget: project.budget,
+          deadline: project.deadline
+        })
       });
 
-      // Sauvegarde en base (simulé)
-      const projectStandardization = {
-        id: crypto.randomUUID(),
-        project_id: id,
-        ...standardizationResult,
-        rewrite_version: '1.0',
-        created_at: new Date(),
-        updated_at: new Date()
+      if (!mlResponse.ok) {
+        throw new Error(`ML service error: ${mlResponse.status}`);
+      }
+
+      const improvements = await mlResponse.json();
+      
+      // Persistance de la standardisation
+      const standardization = {
+        id: `std_${id}`,
+        projectId: id,
+        titleStd: improvements.title_std,
+        summaryStd: improvements.summary_std,
+        acceptanceCriteria: improvements.acceptance_criteria,
+        categoryStd: improvements.category_std,
+        subCategoryStd: improvements.sub_category_std,
+        tagsStd: improvements.tags_std,
+        tasksStd: improvements.tasks_std,
+        deliverablesStd: improvements.deliverables_std,
+        skillsStd: improvements.skills_std,
+        constraintsStd: improvements.constraints_std,
+        briefQualityScore: improvements.brief_quality_score,
+        richnessScore: improvements.richness_score,
+        missingInfo: improvements.missing_info,
+        priceSuggestedMin: improvements.price_suggested_min,
+        priceSuggestedMed: improvements.price_suggested_med,
+        priceSuggestedMax: improvements.price_suggested_max,
+        delaySuggestedDays: improvements.delay_suggested_days,
+        locBase: improvements.loc_base,
+        locUpliftReco: improvements.loc_uplift_reco,
+        rewriteVersion: improvements.rewrite_version,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
-      reply.send(projectStandardization);
-    } catch (error) {
-      // Using Express's res.status and res.send for consistency
-      (reply as any).status(500).send({ error: 'Standardization failed' });
-    }
-  });
+      storage.saveProjectStandardization(standardization);
 
-  app.get('/api/projects/:id/standardized', async (request, reply) => {
-    try {
-      const { id } = request.params as { id: string };
-      // Récupération de la standardisation (simulé)
-      (reply as any).send({
-        standardized: true,
-        project_id: id,
-        last_updated: new Date()
-      });
-    } catch (error) {
-      (reply as any).status(404).send({ error: 'Standardization not found' });
-    }
-  });
-
-  app.post('/api/ai/projects/:id/brief/complete', async (request, reply) => {
-    try {
-      const { id } = request.params as { id: string };
-      const updatedData = request.body;
-
-      const recomputedResult = await aiService.recomputeStandardization(id, updatedData);
-      reply.send(recomputedResult);
-    } catch (error) {
-      (reply as any).status(500).send({ error: 'Brief completion failed' });
-    }
-  });
-
-  app.get('/api/ai/projects/:id/preview-scoring', async (request, reply) => {
-    try {
-      const { id } = request.params as { id: string };
-      const previewScoring = await aiService.getPreviewScoring(id);
-      reply.send(previewScoring);
-    } catch (error) {
-      (reply as any).status(500).send({ error: 'Preview scoring failed' });
-    }
-  });
-
-  // Sourcing Web (NOUVEAU)
-  app.post('/api/sourcing/discover', async (request, reply) => {
-    try {
-      const { project_id, strategy = 'sitemap', max = 50 } = request.body;
-
-      // Simulation du pipeline de découverte
-      const discoveryResult = {
-        project_id,
-        strategy,
-        discovered_companies: Math.floor(Math.random() * max),
-        pages_crawled: Math.floor(Math.random() * 200),
-        processing_time_ms: Math.floor(Math.random() * 5000) + 1000,
-        status: 'completed'
+      return {
+        success: true,
+        standardization,
+        diffs: {
+          title: {
+            original: project.title,
+            improved: improvements.title_std
+          },
+          description: {
+            original: project.description,
+            improved: improvements.summary_std
+          },
+          budget: {
+            original: project.budget,
+            suggested: {
+              min: improvements.price_suggested_min,
+              med: improvements.price_suggested_med,
+              max: improvements.price_suggested_max
+            }
+          },
+          deadline: {
+            original: project.deadline,
+            suggested_days: improvements.delay_suggested_days
+          }
+        }
       };
 
-      reply.send(discoveryResult);
     } catch (error) {
-      (reply as any).status(500).send({ error: 'Sourcing discovery failed' });
+      fastify.log.error('Error improving project:', error);
+      return reply.status(500).send({ error: 'Erreur lors de l\'amélioration du projet' });
     }
   });
 
-  app.get('/api/sourcing/project/:id/candidates', async (request, reply) => {
+  // Preview de la standardisation
+  fastify.get('/ai/projects/:id/preview', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    
     try {
-      const { id } = request.params as { id: string };
-      const { min_score = 0.4, limit = 20 } = request.query as any;
+      const project = storage.getProject(id);
+      const standardization = storage.getProjectStandardization(id);
+      
+      if (!project) {
+        return reply.status(404).send({ error: 'Projet non trouvé' });
+      }
 
-      // Simulation de candidats externes
-      const mockCandidates = Array.from({ length: parseInt(limit) }, (_, index) => ({
-        id: `ext_company_${index + 1}`,
-        name: `Entreprise ${index + 1}`,
-        lead_score: Math.random() * 0.6 + 0.4, // Score entre 0.4 et 1.0
-        reasons: [
-          'Compétences correspondantes détectées',
-          'Localisation géographique favorable',
-          'Signaux de prix cohérents'
-        ],
-        website: `https://exemple-${index + 1}.fr`,
-        city: 'Paris',
-        skills: ['React', 'Node.js', 'Design'],
-        confidence: Math.random() * 0.4 + 0.6
-      })).filter(candidate => candidate.lead_score >= parseFloat(min_score));
+      if (!standardization) {
+        return reply.status(404).send({ 
+          error: 'Aucune standardisation disponible. Lancez d\'abord l\'amélioration.' 
+        });
+      }
 
-      reply.send({
-        candidates: mockCandidates,
-        total_found: mockCandidates.length,
-        search_criteria: { min_score, limit }
-      });
-    } catch (error) {
-      (reply as any).status(500).send({ error: 'Candidate retrieval failed' });
-    }
-  });
-
-  app.get('/api/sourcing/status', async (request, reply) => {
-    try {
-      const status = {
-        pages_crawled_today: Math.floor(Math.random() * 1000),
-        valid_docs_extracted: Math.floor(Math.random() * 500),
-        companies_indexed: Math.floor(Math.random() * 200),
-        avg_processing_time_ms: Math.floor(Math.random() * 2000) + 500,
-        blocked_domains: Math.floor(Math.random() * 10),
-        last_updated: new Date()
+      return {
+        original: {
+          title: project.title,
+          description: project.description,
+          budget: project.budget,
+          deadline: project.deadline
+        },
+        standardized: {
+          title_std: standardization.titleStd,
+          summary_std: standardization.summaryStd,
+          acceptance_criteria: standardization.acceptanceCriteria,
+          category_std: standardization.categoryStd,
+          sub_category_std: standardization.subCategoryStd,
+          tags_std: standardization.tagsStd,
+          skills_std: standardization.skillsStd,
+          constraints_std: standardization.constraintsStd,
+          tasks_std: standardization.tasksStd,
+          deliverables_std: standardization.deliverablesStd
+        },
+        quality: {
+          brief_quality_score: standardization.briefQualityScore,
+          richness_score: standardization.richnessScore,
+          missing_info: standardization.missingInfo
+        },
+        suggestions: {
+          price: {
+            min: standardization.priceSuggestedMin,
+            med: standardization.priceSuggestedMed,
+            max: standardization.priceSuggestedMax
+          },
+          delay_days: standardization.delaySuggestedDays,
+          loc_base: standardization.locBase,
+          loc_uplift_reco: standardization.locUpliftReco
+        }
       };
 
-      reply.send(status);
     } catch (error) {
-      (reply as any).status(500).send({ error: 'Status retrieval failed' });
+      fastify.log.error('Error previewing standardization:', error);
+      return reply.status(500).send({ error: 'Erreur lors de la prévisualisation' });
     }
   });
 
-  // Fusion candidats internes + externes (NOUVEAU)
-  app.get('/api/ai/projects/:id/candidates', async (request, reply) => {
+  // Complétion du brief avec réponses aux questions
+  fastify.post('/ai/projects/:id/brief/complete', async (request, reply) => {
+    const { projectId, answers, apply } = completeBriefSchema.parse({
+      projectId: (request.params as any).id,
+      ...request.body
+    });
+    
     try {
-      const { id } = request.params as { id: string };
-      const { diversity = false, limit = 20 } = request.query as any;
+      const project = storage.getProject(projectId);
+      if (!project) {
+        return reply.status(404).send({ error: 'Projet non trouvé' });
+      }
 
-      // Simulation fusion candidats internes + externes
-      const internalCandidates = Array.from({ length: 5 }, (_, index) => ({
-        id: `internal_${index + 1}`,
-        type: 'internal',
-        name: `Prestataire ${index + 1}`,
-        score: Math.random() * 30 + 70, // Score GlobalScore 70-100
-        score_type: 'GlobalScore',
-        rating: 4.0 + Math.random(),
-        completed_projects: Math.floor(Math.random() * 50) + 10,
-        skills: ['React', 'Vue.js', 'PHP'],
-        location: 'Lyon'
+      // Appel ML pour recomputer avec les réponses
+      const mlResponse = await fetch('http://localhost:8001/brief/recompute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: projectId,
+          answers: answers
+        })
+      });
+
+      if (!mlResponse.ok) {
+        throw new Error(`ML service error: ${mlResponse.status}`);
+      }
+
+      const updatedStandardization = await mlResponse.json();
+      
+      if (apply) {
+        // Mise à jour de la standardisation
+        storage.updateProjectStandardization(projectId, updatedStandardization);
+      }
+
+      return {
+        success: true,
+        updated_standardization: updatedStandardization,
+        applied: apply || false
+      };
+
+    } catch (error) {
+      fastify.log.error('Error completing brief:', error);
+      return reply.status(500).send({ error: 'Erreur lors de la complétion du brief' });
+    }
+  });
+
+  // Application des suggestions au projet
+  fastify.post('/ai/projects/:id/apply', async (request, reply) => {
+    const { 
+      projectId, 
+      apply_budget, 
+      apply_delay, 
+      apply_title, 
+      apply_summary 
+    } = applyStandardizationSchema.parse({
+      projectId: (request.params as any).id,
+      ...request.body
+    });
+    
+    try {
+      const project = storage.getProject(projectId);
+      const standardization = storage.getProjectStandardization(projectId);
+      
+      if (!project || !standardization) {
+        return reply.status(404).send({ error: 'Projet ou standardisation non trouvé' });
+      }
+
+      const changes: any = {};
+      const originalProject = { ...project };
+
+      // Application du budget
+      if (apply_budget && standardization.priceSuggestedMin) {
+        const budgetMap = {
+          'min': standardization.priceSuggestedMin,
+          'med': standardization.priceSuggestedMed,
+          'max': standardization.priceSuggestedMax
+        };
+        
+        project.budget = budgetMap[apply_budget];
+        changes.budget = {
+          from: originalProject.budget,
+          to: project.budget,
+          type: apply_budget
+        };
+      }
+
+      // Application du délai
+      if (apply_delay && standardization.delaySuggestedDays) {
+        const newDeadline = new Date();
+        newDeadline.setDate(newDeadline.getDate() + standardization.delaySuggestedDays);
+        
+        project.deadline = newDeadline;
+        changes.deadline = {
+          from: originalProject.deadline,
+          to: project.deadline,
+          days_added: standardization.delaySuggestedDays
+        };
+      }
+
+      // Application du titre
+      if (apply_title && standardization.titleStd) {
+        project.title = standardization.titleStd;
+        changes.title = {
+          from: originalProject.title,
+          to: project.title
+        };
+      }
+
+      // Application du résumé
+      if (apply_summary && standardization.summaryStd) {
+        project.description = standardization.summaryStd;
+        changes.description = {
+          from: originalProject.description,
+          to: project.description
+        };
+      }
+
+      // Sauvegarde du projet modifié
+      storage.updateProject(projectId, project);
+
+      // Log des changements
+      const changeLog = {
+        id: `log_${Date.now()}`,
+        projectId,
+        action: 'apply_standardization',
+        changes,
+        createdAt: new Date()
+      };
+      storage.saveProjectChangeLog(changeLog);
+
+      return {
+        success: true,
+        project_updated: project,
+        changes_applied: changes,
+        change_log_id: changeLog.id
+      };
+
+    } catch (error) {
+      fastify.log.error('Error applying standardization:', error);
+      return reply.status(500).send({ error: 'Erreur lors de l\'application des suggestions' });
+    }
+  });
+
+  // === Routes Sourcing ===
+
+  // Découverte de candidats externes
+  fastify.post('/sourcing/discover', async (request, reply) => {
+    const { projectId, strategy, max } = sourcingDiscoverSchema.parse(request.body);
+    
+    try {
+      const project = storage.getProject(projectId);
+      if (!project) {
+        return reply.status(404).send({ error: 'Projet non trouvé' });
+      }
+
+      // Appel ML pour sourcing
+      const mlResponse = await fetch('http://localhost:8001/sourcing/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: projectId,
+          strategy: strategy || 'rss',
+          max: max || 20
+        })
+      });
+
+      if (!mlResponse.ok) {
+        throw new Error(`ML service error: ${mlResponse.status}`);
+      }
+
+      const sourcingResults = await mlResponse.json();
+
+      return {
+        success: true,
+        discovered_candidates: sourcingResults.candidates_count,
+        discovery_stats: sourcingResults.stats,
+        top_matches: sourcingResults.top_matches
+      };
+
+    } catch (error) {
+      fastify.log.error('Error discovering candidates:', error);
+      return reply.status(500).send({ error: 'Erreur lors de la découverte de candidats' });
+    }
+  });
+
+  // Récupération des candidats externes pour un projet
+  fastify.get('/sourcing/project/:id/candidates', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { min_score = 0.4, limit = 20 } = request.query as any;
+    
+    try {
+      const externalCandidates = storage.getSourcingMatches(id, {
+        minScore: parseFloat(min_score),
+        limit: parseInt(limit)
+      });
+
+      const candidates = externalCandidates.map(match => ({
+        company: storage.getExternalCompany(match.companyId),
+        match_score: match.leadScore,
+        reasons: match.reasons,
+        status: match.status,
+        last_seen: storage.getExternalCompany(match.companyId)?.lastSeenAt
       }));
 
-      const externalCandidates = Array.from({ length: 8 }, (_, index) => ({
-        id: `external_${index + 1}`,
-        type: 'external',
-        name: `Entreprise externe ${index + 1}`,
-        score: Math.random() * 40 + 40, // Score SupplierLeadScore 40-80 (normalisé)
-        score_type: 'SupplierLeadScore',
-        website: `https://externe-${index + 1}.fr`,
-        skills: ['JavaScript', 'Design', 'SEO'],
-        location: 'Paris',
-        confidence: Math.random() * 0.4 + 0.6
-      }));
+      return {
+        project_id: id,
+        external_candidates: candidates,
+        total_count: candidates.length,
+        filters_applied: {
+          min_score: parseFloat(min_score),
+          limit: parseInt(limit)
+        }
+      };
+
+    } catch (error) {
+      fastify.log.error('Error getting external candidates:', error);
+      return reply.status(500).send({ error: 'Erreur lors de la récupération des candidats' });
+    }
+  });
+
+  // Candidats unifiés (internes + externes)
+  fastify.get('/ai/projects/:id/candidates', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { diversity = false, limit = 30 } = request.query as any;
+    
+    try {
+      const project = storage.getProject(id);
+      if (!project) {
+        return reply.status(404).send({ error: 'Projet non trouvé' });
+      }
+
+      // Candidats internes (existants)
+      const internalBids = storage.getBids().filter(bid => bid.projectId === id);
+      const internalCandidates = internalBids.map(bid => {
+        const provider = storage.getUser(bid.providerId);
+        return {
+          type: 'internal',
+          provider,
+          bid,
+          global_score: calculateGlobalScore(bid, project), // À implémenter
+          source: 'platform'
+        };
+      });
+
+      // Candidats externes
+      const externalMatches = storage.getSourcingMatches(id, { minScore: 0.3 });
+      const externalCandidates = externalMatches.map(match => {
+        const company = storage.getExternalCompany(match.companyId);
+        return {
+          type: 'external',
+          company,
+          match_score: match.leadScore,
+          reasons: match.reasons,
+          source: 'sourcing'
+        };
+      });
 
       // Fusion et tri
-      let allCandidates = [...internalCandidates, ...externalCandidates]
-        .sort((a, b) => b.score - a.score);
-
-      // Application de MMR si diversity=true
-      if (diversity === 'true') {
-        // Simulation de diversification MMR
-        allCandidates = allCandidates.map((candidate, index) => ({
-          ...candidate,
-          diversity_boost: index < 3 ? 0 : Math.random() * 5 // Boost pour diversité
-        }));
+      let allCandidates = [...internalCandidates, ...externalCandidates];
+      
+      if (diversity) {
+        // Algorithme MMR (Maximal Marginal Relevance) simplifié
+        allCandidates = applyDiversityFiltering(allCandidates);
       }
 
-      reply.send({
-        candidates: allCandidates.slice(0, parseInt(limit)),
-        internal_count: internalCandidates.length,
-        external_count: externalCandidates.length,
-        diversity_applied: diversity === 'true',
-        total_available: allCandidates.length
-      });
+      // Limitation
+      allCandidates = allCandidates.slice(0, parseInt(limit));
+
+      return {
+        project_id: id,
+        unified_candidates: allCandidates,
+        stats: {
+          total_internal: internalCandidates.length,
+          total_external: externalCandidates.length,
+          diversity_applied: diversity,
+          final_count: allCandidates.length
+        }
+      };
+
     } catch (error) {
-      (reply as any).status(500).send({ error: 'Candidate fusion failed' });
+      fastify.log.error('Error getting unified candidates:', error);
+      return reply.status(500).send({ error: 'Erreur lors de la récupération des candidats unifiés' });
     }
   });
+}
 
-  // AI endpoints
-  app.post('/api/ai/score', async (request, reply) => {
-    // Original AI scoring logic would go here.
-    // For demonstration, we'll just return a placeholder.
-    reply.send({ message: "AI scoring endpoint reached." });
-  });
+// Fonctions utilitaires
+function calculateGlobalScore(bid: any, project: any): number {
+  // Implémentation simplifiée du scoring global
+  let score = 0.5; // Score de base
 
+  // Facteur prix
+  if (bid.amount && project.budget) {
+    const priceRatio = bid.amount / project.budget;
+    if (priceRatio <= 0.8) score += 0.2;
+    else if (priceRatio <= 1.0) score += 0.1;
+    else if (priceRatio > 1.2) score -= 0.1;
+  }
 
-  app.use(router); // Mount the router
+  // Facteur délai
+  if (bid.estimatedDuration && project.deadline) {
+    const daysUntilDeadline = Math.ceil((new Date(project.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    if (bid.estimatedDuration <= daysUntilDeadline * 0.8) score += 0.15;
+    else if (bid.estimatedDuration > daysUntilDeadline) score -= 0.1;
+  }
 
-  const httpServer = createServer(app);
-  return httpServer;
+  return Math.max(0, Math.min(1, score));
+}
+
+function applyDiversityFiltering(candidates: any[]): any[] {
+  // Implémentation simplifiée de MMR
+  const selected: any[] = [];
+  const remaining = [...candidates];
+
+  while (remaining.length > 0 && selected.length < 20) {
+    let bestCandidate = null;
+    let bestScore = -1;
+
+    for (const candidate of remaining) {
+      // Score de pertinence
+      const relevanceScore = candidate.global_score || candidate.match_score || 0.5;
+      
+      // Score de diversité (distance avec les déjà sélectionnés)
+      let diversityScore = 1.0;
+      for (const selectedCandidate of selected) {
+        const similarity = calculateSimilarity(candidate, selectedCandidate);
+        diversityScore *= (1 - similarity);
+      }
+
+      // Combinaison MMR (lambda = 0.7 pour favoriser la pertinence)
+      const mmrScore = 0.7 * relevanceScore + 0.3 * diversityScore;
+
+      if (mmrScore > bestScore) {
+        bestScore = mmrScore;
+        bestCandidate = candidate;
+      }
+    }
+
+    if (bestCandidate) {
+      selected.push(bestCandidate);
+      remaining.splice(remaining.indexOf(bestCandidate), 1);
+    } else {
+      break;
+    }
+  }
+
+  return selected;
+}
+
+function calculateSimilarity(candidate1: any, candidate2: any): number {
+  // Calcul simplifié de similarité
+  if (candidate1.type !== candidate2.type) return 0.2; // Types différents = peu similaires
+  
+  // Pour les candidats internes
+  if (candidate1.type === 'internal' && candidate2.type === 'internal') {
+    if (candidate1.provider?.id === candidate2.provider?.id) return 1.0;
+    return 0.3;
+  }
+  
+  // Pour les candidats externes
+  if (candidate1.type === 'external' && candidate2.type === 'external') {
+    const company1 = candidate1.company;
+    const company2 = candidate2.company;
+    
+    if (company1?.name === company2?.name) return 1.0;
+    
+    // Similarité par compétences
+    const skills1 = company1?.skills || [];
+    const skills2 = company2?.skills || [];
+    const commonSkills = skills1.filter(skill => skills2.includes(skill));
+    
+    return commonSkills.length / Math.max(skills1.length, skills2.length, 1);
+  }
+  
+  return 0.5; // Défaut
 }

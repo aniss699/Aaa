@@ -21,3 +21,60 @@ writing,copywriting,"Rédaction,Marketing,SEO,Storytelling,Communication","réda
 writing,technical-writing,"Documentation,API,Manuel,Procédure,Formation","documentation technique,manuel,procédure,formation,API"
 translation,french-english,"Français,Anglais,Traduction,Localisation,Révision","traduction,anglais,français,localisation,langue"
 translation,multilingual,"Traduction,Localisation,Révision,Langue,Culture","traduction,langue,localisation,international,culture"
+category,sub_category,skill,keywords
+développement,web,React,react reactjs jsx
+développement,web,Vue.js,vue vuejs nuxt
+développement,web,Angular,angular typescript
+développement,web,Node.js,node nodejs express fastify
+développement,web,PHP,php laravel symfony wordpress
+développement,web,Python,python django flask fastapi
+développement,web,JavaScript,javascript js es6 typescript
+développement,web,HTML/CSS,html css sass scss bootstrap tailwind
+développement,mobile,React Native,react native rn expo
+développement,mobile,Flutter,flutter dart
+développement,mobile,iOS,ios swift objective-c xcode
+développement,mobile,Android,android kotlin java
+développement,mobile,Ionic,ionic cordova phonegap
+développement,api,REST API,api rest restful json
+développement,api,GraphQL,graphql apollo
+développement,api,Microservices,microservices architecture
+développement,database,MySQL,mysql mariadb
+développement,database,PostgreSQL,postgresql postgres
+développement,database,MongoDB,mongodb nosql
+développement,database,Redis,redis cache
+design,ui_ux,Figma,figma design prototype
+design,ui_ux,Adobe XD,xd adobe prototype
+design,ui_ux,Sketch,sketch design
+design,ui_ux,UX Research,ux research utilisateur
+design,ui_ux,UI Design,ui interface design
+design,graphique,Photoshop,photoshop ps retouche
+design,graphique,Illustrator,illustrator ai vectoriel
+design,graphique,InDesign,indesign mise en page
+design,graphique,Logo,logo identité branding
+design,web,Responsive,responsive mobile-first
+marketing,digital,SEO,seo référencement google
+marketing,digital,Google Ads,google ads adwords ppc
+marketing,digital,Facebook Ads,facebook ads instagram
+marketing,digital,Analytics,analytics google tracking
+marketing,social,Community Management,community management réseaux sociaux
+marketing,social,Influence,influence influenceur
+marketing,contenu,Rédaction,rédaction contenu copywriting
+marketing,contenu,Video,video montage production
+marketing,email,Newsletter,newsletter email marketing
+conseil,stratégie,Business Plan,business plan stratégie
+conseil,stratégie,Audit,audit analyse diagnostic
+conseil,formation,Formation,formation accompagnement
+services,traduction,Français-Anglais,traduction français anglais
+services,traduction,Autres langues,traduction multilingue
+services,juridique,Droit,droit juridique legal
+services,comptabilité,Comptabilité,comptabilité fiscalité
+services,rh,Recrutement,recrutement rh ressources humaines
+travaux,construction,Maçonnerie,maçonnerie construction gros oeuvre
+travaux,construction,Plomberie,plomberie chauffage sanitaire
+travaux,construction,Électricité,électricité électricien
+travaux,rénovation,Peinture,peinture décoration
+travaux,rénovation,Carrelage,carrelage sol revêtement
+travaux,jardinage,Jardinage,jardinage paysage espaces verts
+services_personne,ménage,Ménage,ménage nettoyage entretien
+services_personne,garde,Garde enfants,garde enfants baby-sitting
+services_personne,aide,Aide à domicile,aide domicile personnes âgées

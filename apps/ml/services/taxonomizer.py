@@ -1,218 +1,252 @@
 
-import json
+import csv
+import logging
+from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from dataclasses import dataclass
 import re
-from typing import Dict, List, Tuple, Optional
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-import pandas as pd
+from collections import defaultdict
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class TaxonomyResult:
+    category_std: str
+    sub_category_std: str
+    skills_std: List[str]
+    tags_std: List[str]
+    confidence: float
 
 class Taxonomizer:
-    """Classification automatique en catégories et extraction de compétences"""
-    
-    def __init__(self, taxonomy_file: str = '/infra/data/taxonomy_skills_fr.csv'):
-        self.taxonomy_df = None
-        self.category_vectorizer = None
-        self.skills_vectorizer = None
-        self.load_taxonomy(taxonomy_file)
-        
-    def load_taxonomy(self, file_path: str):
-        """Chargement de la taxonomie depuis CSV"""
+    def __init__(self, data_path: str = "/infra/data"):
+        self.data_path = Path(data_path)
+        self.taxonomy_data = {}
+        self.skills_mapping = {}
+        self.category_keywords = defaultdict(list)
+        self._load_taxonomy_data()
+
+    def _load_taxonomy_data(self):
+        """Charge les données de taxonomie depuis les fichiers CSV"""
         try:
-            self.taxonomy_df = pd.read_csv(file_path)
-            # Structure attendue: category, sub_category, skills, keywords
-            self._prepare_vectorizers()
-        except FileNotFoundError:
-            # Fallback avec taxonomie basique
-            self._create_fallback_taxonomy()
-    
-    def _create_fallback_taxonomy(self):
-        """Taxonomie de base si le fichier n'existe pas"""
-        fallback_data = [
-            {
-                'category': 'web-development',
-                'sub_category': 'frontend',
-                'skills': ['React', 'Vue.js', 'Angular', 'JavaScript', 'TypeScript', 'HTML', 'CSS'],
-                'keywords': ['site web', 'application web', 'frontend', 'interface', 'UI/UX']
+            # Chargement de la taxonomie des compétences
+            taxonomy_file = self.data_path / "taxonomy_skills_fr.csv"
+            if taxonomy_file.exists():
+                with open(taxonomy_file, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        category = row['category']
+                        sub_category = row['sub_category']
+                        skill = row['skill']
+                        keywords = row.get('keywords', '').split(',')
+                        
+                        if category not in self.taxonomy_data:
+                            self.taxonomy_data[category] = {}
+                        if sub_category not in self.taxonomy_data[category]:
+                            self.taxonomy_data[category][sub_category] = []
+                        
+                        self.taxonomy_data[category][sub_category].append({
+                            'skill': skill,
+                            'keywords': [k.strip().lower() for k in keywords if k.strip()]
+                        })
+                        
+                        # Index pour la recherche par mots-clés
+                        for keyword in keywords:
+                            if keyword.strip():
+                                self.category_keywords[keyword.strip().lower()].append({
+                                    'category': category,
+                                    'sub_category': sub_category,
+                                    'skill': skill
+                                })
+            
+            logger.info(f"Taxonomie chargée: {len(self.taxonomy_data)} catégories")
+            
+        except Exception as e:
+            logger.error(f"Erreur lors du chargement de la taxonomie: {e}")
+            self._init_default_taxonomy()
+
+    def _init_default_taxonomy(self):
+        """Initialise une taxonomie par défaut"""
+        self.taxonomy_data = {
+            "développement": {
+                "web": [
+                    {"skill": "React", "keywords": ["react", "reactjs", "jsx"]},
+                    {"skill": "Vue.js", "keywords": ["vue", "vuejs", "nuxt"]},
+                    {"skill": "Node.js", "keywords": ["node", "nodejs", "express"]},
+                    {"skill": "PHP", "keywords": ["php", "laravel", "symfony"]},
+                    {"skill": "Python", "keywords": ["python", "django", "flask"]},
+                ],
+                "mobile": [
+                    {"skill": "React Native", "keywords": ["react native", "rn"]},
+                    {"skill": "Flutter", "keywords": ["flutter", "dart"]},
+                    {"skill": "iOS", "keywords": ["ios", "swift", "objective-c"]},
+                    {"skill": "Android", "keywords": ["android", "kotlin", "java"]},
+                ]
             },
-            {
-                'category': 'web-development', 
-                'sub_category': 'backend',
-                'skills': ['Node.js', 'Python', 'PHP', 'Java', 'API', 'Base de données'],
-                'keywords': ['backend', 'serveur', 'API', 'base de données', 'architecture']
+            "design": {
+                "ui_ux": [
+                    {"skill": "Figma", "keywords": ["figma", "design"]},
+                    {"skill": "Adobe XD", "keywords": ["xd", "adobe xd"]},
+                    {"skill": "Sketch", "keywords": ["sketch"]},
+                ],
+                "graphique": [
+                    {"skill": "Photoshop", "keywords": ["photoshop", "ps"]},
+                    {"skill": "Illustrator", "keywords": ["illustrator", "ai"]},
+                ]
             },
-            {
-                'category': 'design',
-                'sub_category': 'graphic-design',
-                'skills': ['Photoshop', 'Illustrator', 'Figma', 'Sketch', 'InDesign'],
-                'keywords': ['design graphique', 'logo', 'identité visuelle', 'charte graphique']
-            },
-            {
-                'category': 'marketing',
-                'sub_category': 'digital-marketing',
-                'skills': ['SEO', 'SEM', 'Google Ads', 'Facebook Ads', 'Analytics'],
-                'keywords': ['marketing digital', 'référencement', 'publicité', 'réseaux sociaux']
+            "marketing": {
+                "digital": [
+                    {"skill": "SEO", "keywords": ["seo", "référencement"]},
+                    {"skill": "Google Ads", "keywords": ["google ads", "adwords"]},
+                    {"skill": "Facebook Ads", "keywords": ["facebook ads", "fb ads"]},
+                ],
+                "contenu": [
+                    {"skill": "Rédaction", "keywords": ["rédaction", "contenu"]},
+                    {"skill": "Copywriting", "keywords": ["copywriting", "copy"]},
+                ]
             }
+        }
+
+    def classify(self, text: str, keywords: List[str] = None) -> TaxonomyResult:
+        """Classifie un texte selon la taxonomie"""
+        text_lower = text.lower()
+        all_keywords = keywords or []
+        
+        # Extraction des mots-clés du texte
+        text_keywords = self._extract_keywords_from_text(text_lower)
+        all_keywords.extend(text_keywords)
+        
+        # Scoring par catégorie/sous-catégorie
+        category_scores = defaultdict(lambda: defaultdict(float))
+        matched_skills = defaultdict(list)
+        matched_tags = []
+        
+        for keyword in all_keywords:
+            keyword_lower = keyword.lower()
+            if keyword_lower in self.category_keywords:
+                for match in self.category_keywords[keyword_lower]:
+                    category = match['category']
+                    sub_category = match['sub_category']
+                    skill = match['skill']
+                    
+                    category_scores[category][sub_category] += 1.0
+                    if skill not in matched_skills[(category, sub_category)]:
+                        matched_skills[(category, sub_category)].append(skill)
+                    
+                    if keyword not in matched_tags:
+                        matched_tags.append(keyword)
+        
+        # Recherche directe dans le texte
+        for category, sub_categories in self.taxonomy_data.items():
+            for sub_category, skills in sub_categories.items():
+                for skill_info in skills:
+                    skill_name = skill_info['skill']
+                    skill_keywords = skill_info['keywords']
+                    
+                    # Vérification de la présence des mots-clés dans le texte
+                    for keyword in skill_keywords:
+                        if keyword in text_lower:
+                            category_scores[category][sub_category] += 0.8
+                            if skill_name not in matched_skills[(category, sub_category)]:
+                                matched_skills[(category, sub_category)].append(skill_name)
+                            if keyword not in matched_tags:
+                                matched_tags.append(keyword)
+        
+        # Sélection de la meilleure catégorie/sous-catégorie
+        best_category = None
+        best_sub_category = None
+        best_score = 0.0
+        
+        for category, sub_cats in category_scores.items():
+            for sub_category, score in sub_cats.items():
+                if score > best_score:
+                    best_score = score
+                    best_category = category
+                    best_sub_category = sub_category
+        
+        # Résultat par défaut si aucune correspondance
+        if not best_category:
+            best_category = "services"
+            best_sub_category = "généraliste"
+            confidence = 0.1
+        else:
+            confidence = min(best_score / 5.0, 1.0)  # Normalisation
+        
+        # Compétences correspondantes
+        skills_std = matched_skills.get((best_category, best_sub_category), [])
+        
+        return TaxonomyResult(
+            category_std=best_category,
+            sub_category_std=best_sub_category,
+            skills_std=skills_std[:10],  # Limite à 10 compétences
+            tags_std=matched_tags[:15],  # Limite à 15 tags
+            confidence=confidence
+        )
+
+    def _extract_keywords_from_text(self, text: str) -> List[str]:
+        """Extrait les mots-clés techniques du texte"""
+        # Patterns pour identifier les technologies/compétences
+        tech_patterns = [
+            r'\b(?:react|vue|angular|node|php|python|java|javascript|typescript)\b',
+            r'\b(?:html|css|sass|scss|bootstrap|tailwind)\b',
+            r'\b(?:mysql|postgresql|mongodb|redis|elasticsearch)\b',
+            r'\b(?:aws|azure|gcp|docker|kubernetes)\b',
+            r'\b(?:figma|sketch|photoshop|illustrator|xd)\b',
+            r'\b(?:seo|sem|google ads|facebook ads|instagram)\b',
         ]
         
-        self.taxonomy_df = pd.DataFrame(fallback_data)
-        self._prepare_vectorizers()
-    
-    def _prepare_vectorizers(self):
-        """Préparation des vectoriseurs TF-IDF"""
-        # Vectoriseur pour les catégories
-        category_texts = []
-        for _, row in self.taxonomy_df.iterrows():
-            text = f"{row['category']} {row['sub_category']} {' '.join(row['keywords'])}"
-            category_texts.append(text)
+        keywords = []
+        for pattern in tech_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            keywords.extend(matches)
         
-        self.category_vectorizer = TfidfVectorizer(
-            lowercase=True,
-            stop_words=None,  # Pas de stop words pour préserver les termes techniques
-            ngram_range=(1, 2),
-            max_features=1000
-        )
-        self.category_vectors = self.category_vectorizer.fit_transform(category_texts)
-        
-        # Vectoriseur pour les compétences
-        skills_texts = []
-        for _, row in self.taxonomy_df.iterrows():
-            skills_text = ' '.join(row['skills']) if isinstance(row['skills'], list) else row['skills']
-            skills_texts.append(skills_text)
-        
-        self.skills_vectorizer = TfidfVectorizer(
-            lowercase=True,
-            ngram_range=(1, 2),
-            max_features=500
-        )
-        self.skills_vectors = self.skills_vectorizer.fit_transform(skills_texts)
+        return list(set(keywords))  # Déduplication
 
-    def classify_category(self, text: str, top_k: int = 3) -> List[Dict[str, any]]:
-        """Classification en catégorie/sous-catégorie"""
-        if not text or self.category_vectorizer is None:
-            return []
+    def suggest_improvements(self, current_category: str, current_skills: List[str]) -> Dict[str, any]:
+        """Suggère des améliorations pour la classification"""
+        suggestions = {
+            'missing_skills': [],
+            'related_categories': [],
+            'skill_alternatives': {}
+        }
         
-        # Vectorisation du texte d'entrée
-        text_vector = self.category_vectorizer.transform([text])
-        
-        # Calcul de similarité
-        similarities = cosine_similarity(text_vector, self.category_vectors).flatten()
-        
-        # Top-K résultats
-        top_indices = similarities.argsort()[-top_k:][::-1]
-        
-        results = []
-        for idx in top_indices:
-            if similarities[idx] > 0.1:  # Seuil minimum
-                row = self.taxonomy_df.iloc[idx]
-                results.append({
-                    'category': row['category'],
-                    'sub_category': row['sub_category'],
-                    'confidence': float(similarities[idx]),
-                    'matched_keywords': self._extract_matched_keywords(text, row['keywords'])
-                })
-        
-        return results
-
-    def extract_skills(self, text: str, top_k: int = 10) -> List[Dict[str, any]]:
-        """Extraction des compétences mentionnées"""
-        if not text or self.skills_vectorizer is None:
-            return []
-        
-        # Vectorisation du texte
-        text_vector = self.skills_vectorizer.transform([text])
-        
-        # Similarité avec chaque ensemble de compétences
-        similarities = cosine_similarity(text_vector, self.skills_vectors).flatten()
-        
-        # Extraction des compétences les plus pertinentes
-        extracted_skills = []
-        text_lower = text.lower()
-        
-        for idx, similarity in enumerate(similarities):
-            if similarity > 0.2:  # Seuil pour compétences
-                row = self.taxonomy_df.iloc[idx]
-                skills_list = row['skills'] if isinstance(row['skills'], list) else row['skills'].split(',')
-                
-                for skill in skills_list:
-                    skill = skill.strip()
-                    # Vérification si la compétence est mentionnée dans le texte
-                    if skill.lower() in text_lower or any(word in text_lower for word in skill.lower().split()):
-                        extracted_skills.append({
-                            'skill': skill,
-                            'confidence': float(similarity),
-                            'category': row['category']
+        # Recherche des compétences manquantes dans la même catégorie
+        if current_category in self.taxonomy_data:
+            for sub_category, skills in self.taxonomy_data[current_category].items():
+                for skill_info in skills:
+                    skill_name = skill_info['skill']
+                    if skill_name not in current_skills:
+                        suggestions['missing_skills'].append({
+                            'skill': skill_name,
+                            'sub_category': sub_category,
+                            'keywords': skill_info['keywords']
                         })
         
-        # Déduplication et tri
-        unique_skills = {}
-        for skill_data in extracted_skills:
-            skill_name = skill_data['skill']
-            if skill_name not in unique_skills or skill_data['confidence'] > unique_skills[skill_name]['confidence']:
-                unique_skills[skill_name] = skill_data
+        # Catégories liées
+        for category in self.taxonomy_data.keys():
+            if category != current_category:
+                suggestions['related_categories'].append(category)
         
-        return sorted(unique_skills.values(), key=lambda x: x['confidence'], reverse=True)[:top_k]
+        return suggestions
 
-    def _extract_matched_keywords(self, text: str, keywords: List[str]) -> List[str]:
-        """Extraction des mots-clés qui matchent dans le texte"""
-        text_lower = text.lower()
-        matched = []
-        
-        if isinstance(keywords, str):
-            keywords = keywords.split(',')
-        
-        for keyword in keywords:
-            keyword = keyword.strip().lower()
-            if keyword in text_lower:
-                matched.append(keyword)
-        
-        return matched
-
-    def taxonomize_complete(self, text: str) -> Dict[str, any]:
-        """Taxonomisation complète"""
-        categories = self.classify_category(text)
-        skills = self.extract_skills(text)
-        
-        # Catégorie principale
-        main_category = categories[0] if categories else {
-            'category': 'other',
-            'sub_category': 'general',
-            'confidence': 0.1
+    def get_category_stats(self) -> Dict[str, any]:
+        """Retourne les statistiques de la taxonomie"""
+        stats = {
+            'total_categories': len(self.taxonomy_data),
+            'total_subcategories': 0,
+            'total_skills': 0,
+            'categories': {}
         }
         
-        return {
-            'category_std': main_category['category'],
-            'sub_category_std': main_category['sub_category'],
-            'category_confidence': main_category['confidence'],
-            'alternative_categories': categories[1:3],
-            'skills_std': [s['skill'] for s in skills],
-            'skills_detail': skills,
-            'tags_std': self._generate_tags(text, categories, skills)
-        }
-    
-    def _generate_tags(self, text: str, categories: List[Dict], skills: List[Dict]) -> List[str]:
-        """Génération automatique de tags"""
-        tags = set()
+        for category, sub_categories in self.taxonomy_data.items():
+            sub_count = len(sub_categories)
+            skill_count = sum(len(skills) for skills in sub_categories.values())
+            
+            stats['total_subcategories'] += sub_count
+            stats['total_skills'] += skill_count
+            
+            stats['categories'][category] = {
+                'subcategories': sub_count,
+                'skills': skill_count
+            }
         
-        # Tags depuis catégories
-        for cat in categories[:2]:
-            tags.add(cat['category'])
-            tags.add(cat['sub_category'])
-        
-        # Tags depuis compétences principales
-        for skill in skills[:5]:
-            tags.add(skill['skill'].lower().replace(' ', '-'))
-        
-        # Tags depuis mots-clés détectés
-        text_lower = text.lower()
-        keyword_tags = {
-            'urgence': ['urgent', 'rapidement', 'asap'],
-            'remote': ['télétravail', 'distance', 'remote'],
-            'qualité': ['qualité', 'premium', 'excellence'],
-            'budget-serré': ['budget', 'économique', 'pas cher']
-        }
-        
-        for tag, keywords in keyword_tags.items():
-            if any(kw in text_lower for kw in keywords):
-                tags.add(tag)
-        
-        return list(tags)[:15]  # Limite à 15 tags
+        return stats

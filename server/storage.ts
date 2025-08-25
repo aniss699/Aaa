@@ -1,264 +1,276 @@
-import { type User, type InsertUser, type Mission, type InsertMission, type Bid, type InsertBid, type MissionWithBids } from "@shared/schema";
-import { randomUUID } from "crypto";
 
-export interface IStorage {
-  // Users
-  getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+<old_str>export const storage = {
+  users: [] as User[],
+  projects: [] as Project[],
+  bids: [] as Bid[],
 
-  // Missions
-  getMission(id: string): Promise<Mission | undefined>;
-  getMissionWithBids(id: string): Promise<MissionWithBids | undefined>;
-  getAllMissions(): Promise<Mission[]>;
-  getAllMissionsWithBids(): Promise<MissionWithBids[]>;
-  getUserMissions(clientId: string): Promise<Mission[]>;
-  createMission(mission: InsertMission): Promise<Mission>;
-
-  // Bids
-  getBid(id: string): Promise<Bid | undefined>;
-  getMissionBids(missionId: string): Promise<Bid[]>;
-  getUserBids(providerId: string): Promise<Bid[]>;
-  createBid(bid: InsertBid): Promise<Bid>;
-}
-
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private missions: Map<string, Mission>;
-  private bids: Map<string, Bid>;
-
-  constructor() {
-    this.users = new Map();
-    this.missions = new Map();
-    this.bids = new Map();
-    this.initializeDemoData();
-  }
-
-  private initializeDemoData() {
-    // Demo users
-    const demoUsers = [
-      {
-        id: "client1",
-        name: "Marie Dubois",
-        email: "marie@example.com",
-        password: "password123",
-        type: "client" as const,
-        rating: null,
-        createdAt: new Date("2024-01-01"),
-        availability: []
-      },
-      {
-        id: "provider1",
-        name: "TechCorp Solutions",
-        email: "contact@techcorp.com",
-        password: "password123",
-        type: "provider" as const,
-        rating: "4.8",
-        createdAt: new Date("2024-01-01"),
-        availability: [
-          { start: new Date("2024-03-10T09:00:00"), end: new Date("2024-03-10T17:00:00") },
-          { start: new Date("2024-03-11T10:00:00"), end: new Date("2024-03-11T12:00:00") },
-          { start: new Date("2024-03-12T14:00:00"), end: new Date("2024-03-12T18:00:00") },
-        ]
-      },
-      {
-        id: "provider2",
-        name: "Digital Masters",
-        email: "hello@digitalmasters.com",
-        password: "password123",
-        type: "provider" as const,
-        rating: "4.9",
-        createdAt: new Date("2024-01-01"),
-        availability: [
-          { start: new Date("2024-03-10T08:00:00"), end: new Date("2024-03-10T12:00:00") },
-          { start: new Date("2024-03-11T13:00:00"), end: new Date("2024-03-11T17:00:00") },
-        ]
-      },
-      {
-        id: "provider3",
-        name: "Creative Studio",
-        email: "info@creativestudio.com",
-        password: "password123",
-        type: "provider" as const,
-        rating: "4.7",
-        createdAt: new Date("2024-01-01"),
-        availability: [
-          { start: new Date("2024-03-11T09:00:00"), end: new Date("2024-03-11T18:00:00") },
-          { start: new Date("2024-03-13T10:00:00"), end: new Date("2024-03-13T16:00:00") },
-        ]
-      },
-    ];
-
-    demoUsers.forEach(user => this.users.set(user.id, user));
-
-    // Demo missions
-    const demoMissions = [
-      {
-        id: "mission1",
-        title: "Développement d'une application mobile de e-commerce",
-        description: "Je recherche un développeur expérimenté pour créer une application mobile complète de vente en ligne avec système de paiement intégré.",
-        category: "development",
-        budget: "5000",
-        location: "Paris, France",
-        clientId: "client1",
-        clientName: "Marie Dubois",
-        status: "open",
-        createdAt: new Date("2024-01-15"),
-      },
-      {
-        id: "mission2",
-        title: "Refonte complète du site web d'entreprise",
-        description: "Modernisation du site vitrine de notre entreprise avec nouveau design responsive et optimisation SEO.",
-        category: "design",
-        budget: "3000",
-        location: "Lyon, France",
-        clientId: "client1",
-        clientName: "Pierre Martin",
-        status: "open",
-        createdAt: new Date("2024-01-18"),
-      },
-      {
-        id: "mission3",
-        title: "Campagne marketing digital et réseaux sociaux",
-        description: "Lancement d'une campagne complète sur les réseaux sociaux pour augmenter la notoriété de notre marque.",
-        category: "marketing",
-        budget: "2000",
-        location: "Marseille, France",
-        clientId: "client1",
-        clientName: "Sophie Leclerc",
-        status: "open",
-        createdAt: new Date("2024-01-20"),
-      },
-    ];
-
-    demoMissions.forEach(mission => this.missions.set(mission.id, mission));
-
-    // Demo bids
-    const demoBids = [
-      {
-        id: "bid1",
-        missionId: "mission1",
-        providerId: "provider1",
-        providerName: "TechCorp Solutions",
-        price: "4500",
-        timeline: "8 semaines",
-        proposal: "Nous proposons une solution complète avec React Native et backend Node.js. Livraison en 8 semaines.",
-        rating: "4.8",
-        status: "pending",
-        createdAt: new Date("2024-01-16"),
-      },
-      {
-        id: "bid2",
-        missionId: "mission1",
-        providerId: "provider2",
-        providerName: "Digital Masters",
-        price: "5200",
-        timeline: "10 semaines",
-        proposal: "Application native iOS/Android avec design sur mesure et intégration Stripe.",
-        rating: "4.9",
-        status: "pending",
-        createdAt: new Date("2024-01-17"),
-      },
-    ];
-
-    demoBids.forEach(bid => this.bids.set(bid.id, bid));
-  }
-
-  // Users
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id, 
+  // User methods
+  createUser: (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const user: User = {
+      id: `user_${Date.now()}`,
       createdAt: new Date(),
-      rating: insertUser.type === "provider" ? "5.0" : null,
-      availability: [] // Default empty availability for new users
+      updatedAt: new Date(),
+      ...userData
     };
-    this.users.set(id, user);
+    storage.users.push(user);
     return user;
-  }
+  },
 
-  // Missions
-  async getMission(id: string): Promise<Mission | undefined> {
-    return this.missions.get(id);
-  }
+  getUser: (id: string) => storage.users.find(u => u.id === id),
+  getUsers: () => storage.users,
 
-  async getMissionWithBids(id: string): Promise<MissionWithBids | undefined> {
-    const mission = this.missions.get(id);
-    if (!mission) return undefined;
-
-    const bids = Array.from(this.bids.values()).filter(bid => bid.missionId === id);
-    return { ...mission, bids };
-  }
-
-  async getAllMissions(): Promise<Mission[]> {
-    return Array.from(this.missions.values()).sort(
-      (a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-    );
-  }
-
-  async getAllMissionsWithBids(): Promise<MissionWithBids[]> {
-    const missions = await this.getAllMissions();
-    return missions.map(mission => ({
-      ...mission,
-      bids: Array.from(this.bids.values()).filter(bid => bid.missionId === mission.id)
-    }));
-  }
-
-  async getUserMissions(clientId: string): Promise<Mission[]> {
-    return Array.from(this.missions.values())
-      .filter(mission => mission.clientId === clientId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
-  }
-
-  async createMission(insertMission: InsertMission): Promise<Mission> {
-    const id = randomUUID();
-    const mission: Mission = { 
-      ...insertMission, 
-      id, 
+  // Project methods
+  createProject: (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const project: Project = {
+      id: `project_${Date.now()}`,
       createdAt: new Date(),
-      status: "open"
+      updatedAt: new Date(),
+      ...projectData
     };
-    this.missions.set(id, mission);
-    return mission;
-  }
+    storage.projects.push(project);
+    return project;
+  },
 
-  // Bids
-  async getBid(id: string): Promise<Bid | undefined> {
-    return this.bids.get(id);
-  }
+  getProject: (id: string) => storage.projects.find(p => p.id === id),
+  getProjects: () => storage.projects,
+  updateProject: (id: string, updates: Partial<Project>) => {
+    const index = storage.projects.findIndex(p => p.id === id);
+    if (index !== -1) {
+      storage.projects[index] = { ...storage.projects[index], ...updates, updatedAt: new Date() };
+      return storage.projects[index];
+    }
+    return null;
+  },
 
-  async getMissionBids(missionId: string): Promise<Bid[]> {
-    return Array.from(this.bids.values())
-      .filter(bid => bid.missionId === missionId)
-      .sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-  }
-
-  async getUserBids(providerId: string): Promise<Bid[]> {
-    return Array.from(this.bids.values())
-      .filter(bid => bid.providerId === providerId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
-  }
-
-  async createBid(insertBid: InsertBid): Promise<Bid> {
-    const id = randomUUID();
-    const bid: Bid = { 
-      ...insertBid, 
-      id, 
+  // Bid methods
+  createBid: (bidData: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const bid: Bid = {
+      id: `bid_${Date.now()}`,
       createdAt: new Date(),
-      status: "pending"
+      updatedAt: new Date(),
+      ...bidData
     };
-    this.bids.set(id, bid);
+    storage.bids.push(bid);
+    return bid;
+  },
+
+  getBid: (id: string) => storage.bids.find(b => b.id === id),
+  getBids: () => storage.bids,
+  updateBidStatus: (id: string, status: BidStatus) => {
+    const bid = storage.bids.find(b => b.id === id);
+    if (bid) {
+      bid.status = status;
+      bid.updatedAt = new Date();
+    }
     return bid;
   }
-}
+};</old_str>
+<new_str>export const storage = {
+  users: [] as User[],
+  projects: [] as Project[],
+  bids: [] as Bid[],
+  projectStandardizations: [] as any[],
+  webSources: [] as any[],
+  webDocs: [] as any[],
+  externalCompanies: [] as any[],
+  externalCompanySignals: [] as any[],
+  sourcingMatches: [] as any[],
+  projectChangeLogs: [] as any[],
 
-export const storage = new MemStorage();
+  // User methods
+  createUser: (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const user: User = {
+      id: `user_${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...userData
+    };
+    storage.users.push(user);
+    return user;
+  },
+
+  getUser: (id: string) => storage.users.find(u => u.id === id),
+  getUsers: () => storage.users,
+
+  // Project methods
+  createProject: (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const project: Project = {
+      id: `project_${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...projectData
+    };
+    storage.projects.push(project);
+    return project;
+  },
+
+  getProject: (id: string) => storage.projects.find(p => p.id === id),
+  getProjects: () => storage.projects,
+  updateProject: (id: string, updates: Partial<Project>) => {
+    const index = storage.projects.findIndex(p => p.id === id);
+    if (index !== -1) {
+      storage.projects[index] = { ...storage.projects[index], ...updates, updatedAt: new Date() };
+      return storage.projects[index];
+    }
+    return null;
+  },
+
+  // Bid methods
+  createBid: (bidData: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const bid: Bid = {
+      id: `bid_${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...bidData
+    };
+    storage.bids.push(bid);
+    return bid;
+  },
+
+  getBid: (id: string) => storage.bids.find(b => b.id === id),
+  getBids: () => storage.bids,
+  updateBidStatus: (id: string, status: BidStatus) => {
+    const bid = storage.bids.find(b => b.id === id);
+    if (bid) {
+      bid.status = status;
+      bid.updatedAt = new Date();
+    }
+    return bid;
+  },
+
+  // ProjectStandardization methods
+  saveProjectStandardization: (standardization: any) => {
+    const existing = storage.projectStandardizations.findIndex(s => s.projectId === standardization.projectId);
+    if (existing !== -1) {
+      storage.projectStandardizations[existing] = standardization;
+    } else {
+      storage.projectStandardizations.push(standardization);
+    }
+    return standardization;
+  },
+
+  getProjectStandardization: (projectId: string) => 
+    storage.projectStandardizations.find(s => s.projectId === projectId),
+
+  updateProjectStandardization: (projectId: string, updates: any) => {
+    const index = storage.projectStandardizations.findIndex(s => s.projectId === projectId);
+    if (index !== -1) {
+      storage.projectStandardizations[index] = { 
+        ...storage.projectStandardizations[index], 
+        ...updates, 
+        updatedAt: new Date() 
+      };
+      return storage.projectStandardizations[index];
+    }
+    return null;
+  },
+
+  // WebSource methods
+  saveWebSource: (source: any) => {
+    storage.webSources.push(source);
+    return source;
+  },
+
+  getWebSources: () => storage.webSources,
+  getWebSource: (id: string) => storage.webSources.find(s => s.id === id),
+
+  // WebDoc methods
+  saveWebDoc: (doc: any) => {
+    storage.webDocs.push(doc);
+    return doc;
+  },
+
+  getWebDocs: () => storage.webDocs,
+  getWebDoc: (id: string) => storage.webDocs.find(d => d.id === id),
+
+  // ExternalCompany methods
+  saveExternalCompany: (company: any) => {
+    const existing = storage.externalCompanies.findIndex(c => 
+      c.name === company.name || (c.email && c.email === company.email)
+    );
+    
+    if (existing !== -1) {
+      // Mise à jour de la dernière vue
+      storage.externalCompanies[existing] = {
+        ...storage.externalCompanies[existing],
+        ...company,
+        lastSeenAt: new Date(),
+        updatedAt: new Date()
+      };
+      return storage.externalCompanies[existing];
+    } else {
+      company.id = `ext_company_${Date.now()}`;
+      company.createdAt = new Date();
+      company.updatedAt = new Date();
+      storage.externalCompanies.push(company);
+      return company;
+    }
+  },
+
+  getExternalCompany: (id: string) => storage.externalCompanies.find(c => c.id === id),
+  getExternalCompanies: () => storage.externalCompanies,
+
+  // ExternalCompanySignal methods
+  saveExternalCompanySignal: (signal: any) => {
+    signal.id = `signal_${Date.now()}`;
+    signal.createdAt = new Date();
+    storage.externalCompanySignals.push(signal);
+    return signal;
+  },
+
+  getExternalCompanySignals: (companyId: string) => 
+    storage.externalCompanySignals.filter(s => s.companyId === companyId),
+
+  // SourcingMatch methods
+  saveSourcingMatch: (match: any) => {
+    const existing = storage.sourcingMatches.findIndex(m => 
+      m.projectId === match.projectId && m.companyId === match.companyId
+    );
+    
+    if (existing !== -1) {
+      storage.sourcingMatches[existing] = {
+        ...storage.sourcingMatches[existing],
+        ...match,
+        updatedAt: new Date()
+      };
+      return storage.sourcingMatches[existing];
+    } else {
+      match.id = `match_${Date.now()}`;
+      match.createdAt = new Date();
+      match.updatedAt = new Date();
+      storage.sourcingMatches.push(match);
+      return match;
+    }
+  },
+
+  getSourcingMatches: (projectId: string, filters: any = {}) => {
+    let matches = storage.sourcingMatches.filter(m => m.projectId === projectId);
+    
+    if (filters.minScore) {
+      matches = matches.filter(m => m.leadScore >= filters.minScore);
+    }
+    
+    if (filters.status) {
+      matches = matches.filter(m => m.status === filters.status);
+    }
+    
+    // Tri par score décroissant
+    matches.sort((a, b) => b.leadScore - a.leadScore);
+    
+    if (filters.limit) {
+      matches = matches.slice(0, filters.limit);
+    }
+    
+    return matches;
+  },
+
+  // ProjectChangeLog methods
+  saveProjectChangeLog: (log: any) => {
+    storage.projectChangeLogs.push(log);
+    return log;
+  },
+
+  getProjectChangeLogs: (projectId: string) => 
+    storage.projectChangeLogs.filter(l => l.projectId === projectId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+};</new_str>

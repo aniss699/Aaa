@@ -178,8 +178,8 @@ model ExternalCompany {
   raw_tags       String[]
   skills         String[]
   confidence     Float
-  first_seen_at  DateTime  @default(now())
-  last_seen_at   DateTime  @default(now())
+  first_seen_at  DateTime @default(now())
+  last_seen_at   DateTime @default(now())
 
   // Relations
   signals        ExternalCompanySignal[]
@@ -216,6 +216,19 @@ model SourcingMatch {
   company    ExternalCompany @relation(fields: [company_id], references: [id])
 
   @@map("sourcing_matches")
+}
+
+// Added model for project change logs
+model ProjectChangeLog {
+  id        String   @id @default(cuid())
+  project_id String
+  action    String   // 'apply_standardization' | 'apply_budget' | 'apply_delay'
+  changes   Json
+  created_at DateTime @default(now())
+
+  project Project @relation(fields: [project_id], references: [id])
+
+  @@map("project_change_logs")
 }
 
 // Enums

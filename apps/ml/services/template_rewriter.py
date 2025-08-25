@@ -1,49 +1,50 @@
 
-"""
-Template Rewriter - Réécriture structurée des annonces par catégorie
-"""
-
-import re
-from typing import Dict, List, Optional, Tuple
+import logging
+from typing import Dict, List, Optional
 from dataclasses import dataclass
+import re
 
-@dataclass 
-class RewriteResult:
+logger = logging.getLogger(__name__)
+
+@dataclass
+class RewrittenProject:
     title_std: str
     summary_std: str
     acceptance_criteria: List[str]
-    tasks_std: List[Dict]
-    deliverables_std: List[Dict]
+    tasks_std: List[Dict[str, any]]
+    deliverables_std: List[Dict[str, any]]
     rewrite_version: str
 
 class TemplateRewriter:
     def __init__(self):
-        self.rewrite_version = "v2.0"
-        
-        # Templates par catégorie
-        self.category_templates = {
+        self.version = "1.0.0"
+        self._init_templates()
+
+    def _init_templates(self):
+        """Initialise les templates par catégorie"""
+        self.templates = {
             'web_development': {
-                'title_pattern': 'Développement {type} - {scope}',
+                'title_pattern': 'Développement {type_site} - {purpose}',
                 'summary_structure': [
-                    'Contexte et objectifs du projet',
-                    'Technologies et architecture technique',
-                    'Fonctionnalités principales requises',
-                    'Critères de qualité et performance',
-                    'Modalités de collaboration'
+                    'Vision et objectifs du projet web',
+                    'Technologies et contraintes techniques',
+                    'Fonctionnalités principales attendues',
+                    'Design et expérience utilisateur',
+                    'Hébergement et mise en production'
                 ],
                 'acceptance_criteria_base': [
-                    'Code source livré et documenté selon standards',
-                    'Tests unitaires et d\'intégration réalisés',
-                    'Application déployable et fonctionnelle',
-                    'Formation et transfert de compétences',
-                    'Support technique pendant 30 jours'
+                    'Site web fonctionnel et responsive',
+                    'Code propre et documenté',
+                    'Tests unitaires et d\'intégration',
+                    'Performance optimisée (< 3s de chargement)',
+                    'Compatible tous navigateurs récents'
                 ],
                 'tasks_template': [
                     {'name': 'Analyse et conception', 'estimated_hours': 8},
                     {'name': 'Développement frontend', 'estimated_hours': 24},
                     {'name': 'Développement backend', 'estimated_hours': 16},
-                    {'name': 'Tests et débogage', 'estimated_hours': 8},
-                    {'name': 'Déploiement et formation', 'estimated_hours': 4}
+                    {'name': 'Intégration et tests', 'estimated_hours': 8},
+                    {'name': 'Déploiement et documentation', 'estimated_hours': 4}
                 ],
                 'deliverables_template': [
                     {'name': 'Code source complet', 'format': 'Repository Git'},
@@ -72,354 +73,373 @@ class TemplateRewriter:
                 'tasks_template': [
                     {'name': 'Conception UX/UI', 'estimated_hours': 12},
                     {'name': 'Développement natif/hybride', 'estimated_hours': 32},
-                    {'name': 'Intégrations API', 'estimated_hours': 8},
-                    {'name': 'Tests et optimisations', 'estimated_hours': 8},
-                    {'name': 'Publication stores', 'estimated_hours': 4}
+                    {'name': 'Intégration API et services', 'estimated_hours': 16},
+                    {'name': 'Tests et optimisation', 'estimated_hours': 12},
+                    {'name': 'Publication stores', 'estimated_hours': 8}
                 ],
                 'deliverables_template': [
-                    {'name': 'Application mobile', 'format': 'APK/IPA'},
-                    {'name': 'Code source', 'format': 'Repository'},
-                    {'name': 'Designs et assets', 'format': 'Figma/ZIP'},
-                    {'name': 'Guide de publication', 'format': 'PDF'}
+                    {'name': 'Application mobile complète', 'format': 'APK/IPA'},
+                    {'name': 'Code source', 'format': 'Repository Git'},
+                    {'name': 'Documentation technique', 'format': 'Markdown'},
+                    {'name': 'Publication sur stores', 'format': 'Liens stores'}
                 ]
             },
 
-            'design_graphique': {
-                'title_pattern': 'Création Graphique {type} - {style}',
+            'design': {
+                'title_pattern': 'Design {type_design} - {purpose}',
                 'summary_structure': [
-                    'Brief créatif et positionnement visuel',
-                    'Identité de marque et style recherché',
-                    'Applications et déclinaisons requises',
-                    'Formats et spécifications techniques',
-                    'Processus de validation et révisions'
+                    'Brief créatif et objectifs visuels',
+                    'Identité de marque et guidelines',
+                    'Supports et formats requis',
+                    'Style et inspirations',
+                    'Livraison et utilisation'
                 ],
                 'acceptance_criteria_base': [
-                    'Créations conformes au brief validé',
-                    'Fichiers sources haute résolution fournis',
-                    'Déclinaisons formats demandés',
-                    'Charte d\'utilisation incluse',
-                    'Jusqu\'à 3 révisions comprises'
+                    'Designs conformes au brief créatif',
+                    'Fichiers sources modifiables fournis',
+                    'Formats d\'export optimisés',
+                    'Charte graphique respectée',
+                    'Validation client obtenue'
                 ],
                 'tasks_template': [
-                    {'name': 'Recherche et concepts', 'estimated_hours': 6},
-                    {'name': 'Création designs principaux', 'estimated_hours': 12},
-                    {'name': 'Déclinaisons et formats', 'estimated_hours': 8},
-                    {'name': 'Révisions et finalisation', 'estimated_hours': 4}
+                    {'name': 'Recherche et moodboard', 'estimated_hours': 4},
+                    {'name': 'Concepts et esquisses', 'estimated_hours': 8},
+                    {'name': 'Réalisation designs finaux', 'estimated_hours': 16},
+                    {'name': 'Déclinaisons et exports', 'estimated_hours': 6},
+                    {'name': 'Présentation et ajustements', 'estimated_hours': 4}
                 ],
                 'deliverables_template': [
-                    {'name': 'Créations finales', 'format': 'AI/PSD/PDF'},
-                    {'name': 'Fichiers d\'export', 'format': 'PNG/JPG/SVG'},
+                    {'name': 'Designs finaux HD', 'format': 'PNG/JPG/SVG'},
+                    {'name': 'Fichiers sources', 'format': 'PSD/AI/Figma'},
                     {'name': 'Charte graphique', 'format': 'PDF'},
-                    {'name': 'Mockups de présentation', 'format': 'JPG/PDF'}
+                    {'name': 'Déclinaisons formats', 'format': 'Archive ZIP'}
                 ]
             },
 
-            'construction': {
-                'title_pattern': 'Travaux {type} - {scope}',
+            'marketing': {
+                'title_pattern': 'Stratégie Marketing {type_marketing} - {purpose}',
                 'summary_structure': [
-                    'Nature et étendue des travaux',
-                    'Contraintes techniques et réglementaires',
-                    'Matériaux et finitions souhaités',
-                    'Planning et phasage des interventions',
-                    'Garanties et certifications requises'
+                    'Objectifs marketing et KPIs',
+                    'Cible et personas',
+                    'Canaux et stratégies',
+                    'Contenus et planning',
+                    'Mesure et optimisation'
                 ],
                 'acceptance_criteria_base': [
-                    'Travaux conformes aux normes DTU',
-                    'Matériaux de qualité certifiée utilisés',
-                    'Chantier propre et sécurisé',
-                    'Garantie décennale et parfait achèvement',
-                    'Réception travaux avec PV signé'
+                    'Stratégie claire et actionnable',
+                    'Contenus créés et programmés',
+                    'Campagnes configurées et lancées',
+                    'Reporting et suivi mis en place',
+                    'Objectifs mesurables atteints'
                 ],
                 'tasks_template': [
-                    {'name': 'Étude et devis détaillé', 'estimated_hours': 4},
-                    {'name': 'Préparation et approvisionnement', 'estimated_hours': 8},
-                    {'name': 'Réalisation travaux', 'estimated_hours': 40},
-                    {'name': 'Finitions et nettoyage', 'estimated_hours': 8}
+                    {'name': 'Audit et analyse concurrentielle', 'estimated_hours': 8},
+                    {'name': 'Définition stratégie et personas', 'estimated_hours': 6},
+                    {'name': 'Création contenus et campagnes', 'estimated_hours': 20},
+                    {'name': 'Mise en place et lancement', 'estimated_hours': 8},
+                    {'name': 'Suivi et optimisation', 'estimated_hours': 8}
                 ],
                 'deliverables_template': [
-                    {'name': 'Travaux réalisés', 'format': 'Ouvrage fini'},
-                    {'name': 'Certificats conformité', 'format': 'Documents'},
-                    {'name': 'Garanties', 'format': 'Attestations'},
-                    {'name': 'Notice d\'entretien', 'format': 'PDF'}
+                    {'name': 'Stratégie marketing', 'format': 'Document PDF'},
+                    {'name': 'Personas et ciblage', 'format': 'Présentation'},
+                    {'name': 'Contenus créés', 'format': 'Archive médias'},
+                    {'name': 'Reporting mensuel', 'format': 'Dashboard/PDF'}
                 ]
             },
 
-            'services_personne': {
-                'title_pattern': 'Service {type} - {frequency}',
+            'default': {
+                'title_pattern': 'Projet {category} - {purpose}',
                 'summary_structure': [
-                    'Nature du service à domicile',
-                    'Fréquence et horaires d\'intervention',
-                    'Spécificités et contraintes du lieu',
-                    'Qualifications et équipements requis',
-                    'Modalités de suivi et facturation'
+                    'Contexte et objectifs du projet',
+                    'Périmètre et contraintes',
+                    'Livrables attendus',
+                    'Critères de réussite',
+                    'Planning et modalités'
                 ],
                 'acceptance_criteria_base': [
-                    'Service réalisé selon planning convenu',
-                    'Qualité et soin apportés constants',
-                    'Respect des consignes spécifiques',
-                    'Ponctualité et discrétion assurées',
-                    'Facturation transparente et détaillée'
+                    'Livrables conformes au cahier des charges',
+                    'Qualité professionnelle respectée',
+                    'Délais et budget respectés',
+                    'Communication régulière maintenue',
+                    'Satisfaction client validée'
                 ],
                 'tasks_template': [
-                    {'name': 'Prise de contact et brief', 'estimated_hours': 1},
-                    {'name': 'Prestation principale', 'estimated_hours': 3},
-                    {'name': 'Suivi et adaptation', 'estimated_hours': 0.5}
+                    {'name': 'Analyse des besoins', 'estimated_hours': 4},
+                    {'name': 'Conception et planification', 'estimated_hours': 8},
+                    {'name': 'Réalisation principale', 'estimated_hours': 24},
+                    {'name': 'Tests et validations', 'estimated_hours': 6},
+                    {'name': 'Livraison et documentation', 'estimated_hours': 4}
                 ],
                 'deliverables_template': [
-                    {'name': 'Service réalisé', 'format': 'Prestation'},
-                    {'name': 'Compte-rendu', 'format': 'Note écrite'},
-                    {'name': 'Planning suivi', 'format': 'Calendrier'}
+                    {'name': 'Livrable principal', 'format': 'À définir'},
+                    {'name': 'Documentation', 'format': 'PDF'},
+                    {'name': 'Code source/fichiers', 'format': 'Archive'},
+                    {'name': 'Guide d\'utilisation', 'format': 'Document'}
                 ]
             }
         }
 
-    def rewrite_project(self, title: str, description: str, category: str) -> RewriteResult:
-        """Réécrit complètement un projet selon les templates de catégorie"""
+    def rewrite_project(self, 
+                       original_title: str, 
+                       original_description: str,
+                       category: str,
+                       sub_category: str = None,
+                       skills: List[str] = None) -> RewrittenProject:
+        """Réécrit un projet selon les templates de qualité"""
         
         # Sélection du template approprié
-        template = self._select_template(category, description)
+        template_key = self._select_template(category, sub_category)
+        template = self.templates.get(template_key, self.templates['default'])
         
-        # Réécriture du titre
-        title_std = self._rewrite_title(title, description, template)
+        # Extraction des informations du projet original
+        project_info = self._extract_project_info(original_title, original_description)
         
-        # Réécriture du résumé structuré
-        summary_std = self._rewrite_summary(description, template)
+        # Génération du titre standardisé
+        title_std = self._generate_title(template, project_info, category)
+        
+        # Génération du résumé structuré
+        summary_std = self._generate_summary(template, project_info, original_description)
         
         # Génération des critères d'acceptation
-        acceptance_criteria = self._generate_acceptance_criteria(description, template)
+        acceptance_criteria = self._generate_acceptance_criteria(template, project_info, skills)
         
-        # Génération des tâches standardisées
-        tasks_std = self._generate_tasks(description, template)
+        # Génération des tâches
+        tasks_std = self._generate_tasks(template, project_info)
         
         # Génération des livrables
-        deliverables_std = self._generate_deliverables(description, template)
+        deliverables_std = self._generate_deliverables(template, project_info)
         
-        return RewriteResult(
+        return RewrittenProject(
             title_std=title_std,
             summary_std=summary_std,
             acceptance_criteria=acceptance_criteria,
             tasks_std=tasks_std,
             deliverables_std=deliverables_std,
-            rewrite_version=self.rewrite_version
+            rewrite_version=self.version
         )
 
-    def _select_template(self, category: str, description: str) -> Dict:
-        """Sélectionne le template le plus approprié"""
-        # Mapping des catégories
-        category_mapping = {
-            'developpement': 'web_development',
-            'web-development': 'web_development', 
+    def _select_template(self, category: str, sub_category: str = None) -> str:
+        """Sélectionne le template approprié"""
+        category_lower = category.lower()
+        
+        template_mapping = {
+            'développement': 'web_development',
+            'dev': 'web_development',
+            'web': 'web_development',
             'mobile': 'mobile_development',
-            'design': 'design_graphique',
-            'construction': 'construction',
-            'travaux': 'construction',
-            'plomberie': 'construction',
-            'electricite': 'construction',
-            'menage': 'services_personne',
-            'garde_enfants': 'services_personne',
-            'jardinage': 'services_personne'
+            'app': 'mobile_development',
+            'design': 'design',
+            'graphisme': 'design',
+            'ui': 'design',
+            'ux': 'design',
+            'marketing': 'marketing',
+            'communication': 'marketing',
+            'seo': 'marketing',
+            'publicité': 'marketing'
         }
         
-        template_key = category_mapping.get(category, 'web_development')
-        return self.category_templates[template_key]
+        return template_mapping.get(category_lower, 'default')
 
-    def _rewrite_title(self, title: str, description: str, template: Dict) -> str:
-        """Réécrit le titre selon le pattern du template"""
-        pattern = template['title_pattern']
+    def _extract_project_info(self, title: str, description: str) -> Dict[str, any]:
+        """Extrait les informations clés du projet"""
+        info = {
+            'purpose': 'améliorer la productivité',
+            'type_site': 'application web',
+            'type_design': 'interface utilisateur',
+            'type_marketing': 'digital',
+            'platform': 'web',
+            'complexity': 'moyenne'
+        }
         
-        # Extraction intelligente des variables
-        if 'web' in description.lower() or 'site' in description.lower():
-            type_val = 'Web'
-            scope = self._extract_scope(description)
-        elif 'mobile' in description.lower() or 'app' in description.lower():
-            type_val = 'Mobile'
-            scope = self._extract_scope(description)
-        elif 'logo' in description.lower() or 'identité' in description.lower():
-            type_val = 'Identité Visuelle'
-            scope = self._extract_scope(description)
-        else:
-            type_val = 'Professionnel'
-            scope = self._extract_scope(description)
+        # Analyse du titre et de la description
+        text = (title + ' ' + description).lower()
+        
+        # Détection du type de projet
+        if any(word in text for word in ['ecommerce', 'boutique', 'vente', 'shop']):
+            info['type_site'] = 'site e-commerce'
+            info['purpose'] = 'vendre en ligne'
+        elif any(word in text for word in ['vitrine', 'présentation', 'corporate']):
+            info['type_site'] = 'site vitrine'
+            info['purpose'] = 'présenter l\'entreprise'
+        elif any(word in text for word in ['blog', 'actualités', 'news']):
+            info['type_site'] = 'blog/magazine'
+            info['purpose'] = 'publier du contenu'
+        elif any(word in text for word in ['intranet', 'gestion', 'crm', 'erp']):
+            info['type_site'] = 'application métier'
+            info['purpose'] = 'gérer l\'activité'
+        
+        # Détection de la plateforme mobile
+        if any(word in text for word in ['ios', 'iphone', 'ipad']):
+            info['platform'] = 'iOS'
+        elif any(word in text for word in ['android']):
+            info['platform'] = 'Android'
+        elif any(word in text for word in ['react native', 'flutter', 'cross-platform']):
+            info['platform'] = 'Cross-platform'
+        
+        # Détection de la complexité
+        if any(word in text for word in ['simple', 'basique', 'léger']):
+            info['complexity'] = 'simple'
+        elif any(word in text for word in ['complexe', 'avancé', 'sophistiqué']):
+            info['complexity'] = 'complexe'
+        
+        return info
 
-        # Remplacement des variables dans le pattern
-        title_std = pattern.replace('{type}', type_val).replace('{scope}', scope)
-        title_std = title_std.replace('{platform}', 'Cross-Platform')
-        title_std = title_std.replace('{purpose}', scope)
-        title_std = title_std.replace('{style}', 'Moderne')
-        title_std = title_std.replace('{frequency}', 'Régulier')
+    def _generate_title(self, template: Dict, project_info: Dict, category: str) -> str:
+        """Génère un titre standardisé"""
+        title_pattern = template.get('title_pattern', 'Projet {category} - {purpose}')
         
-        return title_std[:100]  # Limitation longueur
+        # Remplacement des variables
+        title = title_pattern.format(
+            category=category.title(),
+            purpose=project_info['purpose'],
+            type_site=project_info['type_site'],
+            type_design=project_info['type_design'],
+            type_marketing=project_info['type_marketing'],
+            platform=project_info['platform']
+        )
+        
+        return title
 
-    def _extract_scope(self, description: str) -> str:
-        """Extrait le scope/portée du projet"""
-        desc_lower = description.lower()
+    def _generate_summary(self, template: Dict, project_info: Dict, original_description: str) -> str:
+        """Génère un résumé structuré"""
+        structure = template.get('summary_structure', [])
         
-        if 'e-commerce' in desc_lower or 'boutique' in desc_lower:
-            return 'E-commerce'
-        elif 'blog' in desc_lower or 'actualité' in desc_lower:
-            return 'Blog/Actualités'
-        elif 'portfolio' in desc_lower or 'présentation' in desc_lower:
-            return 'Portfolio'
-        elif 'gestion' in desc_lower or 'admin' in desc_lower:
-            return 'Gestion/Admin'
-        elif 'rénovation' in desc_lower:
-            return 'Rénovation'
-        elif 'construction' in desc_lower:
-            return 'Construction Neuve'
-        else:
-            return 'Sur Mesure'
-
-    def _rewrite_summary(self, description: str, template: Dict) -> str:
-        """Réécrit le résumé selon la structure du template"""
-        structure = template['summary_structure']
-        
-        # Analyse du contenu original
-        content_analysis = self._analyze_content(description)
+        # Extraction d'informations de la description originale
+        description_lower = original_description.lower()
         
         summary_parts = []
+        
         for section in structure:
-            if 'contexte' in section.lower():
-                summary_parts.append(f"**{section} :** {content_analysis['context']}")
-            elif 'technolog' in section.lower():
-                summary_parts.append(f"**{section} :** {content_analysis['technical']}")
-            elif 'fonctionnalit' in section.lower():
-                summary_parts.append(f"**{section} :** {content_analysis['features']}")
-            elif 'qualité' in section.lower():
-                summary_parts.append(f"**{section} :** {content_analysis['quality']}")
-            elif 'collaboration' in section.lower():
-                summary_parts.append(f"**{section} :** {content_analysis['collaboration']}")
+            if 'objectifs' in section.lower():
+                summary_parts.append(f"**{section}** : {self._extract_objectives(description_lower)}")
+            elif 'technologies' in section.lower() or 'techniques' in section.lower():
+                summary_parts.append(f"**{section}** : {self._extract_tech_requirements(description_lower)}")
+            elif 'fonctionnalités' in section.lower():
+                summary_parts.append(f"**{section}** : {self._extract_features(description_lower)}")
+            elif 'design' in section.lower():
+                summary_parts.append(f"**{section}** : Interface moderne et intuitive, expérience utilisateur optimisée")
+            elif 'planning' in section.lower() or 'modalités' in section.lower():
+                summary_parts.append(f"**{section}** : Développement agile avec livraisons incrementales")
             else:
-                summary_parts.append(f"**{section} :** À définir selon les besoins spécifiques.")
-
+                summary_parts.append(f"**{section}** : À définir selon vos besoins spécifiques")
+        
         return '\n\n'.join(summary_parts)
 
-    def _analyze_content(self, description: str) -> Dict[str, str]:
-        """Analyse le contenu pour extraire les éléments clés"""
-        desc_lower = description.lower()
+    def _extract_objectives(self, description: str) -> str:
+        """Extrait les objectifs de la description"""
+        if 'augmenter' in description or 'améliorer' in description:
+            return "Améliorer la performance et l'efficacité des processus existants"
+        elif 'nouveau' in description or 'créer' in description:
+            return "Créer une nouvelle solution adaptée aux besoins métier"
+        elif 'moderniser' in description or 'refonte' in description:
+            return "Moderniser les outils et processus actuels"
+        else:
+            return "Répondre aux besoins spécifiques de l'entreprise"
+
+    def _extract_tech_requirements(self, description: str) -> str:
+        """Extrait les exigences techniques"""
+        tech_found = []
         
-        # Extraction du contexte
-        if 'entreprise' in desc_lower or 'société' in desc_lower:
-            context = "Projet d'entreprise nécessitant une approche professionnelle."
-        elif 'personnel' in desc_lower or 'particulier' in desc_lower:
-            context = "Projet personnel avec besoins spécifiques."
-        else:
-            context = "Projet nécessitant une expertise technique adaptée."
-
-        # Extraction technique
-        tech_keywords = ['react', 'vue', 'angular', 'php', 'python', 'mobile', 'ios', 'android']
-        found_tech = [tech for tech in tech_keywords if tech in desc_lower]
-        if found_tech:
-            technical = f"Technologies souhaitées : {', '.join(found_tech)}. Architecture moderne et maintenable."
-        else:
-            technical = "Technologies modernes et éprouvées selon les meilleures pratiques."
-
-        # Extraction fonctionnalités
-        if 'boutique' in desc_lower or 'vente' in desc_lower:
-            features = "Fonctionnalités e-commerce complètes avec gestion des commandes."
-        elif 'blog' in desc_lower or 'contenu' in desc_lower:
-            features = "Système de gestion de contenu intuitif et flexible."
-        else:
-            features = "Fonctionnalités personnalisées selon cahier des charges."
-
-        # Qualité
-        quality = "Respect des standards de qualité, tests approfondis et documentation complète."
-        
-        # Collaboration
-        collaboration = "Communication régulière, méthodologie agile et livraisons itératives."
-
-        return {
-            'context': context,
-            'technical': technical, 
-            'features': features,
-            'quality': quality,
-            'collaboration': collaboration
+        tech_keywords = {
+            'react': 'React.js',
+            'vue': 'Vue.js',
+            'angular': 'Angular',
+            'node': 'Node.js',
+            'php': 'PHP',
+            'python': 'Python',
+            'wordpress': 'WordPress',
+            'mysql': 'MySQL',
+            'postgresql': 'PostgreSQL'
         }
+        
+        for keyword, tech in tech_keywords.items():
+            if keyword in description:
+                tech_found.append(tech)
+        
+        if tech_found:
+            return f"Technologies demandées : {', '.join(tech_found)}"
+        else:
+            return "Technologies modernes et éprouvées, à définir selon les besoins"
 
-    def _generate_acceptance_criteria(self, description: str, template: Dict) -> List[str]:
+    def _extract_features(self, description: str) -> str:
+        """Extrait les fonctionnalités mentionnées"""
+        features = []
+        
+        feature_keywords = {
+            'authentification': 'Système d\'authentification',
+            'paiement': 'Gestion des paiements',
+            'admin': 'Interface d\'administration',
+            'api': 'API REST',
+            'mobile': 'Version mobile responsive',
+            'email': 'Notifications par email',
+            'search': 'Moteur de recherche',
+            'chat': 'Système de messagerie'
+        }
+        
+        for keyword, feature in feature_keywords.items():
+            if keyword in description:
+                features.append(feature)
+        
+        if features:
+            return ', '.join(features)
+        else:
+            return "Fonctionnalités essentielles selon le cahier des charges"
+
+    def _generate_acceptance_criteria(self, template: Dict, project_info: Dict, skills: List[str] = None) -> List[str]:
         """Génère les critères d'acceptation SMART"""
-        base_criteria = template['acceptance_criteria_base'].copy()
+        base_criteria = template.get('acceptance_criteria_base', [])
         
-        # Critères spécifiques selon le contenu
-        desc_lower = description.lower()
+        # Critères spécifiques selon les compétences
+        specific_criteria = []
+        skills = skills or []
         
-        if 'mobile' in desc_lower:
-            base_criteria.append("Compatibilité iOS 13+ et Android 8+ validée")
+        if any(skill.lower() in ['react', 'vue', 'angular'] for skill in skills):
+            specific_criteria.append('Interface utilisateur moderne et interactive')
         
-        if 'e-commerce' in desc_lower:
-            base_criteria.append("Tunnel de commande fonctionnel et sécurisé")
-            
-        if 'seo' in desc_lower:
-            base_criteria.append("Optimisation SEO on-page réalisée")
+        if any(skill.lower() in ['seo', 'référencement'] for skill in skills):
+            specific_criteria.append('Optimisation SEO complète et mesurable')
+        
+        if any(skill.lower() in ['security', 'sécurité'] for skill in skills):
+            specific_criteria.append('Sécurité renforcée et conformité RGPD')
+        
+        return base_criteria + specific_criteria
 
-        if 'urgent' in desc_lower or 'rapide' in desc_lower:
-            base_criteria.append("Délais de livraison accélérés respectés")
-
-        return base_criteria[:6]  # Limite à 6 critères max
-
-    def _generate_tasks(self, description: str, template: Dict) -> List[Dict]:
-        """Génère les tâches standardisées avec estimations"""
-        tasks = template['tasks_template'].copy()
+    def _generate_tasks(self, template: Dict, project_info: Dict) -> List[Dict[str, any]]:
+        """Génère les tâches avec estimations"""
+        base_tasks = template.get('tasks_template', [])
         
         # Ajustement des estimations selon la complexité
-        complexity_factor = self._estimate_complexity_factor(description)
+        complexity_multiplier = {
+            'simple': 0.7,
+            'moyenne': 1.0,
+            'complexe': 1.5
+        }
         
-        for task in tasks:
-            task['estimated_hours'] = int(task['estimated_hours'] * complexity_factor)
-            task['priority'] = self._determine_priority(task['name'])
-            
-        return tasks
+        multiplier = complexity_multiplier.get(project_info['complexity'], 1.0)
+        
+        adjusted_tasks = []
+        for task in base_tasks:
+            adjusted_task = task.copy()
+            adjusted_task['estimated_hours'] = int(task['estimated_hours'] * multiplier)
+            adjusted_tasks.append(adjusted_task)
+        
+        return adjusted_tasks
 
-    def _generate_deliverables(self, description: str, template: Dict) -> List[Dict]:
-        """Génère les livrables standardisés"""
-        deliverables = template['deliverables_template'].copy()
-        
-        # Ajout de livrables spécifiques selon le contenu
-        desc_lower = description.lower()
-        
-        if 'formation' in desc_lower:
-            deliverables.append({
-                'name': 'Session de formation',
-                'format': 'Présentiel/Visio'
-            })
-            
-        if 'maintenance' in desc_lower:
-            deliverables.append({
-                'name': 'Plan de maintenance',
-                'format': 'Document PDF'
-            })
+    def _generate_deliverables(self, template: Dict, project_info: Dict) -> List[Dict[str, any]]:
+        """Génère les livrables attendus"""
+        return template.get('deliverables_template', [])
 
-        return deliverables
-
-    def _estimate_complexity_factor(self, description: str) -> float:
-        """Estime le facteur de complexité du projet"""
-        desc_lower = description.lower()
-        factor = 1.0
-        
-        # Facteurs d'augmentation
-        if 'complexe' in desc_lower: factor += 0.3
-        if 'intégration' in desc_lower: factor += 0.2
-        if 'api' in desc_lower: factor += 0.15
-        if 'personnalisé' in desc_lower: factor += 0.25
-        if 'urgent' in desc_lower: factor += 0.1
-        
-        # Facteurs de diminution
-        if 'simple' in desc_lower: factor -= 0.2
-        if 'basique' in desc_lower: factor -= 0.15
-        
-        return max(0.5, min(2.0, factor))
-
-    def _determine_priority(self, task_name: str) -> str:
-        """Détermine la priorité d'une tâche"""
-        task_lower = task_name.lower()
-        
-        if 'conception' in task_lower or 'analyse' in task_lower:
-            return 'high'
-        elif 'développement' in task_lower or 'création' in task_lower:
-            return 'high'
-        elif 'test' in task_lower or 'déploiement' in task_lower:
-            return 'medium'
-        else:
-            return 'low'
-
-# Instance principale
-template_rewriter = TemplateRewriter()
+    def get_rewrite_stats(self) -> Dict[str, any]:
+        """Retourne les statistiques de réécriture"""
+        return {
+            'version': self.version,
+            'available_templates': list(self.templates.keys()),
+            'template_count': len(self.templates),
+            'categories_supported': [
+                'développement web',
+                'développement mobile',
+                'design',
+                'marketing',
+                'services généraux'
+            ]
+        }
