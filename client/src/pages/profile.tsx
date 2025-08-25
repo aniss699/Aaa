@@ -23,7 +23,11 @@ import {
   Camera,
   Save,
   Edit,
-  Clock
+  Clock,
+  Brain,
+  Sparkles,
+  Target,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
@@ -59,7 +63,8 @@ export default function Profile() {
     hourlyRate: '75',
     company: 'TechStart Solutions',
     industry: 'Technology & Innovation',
-    calendarAvailability: [] as Array<{ start: Date, end: Date }>
+    calendarAvailability: [] as Array<{ start: Date, end: Date }>,
+    keywords: [] as string[] // Added keywords state
   });
 
   const [newSkill, setNewSkill] = useState('');
@@ -91,7 +96,7 @@ export default function Profile() {
       const updatedUser = { ...user, type: activeProfile };
       login(updatedUser);
     }
-    
+
     toast({
       title: 'Profil sauvegardé',
       description: 'Vos informations ont été mises à jour avec succès.',
@@ -155,6 +160,137 @@ export default function Profile() {
     }));
   };
 
+  // Fonctions d'assistance IA
+  const handleAITextImprovement = async (field: string) => {
+    const currentValue = profileData[field];
+    if (!currentValue) return;
+
+    try {
+      // Simulation d'amélioration IA
+      const improvedText = currentValue + " [Version améliorée par IA - style optimisé]";
+      handleInputChange(field, improvedText);
+
+      toast({
+        title: "Texte amélioré !",
+        description: "Votre texte a été optimisé par l'IA.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'améliorer le texte pour le moment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAIEnrichment = async (field: string) => {
+    const currentValue = profileData[field];
+    if (!currentValue) return;
+
+    try {
+      const keywords = activeProfile === 'provider' ? 
+        ['professionnel', 'expérimenté', 'qualité', 'délais'] :
+        ['partenariat', 'collaboration', 'projet', 'qualité'];
+
+      const enrichedText = currentValue + ` Mots-clés: ${keywords.slice(0, 2).join(', ')}.`;
+      handleInputChange(field, enrichedText);
+
+      toast({
+        title: "Texte enrichi !",
+        description: "Des mots-clés pertinents ont été ajoutés.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'enrichir le texte pour le moment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAICallToAction = async (field: string) => {
+    const currentValue = profileData[field];
+    if (!currentValue) return;
+
+    try {
+      const cta = activeProfile === 'provider' ? 
+        " Contactez-moi pour discuter de votre projet !" :
+        " N'hésitez pas à nous contacter pour échanger !";
+
+      const textWithCTA = currentValue + cta;
+      handleInputChange(field, textWithCTA);
+
+      toast({
+        title: "Appel à l'action ajouté !",
+        description: "Un appel à l'action engageant a été ajouté.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter l'appel à l'action.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAIStructure = async (field: string) => {
+    const currentValue = profileData[field];
+    if (!currentValue) return;
+
+    try {
+      const sentences = currentValue.split('. ');
+      const structuredText = sentences.map((sentence, index) => 
+        index === 0 ? `✓ ${sentence}` : 
+        index < sentences.length - 1 ? `• ${sentence}` : sentence
+      ).join('. ');
+
+      handleInputChange(field, structuredText);
+
+      toast({
+        title: "Texte structuré !",
+        description: "La structure de votre texte a été améliorée.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de structurer le texte.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAIKeywordSuggestion = async () => {
+    try {
+      const suggestions = activeProfile === 'provider' ? 
+        ['développement web', 'react', 'nodejs', 'consultation', 'formation'] :
+        ['projet digital', 'marketing', 'e-commerce', 'startup', 'innovation'];
+
+      // Ajouter les suggestions aux mots-clés existants
+      const newKeywords = [...(profileData.keywords || []), ...suggestions.slice(0, 3)];
+      const uniqueKeywords = [...new Set(newKeywords)];
+
+      handleInputChange('keywords', uniqueKeywords);
+
+      toast({
+        title: "Mots-clés suggérés !",
+        description: `${suggestions.slice(0, 3).length} nouveaux mots-clés ajoutés par l'IA.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer des suggestions pour le moment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -185,7 +321,7 @@ export default function Profile() {
               </Button>
             </div>
           </div>
-          
+
           {/* Mode Selector - Plus visible */}
           <div className="mt-6">
             <div className="bg-white rounded-xl p-4 shadow-lg border">
@@ -242,7 +378,7 @@ export default function Profile() {
                   </Button>
                 )}
               </div>
-              
+
               <div className="flex-1 space-y-4">
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0 mb-3">
@@ -261,7 +397,7 @@ export default function Profile() {
                       )}
                     </Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
                     <div className="flex items-center">
                       <Mail className="w-4 h-4 mr-2 text-blue-500" />
@@ -386,148 +522,162 @@ export default function Profile() {
             />
           </TabsContent>
 
-          <TabsContent value="general">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informations personnelles</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Nom complet</Label>
-                    <Input
-                      id="name"
-                      value={profileData.name}
-                      onChange={(e) => setProfileData(prev => ({...prev, name: e.target.value}))}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => setProfileData(prev => ({...prev, email: e.target.value}))}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Téléphone</Label>
-                    <Input
-                      id="phone"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData(prev => ({...prev, phone: e.target.value}))}
-                      disabled={!isEditing}
-                      placeholder="+33 6 12 34 56 78"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="location">Localisation</Label>
-                    <Input
-                      id="location"
-                      value={profileData.location}
-                      onChange={(e) => setProfileData(prev => ({...prev, location: e.target.value}))}
-                      disabled={!isEditing}
-                      placeholder="Paris, France"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+          <TabsContent value="general" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Informations générales</span>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
+                    <Brain className="w-4 h-4 mr-1" />
+                    Assistant IA activé
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Nom complet</Label>
+                  <Input
+                    id="name"
+                    value={profileData.name}
+                    onChange={(e) => setProfileData(prev => ({...prev, name: e.target.value}))}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profileData.email}
+                    onChange={(e) => setProfileData(prev => ({...prev, email: e.target.value}))}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Téléphone</Label>
+                  <Input
+                    id="phone"
+                    value={profileData.phone}
+                    onChange={(e) => setProfileData(prev => ({...prev, phone: e.target.value}))}
+                    disabled={!isEditing}
+                    placeholder="+33 6 12 34 56 78"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="location">Localisation</Label>
+                  <Input
+                    id="location"
+                    value={profileData.location}
+                    onChange={(e) => setProfileData(prev => ({...prev, location: e.target.value}))}
+                    disabled={!isEditing}
+                    placeholder="Paris, France"
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {activeProfile === 'client' ? 'À propos de votre entreprise' : 'À propos de vous'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="relative">
-                    <Label htmlFor="bio">Description</Label>
-                    <Textarea
-                      id="bio"
-                      value={profileData.bio}
-                      onChange={(e) => setProfileData(prev => ({...prev, bio: e.target.value}))}
-                      disabled={!isEditing}
-                      placeholder={activeProfile === 'client' 
-                        ? "Décrivez votre entreprise et vos besoins..."
-                        : "Présentez-vous et vos services..."
-                      }
-                      rows={4}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {activeProfile === 'client' ? 'À propos de votre entreprise' : 'À propos de vous'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="relative">
+                  <Label htmlFor="bio">Description</Label>
+                  <Textarea
+                    id="bio"
+                    value={profileData.bio || ''}
+                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    placeholder={activeProfile === 'client' 
+                      ? "Décrivez votre entreprise et vos besoins..."
+                      : "Présentez-vous et vos services..."
+                    }
+                    rows={4}
+                  />
+                  {isEditing && (
+                    <TextCompletionAssistant
+                      inputValue={profileData.bio}
+                      onSuggestionApply={handleTextCompletion('bio')}
+                      context={{
+                        field: 'bio',
+                        category: 'profile',
+                        userType: activeProfile
+                      }}
                     />
-                    {isEditing && (
-                      <TextCompletionAssistant
-                        inputValue={profileData.bio}
-                        onSuggestionApply={handleTextCompletion('bio')}
-                        context={{
-                          field: 'bio',
-                          category: 'profile',
-                          userType: activeProfile
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  {activeProfile === 'client' ? (
-                    <>
-                      <div>
-                        <Label htmlFor="company">Entreprise</Label>
-                        <Input
-                          id="company"
-                          value={profileData.company}
-                          onChange={(e) => setProfileData(prev => ({...prev, company: e.target.value}))}
-                          disabled={!isEditing}
-                          placeholder="Nom de votre entreprise"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="industry">Secteur d\'activité</Label>
-                        <Input
-                          id="industry"
-                          value={profileData.industry}
-                          onChange={(e) => setProfileData(prev => ({...prev, industry: e.target.value}))}
-                          disabled={!isEditing}
-                          placeholder="Ex: Tech, Marketing, Finance..."
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <Label htmlFor="experience">Expérience</Label>
-                        <Textarea
-                          id="experience"
-                          value={profileData.experience}
-                          onChange={(e) => setProfileData(prev => ({...prev, experience: e.target.value}))}
-                          disabled={!isEditing}
-                          placeholder="Décrivez votre expérience professionnelle..."
-                          rows={3}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="hourlyRate">Tarif horaire (€)</Label>
-                        <Input
-                          id="hourlyRate"
-                          type="number"
-                          value={profileData.hourlyRate}
-                          onChange={(e) => setProfileData(prev => ({...prev, hourlyRate: e.target.value}))}
-                          disabled={!isEditing}
-                          placeholder="50"
-                        />
-                      </div>
-                    </>
                   )}
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+
+                {activeProfile === 'client' ? (
+                  <>
+                    <div>
+                      <Label htmlFor="company">Entreprise</Label>
+                      <Input
+                        id="company"
+                        value={profileData.company}
+                        onChange={(e) => setProfileData(prev => ({...prev, company: e.target.value}))}
+                        disabled={!isEditing}
+                        placeholder="Nom de votre entreprise"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="industry">Secteur d'activité</Label>
+                      <Input
+                        id="industry"
+                        value={profileData.industry}
+                        onChange={(e) => setProfileData(prev => ({...prev, industry: e.target.value}))}
+                        disabled={!isEditing}
+                        placeholder="Ex: Tech, Marketing, Finance..."
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="experience">Expérience</Label>
+                      <Textarea
+                        id="experience"
+                        value={profileData.experience}
+                        onChange={(e) => setProfileData(prev => ({...prev, experience: e.target.value}))}
+                        disabled={!isEditing}
+                        placeholder="Décrivez votre expérience professionnelle..."
+                        rows={3}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="hourlyRate">Tarif horaire (€)</Label>
+                      <Input
+                        id="hourlyRate"
+                        type="number"
+                        value={profileData.hourlyRate}
+                        onChange={(e) => setProfileData(prev => ({...prev, hourlyRate: e.target.value}))}
+                        disabled={!isEditing}
+                        placeholder="50"
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {activeProfile === 'provider' && (
             <>
-              <TabsContent value="skills">
+              <TabsContent value="skills" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Mes compétences</CardTitle>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>Compétences et Mots-clés</span>
+                      <Button
+                        onClick={handleAIKeywordSuggestion}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200 text-blue-700"
+                      >
+                        <Brain className="h-4 w-4 mr-2" />
+                        Suggestions IA
+                      </Button>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">

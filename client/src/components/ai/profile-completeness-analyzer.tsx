@@ -18,6 +18,7 @@ import {
   Eye,
   Lightbulb
 } from 'lucide-react';
+import { DialogTitle } from '@/components/ui/dialog';
 
 interface ProfileAnalysis {
   completeness_score: number;
