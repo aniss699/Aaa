@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -81,6 +80,7 @@ export default function CreateMission() {
     budget: '',
     delay: false
   });
+  const [appliedPatches, setAppliedPatches] = useState({}); // State to track applied patches
 
   const handleInputChange = (field: keyof MissionFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -166,10 +166,13 @@ export default function CreateMission() {
     if (!aiSuggestion) return;
 
     const updates: Partial<MissionFormData> = {};
+    const currentAppliedPatches: Record<string, any> = {};
 
     if (applySettings.text) {
       updates.title = aiSuggestion.title;
       updates.description = aiSuggestion.summary;
+      currentAppliedPatches['title'] = aiSuggestion.title;
+      currentAppliedPatches['description'] = aiSuggestion.summary;
     }
 
     if (applySettings.budget && applySettings.budget !== '') {
@@ -182,6 +185,8 @@ export default function CreateMission() {
       if (suggestedBudget) {
         updates.budget_min = Math.round(suggestedBudget * 0.8);
         updates.budget_max = suggestedBudget;
+        currentAppliedPatches['budget_min'] = updates.budget_min;
+        currentAppliedPatches['budget_max'] = updates.budget_max;
       }
     }
 
@@ -189,9 +194,11 @@ export default function CreateMission() {
       const deadline = new Date();
       deadline.setDate(deadline.getDate() + aiSuggestion.delay_suggested_days);
       updates.deadline_ts = deadline.toISOString().split('T')[0];
+      currentAppliedPatches['deadline_ts'] = updates.deadline_ts;
     }
 
     setFormData(prev => ({ ...prev, ...updates }));
+    setAppliedPatches(prev => ({ ...prev, ...currentAppliedPatches }));
     
     toast({
       title: "Suggestions appliquées",
@@ -220,7 +227,8 @@ export default function CreateMission() {
         missing_info_answers: missingInfoAnswers,
         applied_ai_suggestion: aiSuggestion ? {
           applied_settings: applySettings,
-          suggestion: aiSuggestion
+          suggestion: aiSuggestion,
+          applied_patches: appliedPatches
         } : null
       };
 
