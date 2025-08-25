@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardList, Hand, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { MissionDetailModal } from '@/components/missions/mission-detail-modal';
-import paths from '@/lib/paths';
+import { paths } from '../routes/paths';
 
 export default function Missions() {
   const { user } = useAuth();
@@ -51,7 +51,7 @@ export default function Missions() {
           </p>
         </div>
         <Button
-          onClick={() => setLocation('/create-mission')}
+          onClick={() => setLocation(paths.createMission)}
           size="lg"
           className="w-full sm:w-auto"
         >

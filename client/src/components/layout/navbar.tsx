@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
 import { QuickMissionCreator } from '@/components/missions/quick-mission-creator';
+import Link from 'wouter/link';
 
 export function Navbar() {
   const [location, setLocation] = useLocation();

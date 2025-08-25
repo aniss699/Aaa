@@ -1,4 +1,3 @@
-
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { storage } from './storage';
@@ -53,13 +52,13 @@ export async function routes(fastify: FastifyInstance) {
   }, 5 * 60 * 1000);
 
   // Routes existantes...
-  
+
   // === Nouvelles routes pour les missions ===
 
   // POST /api/missions - Création de mission avec idempotence
   fastify.post('/api/missions', async (request, reply) => {
     const idempotencyKey = request.headers['idempotency-key'] as string;
-    
+
     try {
       // Vérification idempotence
       if (idempotencyKey && idempotencyStore.has(idempotencyKey)) {
@@ -102,7 +101,7 @@ export async function routes(fastify: FastifyInstance) {
       // Sauvegarde de la standardisation si appliquée
       if (validatedData.applied_ai_suggestion) {
         const { suggestion, applied_settings } = validatedData.applied_ai_suggestion;
-        
+
         const standardization = {
           projectId: mission.id,
           titleStd: applied_settings.text ? suggestion.title : validatedData.title,
@@ -144,7 +143,7 @@ export async function routes(fastify: FastifyInstance) {
         },
         createdAt: new Date()
       };
-      
+
       storage.saveProjectChangeLog(eventLog);
 
       const result = {
@@ -170,7 +169,7 @@ export async function routes(fastify: FastifyInstance) {
 
     } catch (error) {
       fastify.log.error('Erreur création mission:', error);
-      
+
       if (error instanceof z.ZodError) {
         const firstError = error.errors[0];
         return reply.status(422).send({
@@ -192,7 +191,7 @@ export async function routes(fastify: FastifyInstance) {
   fastify.post('/api/ai/missions/suggest', async (request, reply) => {
     try {
       const data = aiSuggestionSchema.parse(request.body);
-      
+
       // Appel au service ML avec fallback intelligent
       let mlResult = null;
       try {
@@ -218,7 +217,7 @@ export async function routes(fastify: FastifyInstance) {
 
       // Génération complète avec structure enrichie
       const suggestion = generateRichSuggestion(data, mlResult);
-      
+
       return reply.send({
         suggestion: {
           title: suggestion.rewrite.title,
@@ -249,7 +248,7 @@ export async function routes(fastify: FastifyInstance) {
 
     } catch (error) {
       fastify.log.error('Erreur suggestions IA:', error);
-      
+
       if (error instanceof z.ZodError) {
         return reply.status(422).send({
           code: 'VALIDATION_ERROR',
@@ -268,9 +267,9 @@ export async function routes(fastify: FastifyInstance) {
   fastify.post('/api/ai/missions/apply', async (request, reply) => {
     try {
       const { missionDraft, suggestion, apply } = request.body;
-      
+
       const patch = buildApplicationPatch(missionDraft, suggestion, apply);
-      
+
       return reply.send({
         fields: patch.fields,
         meta: patch.meta,
@@ -292,13 +291,13 @@ export async function routes(fastify: FastifyInstance) {
   fastify.post('/api/ai/missions/answer-questions', async (request, reply) => {
     try {
       const { suggestionVersion, answers, originalData } = request.body;
-      
+
       // Enrichir les données originales avec les réponses
       const enrichedData = enrichDataWithAnswers(originalData, answers);
-      
+
       // Recalculer la suggestion
       const updatedSuggestion = generateRichSuggestion(enrichedData, null);
-      
+
       return reply.send({
         scores: updatedSuggestion.scores,
         economics: updatedSuggestion.economics,
@@ -322,7 +321,7 @@ export async function routes(fastify: FastifyInstance) {
   // GET /api/missions/:id - Détail d'une mission
   fastify.get('/api/missions/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
-    
+
     try {
       const mission = storage.getProject(id);
       if (!mission) {
@@ -385,7 +384,7 @@ export async function routes(fastify: FastifyInstance) {
   // GET /api/logs/errors - Logs d'erreurs (dev)
   fastify.get('/api/logs/errors', async (request, reply) => {
     const { since } = request.query as { since?: string };
-    
+
     try {
       // TODO: Implémenter un vrai système de logs
       const errors = [
@@ -427,7 +426,7 @@ export async function routes(fastify: FastifyInstance) {
         hint: 'Vérifiez l\'URL et la méthode HTTP'
       });
     }
-    
+
     // Pour les autres routes, laisser le serveur Vite gérer le SPA
     return reply.code(404).type('text/plain').send('SPA Route - handled by Vite');
   });
@@ -535,7 +534,7 @@ function extractSkills(description: string): string[] {
 
   const foundSkills = [];
   const descLower = description.toLowerCase();
-  
+
   for (const [keyword, skill] of Object.entries(skillsMap)) {
     if (descLower.includes(keyword)) {
       foundSkills.push(skill);
@@ -548,7 +547,7 @@ function extractSkills(description: string): string[] {
 function extractTags(description: string): string[] {
   const tags = [];
   const descLower = description.toLowerCase();
-  
+
   if (descLower.includes('urgent')) tags.push('urgent');
   if (descLower.includes('mobile')) tags.push('mobile');
   if (descLower.includes('responsive')) tags.push('responsive');
@@ -633,14 +632,14 @@ function estimateDelay(data: any): number {
   };
 
   const baseDelay = baseDelays[data.category] || 14;
-  
+
   // Ajustement selon la description
   let multiplier = 1.0;
   const descLength = data.description?.length || 0;
-  
+
   if (descLength > 300) multiplier += 0.3;
   if (descLength < 100) multiplier -= 0.2;
-  
+
   if (data.description?.toLowerCase().includes('complexe')) multiplier += 0.5;
   if (data.description?.toLowerCase().includes('simple')) multiplier -= 0.3;
 
@@ -682,7 +681,7 @@ function generateRichSuggestion(data: any, mlResult: any = null) {
   const category = data.category || 'services';
   const surface = extractSurface(data.description);
   const complexity = assessComplexity(data);
-  
+
   // Scores
   const qualityScore = calculateAdvancedQualityScore(data);
   const richnessScore = calculateAdvancedRichnessScore(data);
@@ -690,19 +689,19 @@ function generateRichSuggestion(data: any, mlResult: any = null) {
 
   // Réécriture structurée
   const rewrite = generateStructuredRewrite(data, category, surface);
-  
+
   // Structure & tâches
   const structure = generateProjectStructure(data, category, surface);
-  
+
   // Économie
   const economics = calculateAdvancedEconomics(data, category, complexity, surface);
-  
+
   // LOC
   const loc = calculateLOCWithUplift(data, economics);
-  
+
   // Questions manquantes
   const questions = generateSmartQuestions(data, category);
-  
+
   // Raisons
   const reasons = generateDetailedReasons(data, qualityScore, richnessScore, economics);
 
@@ -761,7 +760,7 @@ function generateImprovedTitle(originalTitle: string, category: string, surface:
 
   const prefix = categoryPrefixes[category] || 'Mission de';
   const surfaceText = surface ? ` (${surface} m²)` : '';
-  
+
   return `${prefix} ${originalTitle.toLowerCase()}${surfaceText}`;
 }
 
@@ -889,19 +888,19 @@ function generateDeliverablesList(data: any, category: string, surface: number |
 function calculateAdvancedEconomics(data: any, category: string, complexity: string, surface: number | null) {
   // Chargement des données de référence prix
   const priceData = getPriceReferenceData(category);
-  
+
   let basePrice = priceData.daily_med * priceData.avg_days;
-  
+
   // Ajustements selon complexité
   const complexityMultipliers = { simple: 0.8, medium: 1.0, complex: 1.3, expert: 1.6 };
   basePrice *= complexityMultipliers[complexity] || 1.0;
-  
+
   // Ajustements selon surface (pour travaux)
   if (surface && category === 'travaux') {
     const pricePerM2 = priceData.hourly_med * 0.5; // Estimation 30min/m²
     basePrice = surface * pricePerM2;
   }
-  
+
   // Ajustements selon budget existant
   if (data.budget_min && data.budget_max) {
     const userBudget = (data.budget_min + data.budget_max) / 2;
@@ -911,9 +910,9 @@ function calculateAdvancedEconomics(data: any, category: string, complexity: str
   const price_min = Math.round(basePrice * 0.75);
   const price_med = Math.round(basePrice);
   const price_max = Math.round(basePrice * 1.35);
-  
+
   const delay_days = Math.round(priceData.avg_days * (complexityMultipliers[complexity] || 1.0));
-  
+
   const rationale = generatePriceRationale(category, complexity, surface, priceData);
 
   return {
@@ -927,7 +926,7 @@ function calculateAdvancedEconomics(data: any, category: string, complexity: str
 
 function calculateLOCWithUplift(data: any, economics: any) {
   const base = calculateQualityScore(data) * 0.8; // Base LOC
-  
+
   const uplift_budget = Math.round(economics.price_suggested_med * 1.05);
   const uplift_delay = economics.delay_suggested_days + 1;
   const delta_loc = Math.min(0.12, (uplift_budget / economics.price_suggested_med - 1) * 0.4);
@@ -1054,14 +1053,14 @@ function buildApplicationPatch(missionDraft: any, suggestion: any, apply: any) {
     applied_count += 1;
   }
 
-  const impact_summary = `${applied_count} amélioration(s) appliquée(s). Impact estimé : +${Math.round(suggestion.loc.uplift_reco.delta_loc * 100)} pts de probabilité d'aboutissement.`;
+  const impact_summary = `${applied_count} amélioration(s) appliquée(s). Impact estimé : +${Math.round(suggestion.loc.uplift_reco.delta_loc * 100)} pts de probabilité d\'aboutissement.`;
 
   return { fields, meta, diffs, applied_count, impact_summary };
 }
 
 function enrichDataWithAnswers(originalData: any, answers: any[]) {
   const enriched = { ...originalData };
-  
+
   answers.forEach(answer => {
     switch (answer.id) {
       case 'surface_m2':
@@ -1074,7 +1073,7 @@ function enrichDataWithAnswers(originalData: any, answers: any[]) {
         enriched.description += `\n\nPréférences techniques : ${answer.value}`;
         break;
       case 'access':
-        enriched.description += `\n\nContraintes d'accès : ${answer.value}`;
+        enriched.description += `\n\nContraintes d\'accès : ${answer.value}`;
         break;
       default:
         enriched[answer.id] = answer.value;
@@ -1087,7 +1086,7 @@ function enrichDataWithAnswers(originalData: any, answers: any[]) {
 function calculateImprovements(originalData: any, enrichedData: any) {
   const originalScore = calculateAdvancedQualityScore(originalData);
   const enrichedScore = calculateAdvancedQualityScore(enrichedData);
-  
+
   return {
     quality_delta: Math.round((enrichedScore - originalScore) * 100) / 100,
     new_questions_count: generateSmartQuestions(enrichedData, enrichedData.category || 'services').length,
@@ -1153,21 +1152,21 @@ function getPriceReferenceData(category: string) {
     'conseil': { hourly_med: 85, daily_med: 680, avg_days: 15 },
     'services': { hourly_med: 40, daily_med: 320, avg_days: 7 }
   };
-  
+
   return priceData[category] || priceData['services'];
 }
 
 function generatePriceRationale(category: string, complexity: string, surface: number | null, priceData: any): string {
   let rationale = `Basé sur tarif médian ${category} (${priceData.daily_med}€/jour, ${priceData.avg_days}j moyens)`;
-  
+
   if (complexity !== 'medium') {
     rationale += `, ajusté complexité ${complexity}`;
   }
-  
+
   if (surface) {
     rationale += `, surface ${surface} m²`;
   }
-  
+
   return rationale + '.';
 }
 
@@ -1251,7 +1250,7 @@ function detectServicesSubCategory(description: string): string {
 
 function extractRequiredSkills(data: any, category: string): string[] {
   const skills = extractSkills(data.description || '');
-  
+
   // Ajouter des compétences par défaut selon la catégorie
   const defaultSkills = {
     'travaux': ['travaux intérieur', 'finitions'],
@@ -1269,13 +1268,13 @@ function extractRequiredSkills(data: any, category: string): string[] {
 function extractProjectConstraints(data: any): string[] {
   const constraints = [];
   const desc = data.description?.toLowerCase() || '';
-  
+
   if (desc.includes('urgent')) constraints.push('délais serrés');
   if (desc.includes('budget') && desc.includes('serré')) constraints.push('budget contraint');
   if (desc.includes('weekend')) constraints.push('intervention weekend');
   if (desc.includes('présence') || desc.includes('sur site')) constraints.push('présence sur site');
   if (data.geo_required) constraints.push('intervention géographique requise');
-  
+
   return constraints;
 }
 
@@ -1288,7 +1287,7 @@ function generateContextSentence(data: any, category: string): string {
     'conseil': 'Mission de conseil pour apporter expertise et recommandations.',
     'services': 'Prestation de service spécialisée.'
   };
-  
+
   return contexts[category] || 'Mission professionnelle nécessitant expertise spécialisée.';
 }
 
@@ -1314,7 +1313,7 @@ function generateDeliverablesSentence(data: any, category: string, surface: numb
     'conseil': 'Analyse complète, recommandations, plan d\'action.',
     'services': 'Prestation réalisée selon cahier des charges.'
   };
-  
+
   return deliverables[category] || 'Livrable conforme aux attentes définies.';
 }
 
