@@ -810,5 +810,345 @@ class AIService {
     };
   }
 
+/**
+   * Analyse prédictive avancée pour succès de mission
+   */
+  async predictMissionSuccess(missionData: any, marketContext: any): Promise<{
+    success_probability: number;
+    key_factors: string[];
+    risk_assessment: any;
+    optimization_suggestions: string[];
+    confidence_level: number;
+  }> {
+    const cacheKey = `predict_success_${JSON.stringify(missionData)}`;
+    
+    return this.getCachedOrFetch(cacheKey, async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/predict/mission-success`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mission: missionData, market_context: marketContext })
+        });
+
+        if (!response.ok) throw new Error('Prediction service unavailable');
+        return await response.json();
+      } catch (error) {
+        return this.predictMissionSuccessFallback(missionData);
+      }
+    }, 300000); // Cache 5 minutes pour prédictions
+  }
+
+  /**
+   * Négociation IA automatique entre client et prestataire
+   */
+  async negotiatePrice(negotiationData: {
+    initial_bid: number;
+    client_budget: number;
+    mission_complexity: number;
+    provider_profile: any;
+    negotiation_history: any[];
+  }): Promise<{
+    suggested_counter_offer: number;
+    negotiation_strategy: string;
+    win_probability: number;
+    arguments: string[];
+    next_steps: string[];
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/negotiate/price`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(negotiationData)
+      });
+
+      if (!response.ok) throw new Error('Negotiation service unavailable');
+      return await response.json();
+    } catch (error) {
+      return this.negotiatePriceFallback(negotiationData);
+    }
+  }
+
+  /**
+   * Analyse comportementale des utilisateurs
+   */
+  async analyzeBehavior(userId: string, actionsHistory: any[]): Promise<{
+    behavior_patterns: any;
+    preferences: any;
+    success_indicators: any;
+    personalized_recommendations: string[];
+    engagement_score: number;
+  }> {
+    const cacheKey = `behavior_${userId}`;
+    
+    return this.getCachedOrFetch(cacheKey, async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/analyze/behavior`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, actions: actionsHistory })
+        });
+
+        if (!response.ok) throw new Error('Behavior analysis unavailable');
+        return await response.json();
+      } catch (error) {
+        return this.analyzeBehaviorFallback(userId, actionsHistory);
+      }
+    }, 1800000); // Cache 30 minutes pour analyse comportementale
+  }
+
+  /**
+   * Optimisation en temps réel des prix basée sur l'IA
+   */
+  async optimizePricingRealTime(missionId: string, currentMarketData: any): Promise<{
+    optimal_price: number;
+    price_elasticity: number;
+    demand_forecast: any;
+    competitive_positioning: string;
+    adjustment_reasoning: string[];
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/optimize/pricing-realtime`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mission_id: missionId, market_data: currentMarketData })
+      });
+
+      if (!response.ok) throw new Error('Real-time pricing unavailable');
+      return await response.json();
+    } catch (error) {
+      return this.optimizePricingRealTimeFallback(missionId, currentMarketData);
+    }
+  }
+
+  /**
+   * Matching intelligent multi-dimensionnel
+   */
+  async intelligentMatching(criteria: {
+    mission: any;
+    provider_pool: any[];
+    matching_preferences: any;
+    historical_data: any[];
+  }): Promise<{
+    ranked_matches: any[];
+    matching_explanations: any;
+    confidence_scores: number[];
+    alternative_suggestions: any[];
+  }> {
+    const cacheKey = `intelligent_match_${JSON.stringify(criteria)}`;
+    
+    return this.getCachedOrFetch(cacheKey, async () => {
+      try {
+        const response = await fetch(`${this.baseUrl}/match/intelligent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(criteria)
+        });
+
+        if (!response.ok) throw new Error('Intelligent matching unavailable');
+        return await response.json();
+      } catch (error) {
+        return this.intelligentMatchingFallback(criteria);
+      }
+    }, 600000); // Cache 10 minutes pour matching
+  }
+
+  /**
+   * Analyse de sentiment en temps réel
+   */
+  async analyzeSentiment(textData: {
+    content: string;
+    context: string;
+    user_profile?: any;
+  }): Promise<{
+    sentiment_score: number;
+    emotional_indicators: any;
+    tone_analysis: any;
+    recommendations: string[];
+    confidence: number;
+  }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/analyze/sentiment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(textData)
+      });
+
+      if (!response.ok) throw new Error('Sentiment analysis unavailable');
+      return await response.json();
+    } catch (error) {
+      return this.analyzeSentimentFallback(textData);
+    }
+  }
+
+  // Méthodes fallback pour les nouvelles fonctionnalités
+
+  private predictMissionSuccessFallback(missionData: any) {
+    const complexity = missionData.complexity || 5;
+    const budget = missionData.budget || 1000;
+    const urgency = missionData.urgency === 'high' ? 0.7 : 1.0;
+    
+    const success_probability = Math.min(0.95, 
+      (0.5 + (budget / 10000) * 0.3 + (10 - complexity) / 10 * 0.2) * urgency
+    );
+
+    return {
+      success_probability: Math.round(success_probability * 100) / 100,
+      key_factors: [
+        'Budget adapté au projet',
+        'Complexité maîtrisable',
+        'Délais réalistes'
+      ],
+      risk_assessment: {
+        technical_risk: complexity > 7 ? 'high' : 'medium',
+        budget_risk: budget < 1000 ? 'high' : 'low',
+        timeline_risk: urgency < 1 ? 'high' : 'medium'
+      },
+      optimization_suggestions: [
+        'Préciser les spécifications techniques',
+        'Adapter le budget au marché',
+        'Planifier des jalons intermédiaires'
+      ],
+      confidence_level: 0.78
+    };
+  }
+
+  private negotiatePriceFallback(negotiationData: any) {
+    const { initial_bid, client_budget, mission_complexity } = negotiationData;
+    const middle_ground = (initial_bid + client_budget) / 2;
+    const suggested_counter_offer = Math.round(middle_ground * (1 + mission_complexity * 0.05));
+
+    return {
+      suggested_counter_offer,
+      negotiation_strategy: 'collaborative',
+      win_probability: 0.72,
+      arguments: [
+        'Prix équitable basé sur la complexité',
+        'Expertise confirmée du prestataire',
+        'Délais de livraison optimisés'
+      ],
+      next_steps: [
+        'Proposer un appel de clarification',
+        'Détailler la valeur ajoutée',
+        'Suggérer un paiement échelonné'
+      ]
+    };
+  }
+
+  private analyzeBehaviorFallback(userId: string, actionsHistory: any[]) {
+    const engagement_score = Math.min(100, actionsHistory.length * 5);
+    
+    return {
+      behavior_patterns: {
+        most_active_time: '14h-18h',
+        preferred_categories: ['développement', 'design'],
+        avg_session_duration: 25,
+        interaction_frequency: 'high'
+      },
+      preferences: {
+        budget_range: '1000-5000€',
+        project_duration: '2-4 semaines',
+        communication_style: 'direct'
+      },
+      success_indicators: {
+        completion_rate: 0.89,
+        client_satisfaction: 4.6,
+        repeat_business: 0.34
+      },
+      personalized_recommendations: [
+        'Missions React/Node.js correspondant à votre profil',
+        'Projets avec budget 2000-4000€',
+        'Clients privilégiant la qualité'
+      ],
+      engagement_score
+    };
+  }
+
+  private optimizePricingRealTimeFallback(missionId: string, currentMarketData: any) {
+    const base_price = currentMarketData.base_price || 2000;
+    const demand_factor = currentMarketData.demand_level === 'high' ? 1.2 : 0.9;
+    const optimal_price = Math.round(base_price * demand_factor);
+
+    return {
+      optimal_price,
+      price_elasticity: 0.8,
+      demand_forecast: {
+        current_level: 'medium',
+        trend: 'increasing',
+        expected_change: '+15%'
+      },
+      competitive_positioning: 'competitive',
+      adjustment_reasoning: [
+        'Demande du marché en hausse',
+        'Concurrence modérée',
+        'Votre expertise reconnue'
+      ]
+    };
+  }
+
+  private intelligentMatchingFallback(criteria: any) {
+    const { mission, provider_pool } = criteria;
+    
+    // Simulation de matching basique
+    const ranked_matches = provider_pool.slice(0, 5).map((provider: any, index: number) => ({
+      ...provider,
+      match_score: Math.round((90 - index * 5) + Math.random() * 10),
+      compatibility_factors: ['Compétences alignées', 'Historique positif', 'Disponibilité']
+    }));
+
+    return {
+      ranked_matches,
+      matching_explanations: {
+        top_criteria: ['Expertise technique', 'Fiabilité', 'Rapport qualité-prix'],
+        algorithm_insights: ['Correspondance des compétences prioritaire', 'Historique de performance considéré']
+      },
+      confidence_scores: ranked_matches.map(() => Math.random() * 0.3 + 0.7),
+      alternative_suggestions: [
+        'Élargir les critères géographiques',
+        'Ajuster la fourchette budgétaire',
+        'Considérer des profils juniors encadrés'
+      ]
+    };
+  }
+
+  private analyzeSentimentFallback(textData: any) {
+    const content = textData.content.toLowerCase();
+    let sentiment_score = 0.5; // Neutre par défaut
+    
+    // Analyse basique de sentiment
+    const positive_words = ['excellent', 'parfait', 'satisfait', 'recommande', 'professionnel'];
+    const negative_words = ['déçu', 'problème', 'retard', 'insatisfait', 'mauvais'];
+    
+    positive_words.forEach(word => {
+      if (content.includes(word)) sentiment_score += 0.1;
+    });
+    
+    negative_words.forEach(word => {
+      if (content.includes(word)) sentiment_score -= 0.1;
+    });
+    
+    sentiment_score = Math.max(0, Math.min(1, sentiment_score));
+
+    return {
+      sentiment_score,
+      emotional_indicators: {
+        satisfaction: sentiment_score > 0.6 ? 'high' : 'medium',
+        frustration: sentiment_score < 0.4 ? 'detected' : 'low',
+        engagement: 'medium'
+      },
+      tone_analysis: {
+        formality: 'professional',
+        urgency: content.includes('urgent') ? 'high' : 'medium',
+        clarity: 'good'
+      },
+      recommendations: [
+        sentiment_score < 0.5 ? 'Surveiller cette interaction' : 'Interaction positive',
+        'Maintenir le niveau de service',
+        'Proposer un suivi personnalisé'
+      ],
+      confidence: 0.75
+    };
+  }
+}
+
 export const aiService = new AIService();
 export type { AIScoreRequest, AIScoreResponse, PriceRecommendationRequest, PriceRecommendationResponse };

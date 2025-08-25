@@ -29,7 +29,8 @@ import {
 import { useLocation } from 'wouter';
 import { QuickMissionCreator } from '@/components/missions/quick-mission-creator';
 import { AnalyticsDashboard } from '@/components/dashboard/analytics-dashboard'; // Assuming this component exists
-import { IntelligentDashboard } from '@/components/dashboard/intelligent-dashboard'; // New AI insights dashboard
+import { IntelligentDashboard } from '../components/ai/intelligent-dashboard';
+import { AINegotiator } from '../components/ai/ai-negotiator';
 import { AIAssistant } from '@/components/ai/ai-assistant'; // New AI assistant component
 
 export default function Dashboard() {
@@ -45,6 +46,9 @@ export default function Dashboard() {
     queryKey: ['/api/users', user?.id, 'bids'],
     enabled: !!user && user.type === 'provider',
   });
+
+  // Feature flag for AI Dashboard (can be controlled from backend or config)
+  const enableAIDashboard = true; 
 
   if (!user) {
     return (
@@ -280,11 +284,70 @@ export default function Dashboard() {
         {/* Enhanced Tabs Section */}
         <Tabs defaultValue="missions" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="missions">Mes missions</TabsTrigger>
-          <TabsTrigger value="analytics">Analytiques</TabsTrigger>
-          <TabsTrigger value="ai-insights">Insights IA</TabsTrigger>
-        </TabsList>
+            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="missions">Mes missions</TabsTrigger>
+            <TabsTrigger value="analytics">Analytiques</TabsTrigger>
+            <TabsTrigger value="ai-insights">Insights IA</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+            {enableAIDashboard && (
+              <div className="mt-8 space-y-8">
+                <IntelligentDashboard />
+
+                {/* Section test des nouvelles fonctionnalités IA */}
+                <div className="border-t pt-8">
+                  <h3 className="text-xl font-semibold mb-4">🧪 Nouvelles Fonctionnalités IA (Beta)</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Test Négociation IA */}
+                    <AINegotiator 
+                      negotiationData={{
+                        initial_bid: 3000,
+                        client_budget: 2500,
+                        mission_complexity: 7,
+                        provider_profile: {
+                          rating: 4.8,
+                          experience_years: 5,
+                          success_rate: 0.92
+                        }
+                      }}
+                    />
+
+                    {/* Prédiction de Succès */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          🎯 Prédiction de Succès
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="text-center">
+                            <div className="text-3xl font-bold text-green-600">87%</div>
+                            <p className="text-sm text-gray-600">Probabilité de succès</p>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span>Facteurs techniques</span>
+                              <span className="text-green-600">Excellent</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Correspondance budget</span>
+                              <span className="text-yellow-600">Bon</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span>Délais réalistes</span>
+                              <span className="text-green-600">Très bon</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="missions" className="space-y-6">
             {userMissions.length > 0 ? (
@@ -365,9 +428,9 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="ai-insights">
-          <IntelligentDashboard />
-        </TabsContent>
-      </Tabs>
+            <IntelligentDashboard />
+          </TabsContent>
+        </Tabs>
 
       <AIAssistant 
         currentPage="dashboard" 

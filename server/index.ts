@@ -2560,6 +2560,17 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 
+// Import advanced AI routes
+import { registerAdvancedAIRoutes } from './routes-ai-advanced.js';
+
+// Register advanced AI routes
+try {
+  await registerAdvancedAIRoutes(app as any);
+  console.log('✅ Advanced AI routes registered');
+} catch (error) {
+  console.warn('⚠️ Advanced AI routes registration failed:', error);
+}
+
 // Serve React app for all other routes
 app.get('*', (req, res) => {
   try {
