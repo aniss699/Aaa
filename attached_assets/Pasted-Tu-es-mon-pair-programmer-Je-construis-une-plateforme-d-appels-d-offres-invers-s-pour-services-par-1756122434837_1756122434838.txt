@@ -1,0 +1,125 @@
+Tu es mon pair-programmer. Je construis une plateforme d’appels d’offres inversés pour services (particuliers/pros/entreprises). L’algorithme IA doit devenir très puissant et différenciant : meilleure compréhension des besoins, génération d’annonces optimisées, matching intelligent, estimation de prix fiable, et apprentissage continu.
+
+Ta mission : appliquer toutes les idées des messages ci-dessous (base validée + extensions ultra-puissance), en les intégrant dans le code de mon projet.
+👉 Chaque module doit être activable par feature flag, bien documenté, testé, et expliqué dans le code/README.
+
+⸻
+
+🧱 1) Architecture (services)
+
+Crée ces services modulaires :
+	•	Ingest (entrée) → gère texte, audio, images, PDF. Sert à comprendre rapidement un brief.
+	•	Normalize → nettoie, mappe à une taxonomie claire, calcule un score de complétude. Sert à rendre les annonces comparables et exploitables.
+	•	Embeddings → stocke vecteurs pgvector pour recherche dense. Sert au matching sémantique missions ↔ prestataires.
+	•	Generator → copilote d’annonce, génération de variantes, templates, fiche SOW. Sert à réduire l’effort de l’utilisateur.
+	•	Questioner → pose max 5 questions dynamiques basées sur la valeur d’information (VoI). Sert à compléter les données manquantes.
+	•	Pricer → calcule estimation prix (ML + règles), élasticité locale, prix garanti ± SLA. Sert à guider client et pros avec transparence.
+	•	Ranker → score multi-objectif (qualité, proximité, charge, badges…). Sert à classer pros de manière juste et efficace.
+	•	Router → distribue missions aux pros équitablement, évite saturation, gère diversité. Sert à maximiser la réactivité et éviter biais.
+	•	Vision_to_brief → analyse photos/vidéos pour détecter objets, surfaces, défauts. Sert à réduire la saisie manuelle et fiabiliser.
+	•	Concierge → contacte 3–5 pros pertinents automatiquement (opt-in). Sert à garantir des offres rapides.
+	•	Badges → vérifie documents (Kbis, RGE, assurances). Sert à afficher fiabilité.
+	•	Metrics → log events, A/B tests, drift monitor. Sert à piloter l’IA et mesurer performance.
+
+⸻
+
+🗄️ 2) Base de données (Postgres + pgvector)
+
+Ajoute tables/migrations pour :
+	•	taxonomies : catégories hiérarchiques avec synonymes. Sert à structurer tous les besoins.
+	•	missions : annonces enrichies (texte, structuré, médias, complétude, prix estimé, SOW).
+	•	providers : pros (skills, rayon, badges, qualité, dispo).
+	•	embeddings : vecteurs missions/pros/taxonomie. Sert au matching dense.
+	•	bids : offres soumises.
+	•	events : télémétrie (actions utilisateur/pros). Sert à la boucle d’apprentissage.
+	•	experiments : stocke variantes A/B.
+	•	verifications : badges + expiration.
+
+⸻
+
+🤖 3) Ingestion & compréhension
+	•	Vision-to-Brief : input photos/vidéos → sortie objets, matériaux, défauts, surfaces approximatives. Sert à fiabiliser l’annonce automatiquement.
+	•	Audio-brief : input audio → transcription + structuration. Sert à rendre la saisie plus naturelle.
+	•	OCR PDF : importer devis → comparer anonymisé. Sert à aider le client à benchmarker.
+	•	Normalize : mappe taxonomie, géo, calcule completeness_score, détecte ambiguïtés. Sert à indiquer ce qu’il manque pour publier.
+
+⸻
+
+✍️ 4) Génération (UX simplifiée)
+	•	Copilote d’annonce : génère 3 variantes (clair, pro, premium) + explications. Sert à gagner du temps et inspirer confiance.
+	•	Questions adaptatives : ≤5 questions, chaque question augmente fortement la précision des prédictions. Sert à éviter les longs formulaires.
+	•	SOW pro : livrables, check-lists, clauses légales. Sert à cadrer clairement dès le départ.
+	•	Templates verticales : métiers spécifiques (plomberie, dev web, nettoyage…). Sert à pré-remplir champs adaptés.
+
+⸻
+
+🎯 5) Matching & Ranking
+	•	Recherche hybride : dense (embeddings) + sparse (BM25). Sert à trouver pros pertinents même avec vocabulaire varié.
+	•	Score multi-objectif (S) : combine spécialisation, proximité, dispo, qualité, réactivité, prix, badges. Sert à donner un classement équilibré.
+	•	Contraintes : anti-concentration (pas toujours les mêmes), anti-saturation (charge). Sert à élargir la compétition.
+	•	Cold-start : extension zone + compétences voisines. Sert à ne pas bloquer un client.
+	•	Explicabilité : retour “Pourquoi ce pro est classé haut ?” (features clés). Sert à renforcer la confiance.
+
+⸻
+
+💰 6) Pricing & enchères
+	•	Estimateur : prix ± intervalle de confiance + décomposition (matériel, MO, déplacement). Sert à clarifier et rassurer.
+	•	Élasticité locale : modèle bayésien hiérarchique (ville × catégorie × saison). Sert à adapter au marché.
+	•	Prix garanti ± SLA : si annonce bien complète → proposer un prix verrouillé avec délai. Sert à donner certitude au client.
+	•	Stratégies dynamiques : Dutch inversé, flash. Sert à maximiser vitesse de réponse.
+	•	Bandits contextuels : optimiser en continu les stratégies. Sert à améliorer conversion.
+
+⸻
+
+🤝 7) Concierge & comparateur
+	•	Concierge IA : envoie l’annonce optimisée à 3–5 pros opt-in. Sert à accélérer 1ère offre.
+	•	Comparateur d’offres : interface claire (prix, délai, garanties, score). Sert à décider vite.
+
+⸻
+
+✅ 8) Qualité & conformité
+	•	Badges : vérif légale + expiration. Sert à valoriser les pros fiables.
+	•	Détection fraude : prix aberrants, copier-coller, multi-comptes. Sert à protéger la marketplace.
+
+⸻
+
+📊 9) Observabilité & apprentissage
+	•	Events : log complet des actions. Sert à réentraîner modèles.
+	•	KPI exposés :
+	•	% annonces complétées sans aide vs avec copilote
+	•	Temps moyen de publication
+	•	% missions avec ≥1 offre à 24h/72h
+	•	Écart prix estimé vs final (MAPE)
+	•	Temps à première réponse
+	•	NPS post-mission
+	•	Drift monitor : détecte quand données changent trop. Sert à éviter dérive des modèles.
+	•	Boucle apprentissage : delta estimé/final + satisfaction = labels pour améliorer pricer & ranker. Sert à rendre l’IA plus précise avec le temps.
+
+⸻
+
+📌 10) Front-end (exigences)
+	•	Accueil : champ besoin + bouton “Analyser/Optimiser” → copilote + questions.
+	•	Fiche mission : estimation live + score de complétude + risques.
+	•	Marketplace : tri par score S + filtres (badges, prix, délai).
+	•	Comparateur d’offres intégré.
+	•	Mode “intro payante ciblée”.
+	•	FR par défaut, mobile-first, couleurs dynamiques.
+
+⸻
+
+🧪 11) Tests & docs
+	•	Tests unitaires + intégration pour chaque service.
+	•	Scénario e2e minimal : publier mission → questions → estimation → matching → offre.
+	•	README (archi, lancement, flags), API.md (endpoints), MODEL_CARD.md (données/biais), OBSERVABILITY.md (KPI + alertes).
+
+⸻
+
+🎯 Livrable final attendu : un PR complet avec code + migrations + docs + tests, prêt à tourner sur Replit en Preview (corrige page blanche, erreurs 404 et analyzeWithAI).
+
+⸻
+
+👉 Exécute toutes ces étapes. Si une partie nécessite un mock, implémente un V0 clair avec flag.
+
+⸻
+
+Veux-tu que je t’ajoute aussi un exemple de structure de fichiers/migrations directement dans le prompt (pour guider Replit plus concrètement) ?
