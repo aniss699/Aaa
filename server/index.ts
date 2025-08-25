@@ -307,7 +307,6 @@ app.post('/api/ai/quick-analysis', async (req, res) => {
   }
 });
 
-// Endpoint pour l'analyse IA rapide pendant la saisie
 // Endpoint pour l'analyse de prix IA
 app.post('/api/ai/price-analysis', async (req, res) => {
   try {
@@ -519,7 +518,7 @@ app.post('/api/ai/optimize-brief', (req, res) => {
 app.post('/api/ai/projects/:id/improve', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Récupérer la mission
     const mission = missions.find(m => m.id === id);
     if (!mission) {
@@ -550,7 +549,7 @@ app.post('/api/ai/projects/:id/improve', async (req, res) => {
     }
 
     const improvement = await mlResponse.json();
-    
+
     // Persistance en base (simulation avec stockage en mémoire)
     const standardizationId = `std_${Date.now()}`;
     const standardization = {
@@ -594,7 +593,7 @@ app.post('/api/ai/projects/:id/improve', async (req, res) => {
 app.get('/api/ai/projects/:id/preview', (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Récupérer la mission et sa standardisation
     const mission = missions.find(m => m.id === id);
     if (!mission) {
@@ -685,7 +684,7 @@ app.post('/api/ai/projects/:id/brief/complete', async (req, res) => {
     }
 
     const updatedStandardization = await mlResponse.json();
-    
+
     // Mise à jour du stockage
     global.projectStandardizations?.set(id, {
       ...global.projectStandardizations.get(id),
@@ -779,7 +778,7 @@ app.post('/api/ai/projects/:id/apply', (req, res) => {
     if (!global.projectChangeLogs) {
       global.projectChangeLogs = [];
     }
-    
+
     global.projectChangeLogs.push({
       id: `log_${Date.now()}`,
       projectId: id,
@@ -809,7 +808,7 @@ app.get('/api/projects/:id/changelog', (req, res) => {
     const { id } = req.params;
 
     const changeLogs = global.projectChangeLogs?.filter(log => log.projectId === id) || [];
-    
+
     res.json({
       project_id: id,
       total_changes: changeLogs.length,
@@ -1905,7 +1904,7 @@ ${description.length > 50 ? description : 'Développement et intégration de sol
 **Planning et Budget :**
 • Durée : ${analysis.isUrgent ? '4-8 semaines' : '2-4 mois'}
 • Budget : Devis détaillé requis
-• Paiement : Selon avancement et jalons`;
+• Paiement : Selon jalons`;
 }
 
 function generateMenageOptimizedDescription(description, title, analysis) {

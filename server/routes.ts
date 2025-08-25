@@ -215,6 +215,21 @@ export async function routes(fastify: FastifyInstance) {
         fastify.log.warn('Service ML indisponible, utilisation du fallback');
       }
 
+      // Enrichissements IA si activés
+      let enhancements = null;
+      if (process.env.ENABLE_NORMALIZE === 'true' || process.env.ENABLE_GENERATOR === 'true') {
+        try {
+          const { aiEnhancementAdapter } = await import('../apps/api/src/ai/adapters/enhancementAdapter');
+          enhancements = await aiEnhancementAdapter.enhanceBrief({
+            title: data.title,
+            description: data.description,
+            category: data.category
+          });
+        } catch (error) {
+          fastify.log.warn('AI enhancements unavailable:', error);
+        }
+      }
+
       // Génération complète avec structure enrichie
       const suggestion = generateRichSuggestion(data, mlResult);
 

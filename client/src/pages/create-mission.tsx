@@ -13,6 +13,7 @@ import { Separator } from '../components/ui/separator';
 import { Brain, Wand2, CheckCircle, AlertCircle, Loader2, Euro, Calendar } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { paths } from '../routes/paths';
+import { BriefEnhancer } from "@/components/ai/brief-enhancer";
 
 interface MissionFormData {
   title: string;
@@ -638,6 +639,15 @@ export default function CreateMission() {
               </Card>
             ) : (
               <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5" />
+                    Description du projet
+                  </CardTitle>
+                  <CardDescription>
+                    Décrivez précisément votre besoin pour attirer les bons prestataires
+                  </CardDescription>
+                </CardHeader>
                 <CardContent className="text-center py-8">
                   <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -656,6 +666,25 @@ export default function CreateMission() {
               </Card>
             )}
           </div>
+
+          {/* Analyse IA - Lazy loaded */}
+          {(formData.title && formData.description && formData.description.length > 20) && (
+            <React.Suspense fallback={<div>Chargement...</div>}>
+              <BriefEnhancer 
+                briefData={{
+                  title: formData.title,
+                  description: formData.description,
+                  category: formData.category
+                }}
+                onEnhancementComplete={(enhancements) => {
+                  console.log('Enhancements received:', enhancements);
+                  // Optionnel : stocker pour usage ultérieur
+                }}
+              />
+            </React.Suspense>
+          )}
+
+          {/* Détails du projet */}
         </div>
       </div>
     </div>

@@ -68,8 +68,64 @@ async def health_check():
             "taxonomizer": "ready", 
             "template_rewriter": "ready",
             "brief_quality_analyzer": "ready",
-            "price_time_suggester": "ready"
+            "price_time_suggester": "ready",
+            "normalize": "ready",
+            "generate": "ready", 
+            "questions": "ready"
         }
+    }
+
+@app.post("/normalize")
+async def normalize_brief(request: dict):
+    """Normalise et structure un brief"""
+    try:
+        # Import dynamique pour éviter les erreurs si module pas installé
+        from enhancements.normalize import normalize_brief
+        
+        result = normalize_brief(
+            title=request.get("title", ""),
+            description=request.get("description", ""),
+            category=request.get("category")
+        )
+        
+        return {"success": True, "data": result}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/generate") 
+async def generate_variants(request: dict):
+    """Génère des variantes d'annonces"""
+    try:
+        from enhancements.generator import generate_brief_variants
+        
+        result = generate_brief_variants(
+            title=request.get("title", ""),
+            description=request.get("description", ""),
+            category=request.get("category", "autre")
+        )
+        
+        return {"success": True, "data": result}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/questions")
+async def get_questions(request: dict):
+    """Génère des questions adaptatives"""
+    try:
+        from enhancements.questioner import get_next_questions
+        
+        brief = request.get("brief", {})
+        answers = request.get("answers", {})
+        max_questions = request.get("max_questions", 5)
+        
+        result = get_next_questions(brief, answers, max_questions)
+        
+        return {"success": True, "data": result}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
     }
 
 @app.post("/improve", response_model=ProjectImproveResponse)
