@@ -1,0 +1,168 @@
+Tu es mon pair‑programmer. Important : ne réécris pas l’algorithme ni l’app. Fais uniquement des ajouts/améliorations incrémentales par-dessus l’existant, en conservant l’API, les signatures, la structure des fichiers et le style actuels.
+Toutes les nouveautés sont encapsulées (wrappers/adapters), activables par feature flags, et livrées via un PR unique avec diffs minimaux + docs + tests.
+Si une info manque, implémente un V0 propre derrière un flag OFF par défaut.
+
+⸻
+
+0) Rappels des objectifs (messages précédents intégrés)
+	•	Produit : plateforme d’appels d’offres inversés (particuliers/pros/entreprises).
+	•	Cible : rendre le moteur IA plus puissant sans casser l’existant :
+	1.	meilleure compréhension des briefs (texte, audio, images),
+	2.	génération (annonce optimisée, SOW, questions ciblées),
+	3.	matching & ranking multi‑objectif,
+	4.	pricing (estimation + élasticité locale + stratégies d’enchères),
+	5.	observabilité & apprentissage continu.
+	•	Contraintes : FR par défaut, RGPD by design, flags, tests, docs.
+
+⸻
+
+1) Règles “anti‑réécriture” (obligatoires)
+	1.	Pas de renommage/suppression de fichiers/fonctions existants (sauf bug critique documenté).
+	2.	Aucune signature publique changée (types, routes, props). Ajouter adapters/shims si besoin.
+	3.	Migrations SQL uniquement additives (nouvelles tables/colonnes nullables, aucun DROP).
+	4.	Feature flags ENABLE_* (bool) OFF par défaut.
+	5.	Nouveaux modules dans enhancements/ + clients minces dans adapters/ pour consommer l’existant.
+	6.	Diff minimal : ≤ 60 lignes modifiées par fichier existant; tout le reste en nouveaux fichiers.
+	7.	Tests régressions : snapshot des endpoints/fonctions clés avant/après (doivent passer inchangés).
+	8.	Compat layer : si un nouveau service remplace une logique, garder l’ancienne et router selon flag.
+
+⸻
+
+2) Schéma & stockage (additif, expliqué)
+
+Créer migrations additives (Postgres + pgvector) :
+	•	taxonomies(id,label,parent_id,synonyms jsonb) — structure service unifiée (sert à normaliser briefs).
+	•	missions(..., structured jsonb, completeness_score int, sow jsonb, price_estimation jsonb) — enrichit les annonces sans toucher aux champs actuels.
+	•	providers(..., skills jsonb, radius_km, badges jsonb, quality_score, response_rate) — ajoute des signaux pour le ranking.
+	•	embeddings(id, owner_type enum{mission,provider,taxonomy}, owner_id, vector, meta jsonb) — matching sémantique en parallèle de la recherche actuelle.
+	•	bids(id, mission_id, provider_id, price, breakdown jsonb, eta_days, message, created_at) — support comparateur d’offres.
+	•	events(id, ts, actor, type, payload jsonb) — observabilité/apprentissage.
+	•	experiments(id, key, variant, meta jsonb) — A/B tests.
+	•	verifications(provider_id, type, status, expires_at) — badges fiabilité.
+
+Tous les ajouts sont optionnels et n’impactent pas les lectures actuelles.
+
+⸻
+
+3) Services ajoutés (avec explication, en surcouche)
+
+Créer sous enhancements/ + adapters vers l’existant :
+	•	ingest/
+	•	vision_to_brief: images/vidéos → {objects,materials,defects,approx_measures}. But : réduire la saisie, fiabiliser.
+	•	audio_to_text: audio → texte. But : saisie naturelle.
+	•	pdf_ocr: devis PDF → texte anonymisé. But : comparateur simple.
+	•	normalize/
+	•	map taxonomie + géocodage + completeness_score + ambiguities[]. But : annonces comparables & actionnables.
+	•	N’affecte pas les champs actuels; écrit dans structured + métriques.
+	•	generator/
+	•	brief_variants: 3 variantes (clair/pro/premium) avec explications. But : gain de temps & qualité.
+	•	sow: fiche SOW (livrables, check‑lists, clauses). But : cadrage pro.
+	•	templates: par verticale (plomberie, dev, nettoyage…). But : champs pertinents d’emblée.
+	•	questioner/
+	•	next_question: ≤5 questions VoI. But : compléter uniquement ce qui augmente précision prix/match.
+	•	pricer/
+	•	estimate: prix + intervalle de confiance + décomposition (matériel/MO/déplacement). But : transparence.
+	•	local_elasticity: bayésien hiérarchique ville×catégorie×saison (V0). But : adapter au marché local.
+	•	guaranteed_price: si completeness_score≥85, propose “prix garanti ± SLA”. Flag OFF par défaut.
+	•	ranker/
+	•	hybrid_search: dense (pgvector) + sparse (BM25 si dispo) en plus de la recherche actuelle.
+	•	score: S = w1Specialisation + w2Proximité + w3Charge + w4Qualité + w5Réactivité + w6AffinitéPrix + w7*Badges/Conformité.
+	•	explain: raisons principales (features) du ranking. But : confiance utilisateur.
+	•	Contraintes : anti‑concentration / anti‑saturation (ne remplace pas l’ancien tri tant que flag=OFF).
+	•	router/
+	•	Répartit missions vers un set de pros (équité + diversité). But : temps de réponse court, pas de biais.
+	•	Log dans events pour audit.
+	•	concierge/
+	•	Outreach opt‑in à 3–5 pros qualifiés + relances. But : garantir ≥1 offre rapide.
+	•	Mock en dev; réel derrière flag.
+	•	badges/
+	•	Vérifs légères (Kbis/RGE/assurances) → verifications. But : fiabilité visible, pondère S.
+	•	metrics/
+	•	Events, A/B, drift monitor. But : boucle d’apprentissage et pilotage KPI.
+
+⸻
+
+4) Intégration front (sans casser l’UI)
+	•	Accueil : bouton “Analyser/Optimiser” → appelle normalize + generator.brief_variants + questioner.next_question. Ajout non bloquant.
+	•	Fiche mission : encarts estimation live, score de complétude, ambiguïtés/risques (composants nouveaux, isolés).
+	•	Marketplace : option de tri “Score S (nouveau)” en plus des tris existants.
+	•	Comparateur d’offres : page/section dédiée lisant bids.
+	•	Intro payante ciblée : bouton qui appelle concierge.
+
+Tous les composants sont lazy‑loaded et masqués si flags OFF.
+
+⸻
+
+5) Flags (exemples à ajouter au .env)
+
+ENABLE_VISION_TO_BRIEF=false
+ENABLE_AUDIO_BRIEF=false
+ENABLE_PDF_OCR=false
+ENABLE_NORMALIZE=true
+ENABLE_GENERATOR=true
+ENABLE_QUESTIONER=true
+ENABLE_PRICER=true
+ENABLE_LOCAL_ELASTICITY=false
+ENABLE_GUARANTEED_PRICE=false
+ENABLE_HYBRID_SEARCH=false
+ENABLE_RANKER_EXPLAIN=false
+ENABLE_ROUTER=false
+ENABLE_CONCIERGE=false
+ENABLE_BADGES=false
+ENABLE_METRICS=true
+
+Par défaut conservateur : seuls normalize/generator/pricer(metrics) activés.
+
+⸻
+
+6) Observabilité & KPI (additif)
+
+Exposer /metrics/kpi (JSON) — sans toucher aux métriques existantes :
+	•	completion_without_ai vs with_ai
+	•	time_to_publish_sec
+	•	offers_24h / offers_72h
+	•	mape_price (estimé vs final)
+	•	time_to_first_response_sec
+	•	nps_post_mission
+
+Ajoute events (front+back) pour les actions clés; met drift monitor simple (stats des features).
+
+⸻
+
+7) Tests & docs (compat d’abord)
+	•	Tests de non‑régression : endpoints/fonctions historiques inchangés.
+	•	Tests intégration : nouveaux services sous flags.
+	•	E2E minimal (flags ON) : publier → questions → estimation → ranking → 1 offre.
+	•	Docs :
+	•	README (comment activer les flags et lancer sans rien casser),
+	•	API.md (nouveaux endpoints),
+	•	MODEL_CARD.md (données/biais/limites),
+	•	OBSERVABILITY.md (KPI + procédures).
+
+⸻
+
+8) Plan de commits (petits incréments)
+	1.	Migrations additives + seeds taxonomie/synonymes.
+	2.	enhancements/normalize + flags + tests.
+	3.	generator + questioner (VoI) + UI lazy‑load.
+	4.	pricer V0 + métriques.
+	5.	ranker (hybride + score + explain) derrière flag.
+	6.	router, concierge, badges (mocks si besoin) derrière flag.
+	7.	Dash KPI + drift monitor.
+	8.	Docs & E2E.
+
+⸻
+
+9) Correctifs Replit à inclure (sans refactor global)
+	•	Corriger page blanche et 404 router en ajoutant route fallback sans renommer l’arborescence.
+	•	Ajouter un polyfill/guard pour analyzeWithAI (ne rien appeler si flag OFF).
+	•	Vérifier preview Replit OK (script de démarrage + healthcheck).
+
+⸻
+
+Livrable attendu
+	•	PR unique : code + migrations (additives) + flags + tests + docs.
+	•	Aucun comportement existant cassé; tous les ajouts désactivables.
+	•	Diff minimal dans fichiers existants; nouvelles capacités dans enhancements/ + adapters/.
+
+Implémente tout cela comme sur‑couche. Si un conflit est inévitable, documente la raison, garde la voie existante par défaut, et place la nouveauté derrière un flag.
