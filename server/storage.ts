@@ -1,71 +1,41 @@
 
-<old_str>export const storage = {
-  users: [] as User[],
-  projects: [] as Project[],
-  bids: [] as Bid[],
+// Types
+interface User {
+  id: string;
+  email: string;
+  role: 'CLIENT' | 'PRO' | 'ADMIN';
+  rating_mean?: number;
+  rating_count?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-  // User methods
-  createUser: (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const user: User = {
-      id: `user_${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...userData
-    };
-    storage.users.push(user);
-    return user;
-  },
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  budget: string;
+  category: string;
+  status: 'DRAFT' | 'PUBLISHED' | 'IN_PROGRESS' | 'COMPLETED';
+  clientId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-  getUser: (id: string) => storage.users.find(u => u.id === id),
-  getUsers: () => storage.users,
+interface Bid {
+  id: string;
+  projectId: string;
+  providerId: string;
+  amount: number;
+  timeline_days: number;
+  message: string;
+  score_breakdown?: any;
+  is_leading: boolean;
+  flagged: boolean;
+  createdAt: Date;
+}
 
-  // Project methods
-  createProject: (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const project: Project = {
-      id: `project_${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...projectData
-    };
-    storage.projects.push(project);
-    return project;
-  },
-
-  getProject: (id: string) => storage.projects.find(p => p.id === id),
-  getProjects: () => storage.projects,
-  updateProject: (id: string, updates: Partial<Project>) => {
-    const index = storage.projects.findIndex(p => p.id === id);
-    if (index !== -1) {
-      storage.projects[index] = { ...storage.projects[index], ...updates, updatedAt: new Date() };
-      return storage.projects[index];
-    }
-    return null;
-  },
-
-  // Bid methods
-  createBid: (bidData: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const bid: Bid = {
-      id: `bid_${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...bidData
-    };
-    storage.bids.push(bid);
-    return bid;
-  },
-
-  getBid: (id: string) => storage.bids.find(b => b.id === id),
-  getBids: () => storage.bids,
-  updateBidStatus: (id: string, status: BidStatus) => {
-    const bid = storage.bids.find(b => b.id === id);
-    if (bid) {
-      bid.status = status;
-      bid.updatedAt = new Date();
-    }
-    return bid;
-  }
-};</old_str>
-<new_str>export const storage = {
+export const storage = {
   users: [] as User[],
   projects: [] as Project[],
   bids: [] as Bid[],
@@ -76,6 +46,7 @@
   externalCompanySignals: [] as any[],
   sourcingMatches: [] as any[],
   projectChangeLogs: [] as any[],
+  recentErrors: [] as any[],
 
   // User methods
   createUser: (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -116,11 +87,10 @@
   },
 
   // Bid methods
-  createBid: (bidData: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => {
+  createBid: (bidData: Omit<Bid, 'id' | 'createdAt'>) => {
     const bid: Bid = {
       id: `bid_${Date.now()}`,
       createdAt: new Date(),
-      updatedAt: new Date(),
       ...bidData
     };
     storage.bids.push(bid);
@@ -129,28 +99,30 @@
 
   getBid: (id: string) => storage.bids.find(b => b.id === id),
   getBids: () => storage.bids,
-  updateBidStatus: (id: string, status: BidStatus) => {
-    const bid = storage.bids.find(b => b.id === id);
-    if (bid) {
-      bid.status = status;
-      bid.updatedAt = new Date();
-    }
-    return bid;
-  },
 
   // ProjectStandardization methods
   saveProjectStandardization: (standardization: any) => {
     const existing = storage.projectStandardizations.findIndex(s => s.projectId === standardization.projectId);
     if (existing !== -1) {
-      storage.projectStandardizations[existing] = standardization;
+      storage.projectStandardizations[existing] = {
+        ...standardization,
+        updatedAt: new Date()
+      };
     } else {
-      storage.projectStandardizations.push(standardization);
+      storage.projectStandardizations.push({
+        ...standardization,
+        id: `std_${Date.now()}`,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
     }
     return standardization;
   },
 
   getProjectStandardization: (projectId: string) => 
     storage.projectStandardizations.find(s => s.projectId === projectId),
+
+  getProjectStandardizations: () => storage.projectStandardizations,
 
   updateProjectStandardization: (projectId: string, updates: any) => {
     const index = storage.projectStandardizations.findIndex(s => s.projectId === projectId);
@@ -167,7 +139,16 @@
 
   // WebSource methods
   saveWebSource: (source: any) => {
-    storage.webSources.push(source);
+    const existing = storage.webSources.findIndex(s => s.domain === source.domain);
+    if (existing !== -1) {
+      storage.webSources[existing] = { ...source, updatedAt: new Date() };
+    } else {
+      storage.webSources.push({ 
+        ...source, 
+        id: `src_${Date.now()}`,
+        createdAt: new Date() 
+      });
+    }
     return source;
   },
 
@@ -176,7 +157,16 @@
 
   // WebDoc methods
   saveWebDoc: (doc: any) => {
-    storage.webDocs.push(doc);
+    const existing = storage.webDocs.findIndex(d => d.url === doc.url);
+    if (existing !== -1) {
+      storage.webDocs[existing] = { ...doc, updatedAt: new Date() };
+    } else {
+      storage.webDocs.push({ 
+        ...doc, 
+        id: `doc_${Date.now()}`,
+        createdAt: new Date() 
+      });
+    }
     return doc;
   },
 
@@ -190,7 +180,6 @@
     );
     
     if (existing !== -1) {
-      // Mise à jour de la dernière vue
       storage.externalCompanies[existing] = {
         ...storage.externalCompanies[existing],
         ...company,
@@ -199,11 +188,16 @@
       };
       return storage.externalCompanies[existing];
     } else {
-      company.id = `ext_company_${Date.now()}`;
-      company.createdAt = new Date();
-      company.updatedAt = new Date();
-      storage.externalCompanies.push(company);
-      return company;
+      const newCompany = {
+        ...company,
+        id: `ext_company_${Date.now()}`,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date()
+      };
+      storage.externalCompanies.push(newCompany);
+      return newCompany;
     }
   },
 
@@ -212,10 +206,13 @@
 
   // ExternalCompanySignal methods
   saveExternalCompanySignal: (signal: any) => {
-    signal.id = `signal_${Date.now()}`;
-    signal.createdAt = new Date();
-    storage.externalCompanySignals.push(signal);
-    return signal;
+    const newSignal = {
+      ...signal,
+      id: `signal_${Date.now()}`,
+      createdAt: new Date()
+    };
+    storage.externalCompanySignals.push(newSignal);
+    return newSignal;
   },
 
   getExternalCompanySignals: (companyId: string) => 
@@ -235,11 +232,14 @@
       };
       return storage.sourcingMatches[existing];
     } else {
-      match.id = `match_${Date.now()}`;
-      match.createdAt = new Date();
-      match.updatedAt = new Date();
-      storage.sourcingMatches.push(match);
-      return match;
+      const newMatch = {
+        ...match,
+        id: `match_${Date.now()}`,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      storage.sourcingMatches.push(newMatch);
+      return newMatch;
     }
   },
 
@@ -266,11 +266,96 @@
 
   // ProjectChangeLog methods
   saveProjectChangeLog: (log: any) => {
-    storage.projectChangeLogs.push(log);
-    return log;
+    const newLog = {
+      ...log,
+      id: log.id || `log_${Date.now()}`,
+      createdAt: log.createdAt || new Date()
+    };
+    storage.projectChangeLogs.push(newLog);
+    
+    // Garder seulement les 1000 derniers logs
+    if (storage.projectChangeLogs.length > 1000) {
+      storage.projectChangeLogs = storage.projectChangeLogs.slice(-1000);
+    }
+    
+    return newLog;
   },
 
   getProjectChangeLogs: (projectId: string) => 
     storage.projectChangeLogs.filter(l => l.projectId === projectId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-};</new_str>
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+
+  // Error logging
+  logError: (error: any) => {
+    const errorLog = {
+      id: `error_${Date.now()}`,
+      timestamp: new Date(),
+      level: 'error',
+      message: error.message,
+      stack: error.stack,
+      context: error.context || {}
+    };
+    
+    storage.recentErrors.push(errorLog);
+    
+    // Garder seulement les 100 dernières erreurs
+    if (storage.recentErrors.length > 100) {
+      storage.recentErrors = storage.recentErrors.slice(-100);
+    }
+    
+    return errorLog;
+  },
+
+  getRecentErrors: () => storage.recentErrors
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+
+  // Statistics
+  getStats: () => ({
+    total_users: storage.users.length,
+    total_projects: storage.projects.length,
+    total_bids: storage.bids.length,
+    projects_with_ai: storage.projectStandardizations.length,
+    external_companies: storage.externalCompanies.length,
+    sourcing_matches: storage.sourcingMatches.length,
+    change_logs: storage.projectChangeLogs.length,
+    recent_errors: storage.recentErrors.length
+  }),
+
+  // Cleanup old data
+  cleanup: () => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    // Nettoyer les logs anciens
+    storage.projectChangeLogs = storage.projectChangeLogs.filter(
+      log => new Date(log.createdAt) > oneWeekAgo
+    );
+    
+    // Nettoyer les erreurs anciennes
+    storage.recentErrors = storage.recentErrors.filter(
+      error => new Date(error.timestamp) > oneWeekAgo
+    );
+    
+    console.log('Cleanup completed');
+  }
+};
+
+// Initialisation avec des données de test
+if (storage.users.length === 0) {
+  storage.createUser({
+    email: 'client@test.com',
+    role: 'CLIENT'
+  });
+  
+  storage.createUser({
+    email: 'pro@test.com', 
+    role: 'PRO',
+    rating_mean: 4.5,
+    rating_count: 12
+  });
+}
+
+// Nettoyage périodique (toutes les heures)
+setInterval(() => {
+  storage.cleanup();
+}, 60 * 60 * 1000);
