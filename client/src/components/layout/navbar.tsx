@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { Badge } from '@/components/ui/badge';
 import { AuthModal } from '@/components/auth/auth-modal';
 import { useAuth } from '@/hooks/use-auth';
+import { paths } from '@/routes/paths';
 import { User, LogOut, Menu, X, Briefcase, Users, BarChart3, Target, Brain, MessageSquare, Search, Zap, TrendingUp, Plus } from 'lucide-react';
 import {
   Sheet,
@@ -78,7 +79,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <button
-            onClick={() => setLocation('/')}
+            onClick={() => setLocation(paths.home)}
             className="flex items-center space-x-3"
           >
             <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center shadow-lg">
@@ -89,8 +90,8 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
-            <NavLink href="/marketplace">Missions</NavLink>
-            <NavLink href="/available-providers">Prestataires</NavLink>
+            <NavLink href={paths.marketplace}>Missions</NavLink>
+            <NavLink href={paths.availableProviders}>Prestataires</NavLink>
 
             {/* AI Features Dropdown */}
             <NavigationMenu>

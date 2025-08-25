@@ -415,13 +415,15 @@ export async function routes(fastify: FastifyInstance) {
           'POST /api/ai/missions/suggest',
           'POST /api/ai/missions/apply',
           'POST /api/ai/missions/answer-questions',
-          'GET /api/admin/diagnostics'
-        ]
+          'GET /api/admin/diagnostics',
+          'GET /api/logs/errors'
+        ],
+        hint: 'Vérifiez l\'URL et la méthode HTTP'
       });
     }
     
-    // Pour les autres routes, laisser le serveur Vite gérer
-    return reply.code(404).send('Not Found');
+    // Pour les autres routes, laisser le serveur Vite gérer le SPA
+    return reply.code(404).type('text/plain').send('SPA Route - handled by Vite');
   });
 }
 

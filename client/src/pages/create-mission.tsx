@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Separator } from '../components/ui/separator';
 import { Brain, Wand2, CheckCircle, AlertCircle, Loader2, Euro, Calendar } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { paths } from '@/routes/paths';
 
 interface MissionFormData {
   title: string;
@@ -278,7 +279,12 @@ export default function CreateMission() {
         description: `Mission "${formData.title}" créée et publiée`,
       });
 
-      setLocation(`/missions/${data.id}`);
+      // Rediriger vers la liste des missions ou le détail si ID disponible
+      if (data.id) {
+        setLocation(paths.missionDetail(data.id));
+      } else {
+        setLocation(paths.missions);
+      }
 
     } catch (error) {
       toast({

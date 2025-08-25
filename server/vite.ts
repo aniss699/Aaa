@@ -49,6 +49,11 @@ export async function setupVite(app: Express, server: Server) {
       return next();
     }
 
+    // Skip static assets (they should be handled by Vite middleware)
+    if (url.includes('.')) {
+      return next();
+    }
+
     try {
       const clientTemplate = path.resolve(
         import.meta.dirname,

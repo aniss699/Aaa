@@ -1,27 +1,37 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Home, ArrowLeft } from "lucide-react";
+import { AlertCircle, Home, ArrowLeft, Search, Plus } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { paths } from "@/routes/paths";
 
 export default function NotFound() {
   const [location] = useLocation();
 
+  const popularPages = [
+    { path: paths.home, label: 'Accueil', icon: Home },
+    { path: paths.marketplace, label: 'Missions', icon: Search },
+    { path: paths.createMission, label: 'Créer mission', icon: Plus },
+    { path: paths.availableProviders, label: 'Prestataires', icon: Search },
+    { path: paths.dashboard, label: 'Dashboard', icon: Home },
+  ];
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
+      <Card className="w-full max-w-lg mx-4">
         <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">404 - Page introuvable</h1>
+          <div className="flex mb-4 gap-3 items-center">
+            <AlertCircle className="h-8 w-8 text-red-500 flex-shrink-0" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">404 - Page introuvable</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                La page "{location}" n'existe pas ou a été déplacée.
+              </p>
+            </div>
           </div>
-
-          <p className="mt-4 text-sm text-gray-600">
-            La page "{location}" n'existe pas ou a été déplacée.
-          </p>
 
           <div className="mt-6 flex gap-2">
             <Button asChild variant="default">
-              <Link href="/">
+              <Link href={paths.home}>
                 <Home className="h-4 w-4 mr-2" />
                 Accueil
               </Link>
@@ -35,17 +45,27 @@ export default function NotFound() {
             </Button>
           </div>
 
-          <div className="mt-4">
-            <p className="text-xs text-gray-500">
-              Pages disponibles :
+          <div className="mt-6">
+            <p className="text-sm font-medium text-gray-700 mb-3">
+              Pages populaires :
             </p>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {['/missions', '/marketplace', '/create-mission', '/profile', '/dashboard'].map(path => (
-                <Button key={path} asChild variant="link" size="sm" className="h-auto p-1 text-xs">
-                  <Link href={path}>{path}</Link>
+            <div className="grid grid-cols-1 gap-2">
+              {popularPages.map(({ path, label, icon: Icon }) => (
+                <Button key={path} asChild variant="ghost" className="justify-start h-auto p-3">
+                  <Link href={path}>
+                    <Icon className="h-4 w-4 mr-3" />
+                    <span>{label}</span>
+                    <span className="ml-auto text-xs text-gray-400">{path}</span>
+                  </Link>
                 </Button>
               ))}
             </div>
+          </div>
+
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-xs text-blue-700">
+              💡 <strong>Astuce :</strong> Vérifiez l'URL dans la barre d'adresse ou utilisez la navigation ci-dessus.
+            </p>
           </div>
         </CardContent>
       </Card>
