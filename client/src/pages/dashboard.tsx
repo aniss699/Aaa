@@ -28,6 +28,9 @@ import {
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { QuickMissionCreator } from '@/components/missions/quick-mission-creator';
+import { AnalyticsDashboard } from '@/components/dashboard/analytics-dashboard'; // Assuming this component exists
+import { IntelligentDashboard } from '@/components/dashboard/intelligent-dashboard'; // New AI insights dashboard
+import { AIAssistant } from '@/components/ai/ai-assistant'; // New AI assistant component
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -276,13 +279,12 @@ export default function Dashboard() {
 
         {/* Enhanced Tabs Section */}
         <Tabs defaultValue="missions" className="space-y-6">
-          <TabsList className="bg-white shadow-lg border-0 p-1 rounded-xl">
-            <TabsTrigger value="missions" className="rounded-lg font-semibold">Mes missions</TabsTrigger>
-            {user.type === 'provider' && (
-              <TabsTrigger value="bids" className="rounded-lg font-semibold">Mes candidatures</TabsTrigger>
-            )}
-            <TabsTrigger value="analytics" className="rounded-lg font-semibold">Statistiques</TabsTrigger>
-          </TabsList>
+          <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="missions">Mes missions</TabsTrigger>
+          <TabsTrigger value="analytics">Analytiques</TabsTrigger>
+          <TabsTrigger value="ai-insights">Insights IA</TabsTrigger>
+        </TabsList>
 
           <TabsContent value="missions" className="space-y-6">
             {userMissions.length > 0 ? (
@@ -359,52 +361,21 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-xl border-0">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-gray-800">Performance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Missions complétées</span>
-                      <span className="font-semibold text-green-600">{completedMissions}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Temps de réponse moyen</span>
-                      <span className="font-semibold">2h 15min</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Taux de satisfaction</span>
-                      <span className="font-semibold text-blue-600">4.9/5</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-xl border-0">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-gray-800">Insights</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        💡 Vos missions reçoivent en moyenne 3.2 candidatures
-                      </p>
-                    </div>
-                    <div className="p-4 bg-green-50 rounded-lg">
-                      <p className="text-sm text-green-800">
-                        🎯 98% de vos projets trouvent un prestataire
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <AnalyticsDashboard />
           </TabsContent>
-        </Tabs>
-      </div>
+
+          <TabsContent value="ai-insights">
+          <IntelligentDashboard />
+        </TabsContent>
+      </Tabs>
+
+      <AIAssistant 
+        currentPage="dashboard" 
+        userContext={{ 
+          isProvider: true,
+          completedProjects: 15 
+        }} 
+      />
     </div>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Search, Filter, MapPin, Calendar, DollarSign, Star, Sliders, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -40,12 +39,12 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
     distance: 50,
     dateRange: 'all',
     sortBy: 'relevance',
-    availability: 'all',
-    ...initialFilters
+    availability: 'all'
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
 
   const updateFilters = (updates: Partial<SearchFilters>) => {
     const newFilters = { ...filters, ...updates };
@@ -90,7 +89,7 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
 
   const handleSearchInput = (query: string) => {
     updateFilters({ query });
-    
+
     // Simuler des suggestions de recherche
     if (query.length > 2) {
       const mockSuggestions = [
@@ -103,6 +102,40 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
       setSuggestions(mockSuggestions);
     } else {
       setSuggestions([]);
+    }
+  };
+
+  const handleSearch = () => {
+    onFiltersChange({
+      query: filters.query,
+      categories: filters.categories,
+      location: filters.location,
+      budgetRange: filters.budgetRange,
+      dateRange: filters.dateRange,
+      urgency: filters.urgency,
+      rating: filters.rating,
+      distance: filters.distance,
+      availability: filters.availability,
+      sortBy: filters.sortBy
+    });
+  };
+
+  const handleAISearch = async () => {
+    if (!filters.query.trim()) return;
+
+    try {
+      const response = await fetch('/api/ai/search-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: filters.query })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiSuggestions(data.suggestions || []);
+      }
+    } catch (error) {
+      console.error('AI search error:', error);
     }
   };
 
@@ -123,7 +156,11 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
               variant="ghost"
               size="icon"
               className="absolute right-1 top-1 h-8 w-8"
-              onClick={() => updateFilters({ query: '' })}
+              onClick={() => {
+                updateFilters({ query: '' });
+                setSuggestions([]);
+                setAiSuggestions([]);
+              }}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -148,6 +185,39 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
               ))}
             </CardContent>
           </Card>
+        )}
+
+        {/* Suggestions IA */}
+        {aiSuggestions.length > 0 && (
+          <Card className="absolute z-10 w-full mt-1 shadow-lg">
+            <CardContent className="p-2">
+              <div className="flex items-center justify-between mb-2">
+                <h5 className="text-sm font-semibold">Suggestions IA</h5>
+                <Button variant="outline" size="sm" onClick={handleAISearch}>
+                  Rafraîchir
+                </Button>
+              </div>
+              {aiSuggestions.map((suggestion) => (
+                <div
+                  key={suggestion}
+                  className="px-3 py-2 hover:bg-muted rounded cursor-pointer"
+                  onClick={() => {
+                    updateFilters({ query: suggestion });
+                    setAiSuggestions([]);
+                  }}
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bouton pour lancer la recherche IA */}
+        {filters.query && (
+          <Button onClick={handleAISearch} className="mt-2 w-full">
+            Recherche IA
+          </Button>
         )}
       </div>
 
@@ -283,19 +353,19 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
             return category ? (
               <Badge key={categoryId} variant="secondary" className="gap-1">
                 {category.name}
-                <X 
-                  className="h-3 w-3 cursor-pointer" 
+                <X
+                  className="h-3 w-3 cursor-pointer"
                   onClick={() => toggleCategory(categoryId)}
                 />
               </Badge>
             ) : null;
           })}
-          
+
           {(filters.budgetRange[0] > 0 || filters.budgetRange[1] < 10000) && (
             <Badge variant="secondary" className="gap-1">
               {filters.budgetRange[0]}€ - {filters.budgetRange[1]}€
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => updateFilters({ budgetRange: [0, 10000] })}
               />
             </Badge>
@@ -304,8 +374,8 @@ export function AdvancedSearch({ onFiltersChange, initialFilters }: AdvancedSear
           {filters.rating > 0 && (
             <Badge variant="secondary" className="gap-1">
               {filters.rating}+ étoiles
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => updateFilters({ rating: 0 })}
               />
             </Badge>
