@@ -20,6 +20,10 @@ import Dashboard from "./pages/dashboard";
 import AIFeatures from "./pages/ai-features";
 import AITest from "./pages/ai-test";
 import AIDashboard from "./pages/ai-dashboard";
+import ProjectImprove from './pages/project-improve';
+import { ProfileDashboard } from './profile/ProfileDashboard';
+import { ProfileWizard } from './profile/ProfileWizard';
+import { ProfilePublicView } from './profile/ProfilePublicView';
 
 function App() {
   return (
@@ -43,6 +47,10 @@ function App() {
               <Route path={paths.legal} component={Legal} />
               <Route path={paths.dashboard} component={Dashboard} />
               <Route path={paths.aiDashboard} component={AIDashboard} />
+              <Route path="/project-improve" element={<ProjectImprove />} />
+              <Route path="/profil" element={<ProfileDashboard />} />
+              <Route path="/profil/editer" element={<ProfileWizard />} />
+              <Route path="/profil/:userId" element={<ProfilePublicView />} />
 
               {/* Redirections compatibilité anciennes URLs */}
               <Route path="/mes-missions">
@@ -63,7 +71,7 @@ function App() {
 
               {/* 404 */}
               <Route path={paths.notFound} component={NotFound} />
-              <Route component={NotFound} />
+              <Route path="*" element={<NotFound />} />
             </Switch>
           </div>
           <Toaster />
