@@ -583,28 +583,83 @@ export default function Profile() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="relative">
+                <div className="space-y-3">
                   <Label htmlFor="bio">Description</Label>
-                  <Textarea
-                    id="bio"
-                    value={profileData.bio || ''}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    placeholder={activeProfile === 'client' 
-                      ? "Décrivez votre entreprise et vos besoins..."
-                      : "Présentez-vous et vos services..."
-                    }
-                    rows={4}
-                  />
-                  {isEditing && (
-                    <TextCompletionAssistant
-                      inputValue={profileData.bio}
-                      onSuggestionApply={handleTextCompletion('bio')}
-                      context={{
-                        field: 'bio',
-                        category: 'profile',
-                        userType: activeProfile
-                      }}
+                  <div className="relative">
+                    <Textarea
+                      id="bio"
+                      value={profileData.bio || ''}
+                      onChange={(e) => handleInputChange('bio', e.target.value)}
+                      placeholder={activeProfile === 'client' 
+                        ? "Décrivez votre entreprise et vos besoins..."
+                        : "Présentez-vous et vos services..."
+                      }
+                      rows={4}
+                      disabled={!isEditing}
                     />
+                    {isEditing && (
+                      <TextCompletionAssistant
+                        inputValue={profileData.bio}
+                        onSuggestionApply={handleTextCompletion('bio')}
+                        context={{
+                          field: 'bio',
+                          category: 'profile',
+                          userType: activeProfile
+                        }}
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Boutons d'assistance IA visibles */}
+                  {isEditing && (
+                    <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-sm">
+                          <Brain className="h-4 w-4 text-blue-600" />
+                          Assistant IA - Améliorer votre description
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => handleAITextImprovement('bio')}
+                            variant="outline"
+                            size="sm"
+                            className="border-blue-200 hover:bg-blue-50 text-blue-700"
+                          >
+                            <Sparkles className="h-3 w-3 mr-2" />
+                            Améliorer le style
+                          </Button>
+                          <Button
+                            onClick={() => handleAIEnrichment('bio')}
+                            variant="outline"
+                            size="sm"
+                            className="border-green-200 hover:bg-green-50 text-green-700"
+                          >
+                            <Target className="h-3 w-3 mr-2" />
+                            Enrichir avec mots-clés
+                          </Button>
+                          <Button
+                            onClick={() => handleAICallToAction('bio')}
+                            variant="outline"
+                            size="sm"
+                            className="border-orange-200 hover:bg-orange-50 text-orange-700"
+                          >
+                            <Zap className="h-3 w-3 mr-2" />
+                            Ajouter un appel à l'action
+                          </Button>
+                          <Button
+                            onClick={() => handleAIStructure('bio')}
+                            variant="outline"
+                            size="sm"
+                            className="border-purple-200 hover:bg-purple-50 text-purple-700"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-2" />
+                            Structurer le texte
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
 
@@ -633,7 +688,7 @@ export default function Profile() {
                   </>
                 ) : (
                   <>
-                    <div>
+                    <div className="space-y-3">
                       <Label htmlFor="experience">Expérience</Label>
                       <Textarea
                         id="experience"
@@ -643,6 +698,38 @@ export default function Profile() {
                         placeholder="Décrivez votre expérience professionnelle..."
                         rows={3}
                       />
+                      
+                      {/* Assistant IA pour l'expérience */}
+                      {isEditing && (
+                        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Brain className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium text-green-800">IA - Optimiser votre expérience</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                onClick={() => handleAITextImprovement('experience')}
+                                variant="outline"
+                                size="sm"
+                                className="border-green-200 hover:bg-green-50 text-green-700"
+                              >
+                                <Sparkles className="h-3 w-3 mr-2" />
+                                Perfectionner
+                              </Button>
+                              <Button
+                                onClick={() => handleAIEnrichment('experience')}
+                                variant="outline"
+                                size="sm"
+                                className="border-blue-200 hover:bg-blue-50 text-blue-700"
+                              >
+                                <Target className="h-3 w-3 mr-2" />
+                                Ajouter expertise
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor="hourlyRate">Tarif horaire (€)</Label>
@@ -681,20 +768,31 @@ export default function Profile() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-3">
                         {profileData.skills.map((skill, index) => (
-                          <Badge key={index} variant="secondary" className="text-sm">
+                          <Badge 
+                            key={index} 
+                            variant="secondary" 
+                            className="text-sm px-3 py-1.5 bg-gradient-to-r from-blue-100 to-purple-100 border-blue-200 text-blue-800 hover:from-blue-150 hover:to-purple-150 transition-all"
+                          >
+                            <Star className="w-3 h-3 mr-1.5 text-blue-600" />
                             {skill}
                             {isEditing && (
                               <button
                                 onClick={() => removeSkill(skill)}
-                                className="ml-2 hover:text-red-500"
+                                className="ml-2 hover:text-red-500 transition-colors"
                               >
                                 <X className="w-3 h-3" />
                               </button>
                             )}
                           </Badge>
                         ))}
+                        
+                        {profileData.skills.length === 0 && (
+                          <div className="text-gray-500 italic text-sm bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                            Aucune compétence ajoutée. Utilisez l'assistant IA pour des suggestions.
+                          </div>
+                        )}
                       </div>
 
                       {isEditing && (
@@ -861,12 +959,61 @@ export default function Profile() {
         </Tabs>
 
         {isEditing && (
-          <div className="flex justify-end mt-8">
-            <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+          <div className="flex justify-between items-center mt-8">
+            <Button
+              onClick={() => setShowAIAssistant(!showAIAssistant)}
+              variant="outline"
+              className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-blue-100"
+            >
+              <Brain className="w-4 h-4 mr-2" />
+              {showAIAssistant ? 'Masquer' : 'Afficher'} l'Assistant IA
+            </Button>
+            
+            <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 shadow-lg">
               <Save className="w-4 h-4 mr-2" />
               Sauvegarder les modifications
             </Button>
           </div>
+        )}
+
+        {/* Assistant IA flottant */}
+        {showAIAssistant && isEditing && (
+          <Card className="mt-6 border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-800">
+                <Brain className="h-5 w-5" />
+                Assistant IA Global
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <Button
+                  onClick={handleAIKeywordSuggestion}
+                  variant="outline"
+                  className="border-purple-200 hover:bg-purple-50 text-purple-700"
+                >
+                  <Lightbulb className="h-4 w-4 mr-2" />
+                  Suggérer mots-clés
+                </Button>
+                <Button
+                  onClick={() => handleAITextImprovement('bio')}
+                  variant="outline"
+                  className="border-blue-200 hover:bg-blue-50 text-blue-700"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Améliorer description
+                </Button>
+                <Button
+                  onClick={() => handleAIEnrichment('bio')}
+                  variant="outline"
+                  className="border-green-200 hover:bg-green-50 text-green-700"
+                >
+                  <Target className="h-4 w-4 mr-2" />
+                  Enrichir profil
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

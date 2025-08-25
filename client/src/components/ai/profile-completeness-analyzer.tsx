@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -18,7 +17,13 @@ import {
   Eye,
   Lightbulb
 } from 'lucide-react';
-import { DialogTitle } from '@/components/ui/dialog';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription 
+} from '@/components/ui/dialog';
 
 interface ProfileAnalysis {
   completeness_score: number;
@@ -61,10 +66,11 @@ export function ProfileCompletenessAnalyzer({
   const [analysis, setAnalysis] = useState<ProfileAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null);
+  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false); // State for the detailed analysis dialog
 
   const analyzeProfile = async () => {
     setIsAnalyzing(true);
-    
+
     try {
       const response = await fetch('/api/ai/analyze-profile', {
         method: 'POST',
@@ -158,13 +164,13 @@ export function ProfileCompletenessAnalyzer({
 
   const calculateCompletenessScore = (): number => {
     let score = 0;
-    
+
     if (userProfile.name) score += 10;
     if (userProfile.email) score += 10;
     if (userProfile.phone) score += 5;
     if (userProfile.location) score += 5;
     if (userProfile.bio && userProfile.bio.length > 50) score += 20;
-    
+
     if (userType === 'provider') {
       if (userProfile.skills && userProfile.skills.length >= 5) score += 25;
       if (userProfile.portfolio && userProfile.portfolio.length >= 3) score += 15;
@@ -191,11 +197,26 @@ export function ProfileCompletenessAnalyzer({
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-blue-600" />
-          Analyse IA de votre profil
+    <Card className="border-2 border-blue-200 shadow-xl bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl shadow-md">
+              <Brain className="h-7 w-7 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">Analyse IA de votre profil</h3>
+              <p className="text-sm text-gray-600">Optimisez votre visibilité et attractivité</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg px-4 py-2 shadow-lg">
+              {analysis?.completeness_score || 0}% complet
+            </Badge>
+            <div className="text-xs text-gray-500 mt-1">
+              Score de visibilité: {analysis?.visibility_score || 0}%
+            </div>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -307,7 +328,7 @@ export function ProfileCompletenessAnalyzer({
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600 mb-3">{suggestion.reasoning}</p>
-                          
+
                           {suggestion.current && (
                             <div className="mb-3">
                               <p className="text-xs text-gray-500 mb-1">Actuel:</p>
@@ -316,7 +337,7 @@ export function ProfileCompletenessAnalyzer({
                               </div>
                             </div>
                           )}
-                          
+
                           <div className="mb-3">
                             <p className="text-xs text-blue-600 mb-1">Suggestion IA:</p>
                             <div className="bg-white p-3 rounded border border-blue-200 text-sm">
@@ -325,7 +346,7 @@ export function ProfileCompletenessAnalyzer({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
@@ -343,7 +364,7 @@ export function ProfileCompletenessAnalyzer({
                           {selectedSuggestion === index ? 'Masquer' : 'Détails'}
                         </Button>
                       </div>
-                      
+
                       {selectedSuggestion === index && (
                         <div className="mt-3 pt-3 border-t border-blue-200">
                           <p className="text-xs text-gray-600">
@@ -374,7 +395,7 @@ export function ProfileCompletenessAnalyzer({
                   <p className="font-medium text-green-600">{analysis.market_positioning.potential_rank}</p>
                 </div>
               </div>
-              
+
               <div className="mt-3">
                 <p className="text-sm text-gray-600 mb-2">Avantages concurrentiels:</p>
                 <div className="flex flex-wrap gap-1">
@@ -386,6 +407,134 @@ export function ProfileCompletenessAnalyzer({
                 </div>
               </div>
             </div>
+            
+            {/* Bouton pour ouvrir le dialogue d'analyse détaillée */}
+            <div className="text-center">
+              <Button 
+                onClick={() => setShowDetailedAnalysis(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Voir l'analyse détaillée
+              </Button>
+            </div>
+
+            {/* Dialogue d'analyse détaillée */}
+            <Dialog open={showDetailedAnalysis} onOpenChange={setShowDetailedAnalysis}>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogTitle>Analyse détaillée du profil IA</DialogTitle>
+                <DialogDescription>
+                  Découvrez les recommandations personnalisées pour optimiser votre profil et augmenter vos opportunités.
+                </DialogDescription>
+                <div className="space-y-6">
+                  {/* Contenu de l'analyse détaillée ici, potentiellement une copie ou une version plus détaillée de ce qui est déjà affiché */}
+                  {/* Par exemple, afficher tous les éléments manquants et suggestions */}
+                  {analysis.missing_elements.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <AlertCircle className="h-4 w-4 mr-2 text-orange-500" />
+                        Améliorations prioritaires
+                      </h4>
+                      <div className="space-y-3">
+                        {analysis.missing_elements.map((element, index) => (
+                          <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-medium">{element.item}</span>
+                                  <Badge 
+                                    variant={element.impact === 'high' ? 'destructive' : element.impact === 'medium' ? 'default' : 'secondary'}
+                                    className="text-xs"
+                                  >
+                                    {element.impact === 'high' ? 'Priorité haute' : 
+                                     element.impact === 'medium' ? 'Priorité moyenne' : 'Priorité basse'}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-2">{element.suggestion}</p>
+                                <div className="flex items-center text-xs text-green-600">
+                                  <TrendingUp className="h-3 w-3 mr-1" />
+                                  {element.estimated_improvement}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {analysis.ai_suggestions.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                        <Lightbulb className="h-4 w-4 mr-2 text-blue-500" />
+                        Suggestions d'amélioration IA
+                      </h4>
+                      <div className="space-y-3">
+                        {analysis.ai_suggestions.map((suggestion, index) => (
+                          <div key={index} className="border rounded-lg p-4 bg-blue-50">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="font-medium capitalize">{suggestion.field}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    Impact: {suggestion.impact_score}%
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-3">{suggestion.reasoning}</p>
+
+                                {suggestion.current && (
+                                  <div className="mb-3">
+                                    <p className="text-xs text-gray-500 mb-1">Actuel:</p>
+                                    <div className="bg-gray-100 p-2 rounded text-sm">
+                                      {suggestion.current.substring(0, 100)}...
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="mb-3">
+                                  <p className="text-xs text-blue-600 mb-1">Suggestion IA:</p>
+                                  <div className="bg-white p-3 rounded border border-blue-200 text-sm">
+                                    {suggestion.suggested}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                onClick={() => onApplySuggestion(suggestion.field, suggestion.suggested)}
+                                className="bg-blue-600 hover:bg-blue-700"
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Appliquer
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setSelectedSuggestion(selectedSuggestion === index ? null : index)}
+                              >
+                                {selectedSuggestion === index ? 'Masquer' : 'Détails'}
+                              </Button>
+                            </div>
+
+                            {selectedSuggestion === index && (
+                              <div className="mt-3 pt-3 border-t border-blue-200">
+                                <p className="text-xs text-gray-600">
+                                  Cette amélioration pourrait augmenter votre visibilité de <strong>{suggestion.impact_score}%</strong> 
+                                  en rendant votre profil plus attractif pour les {userType === 'provider' ? 'clients' : 'prestataires'}.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                   {/* Fin du contenu de l'analyse détaillée */}
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Bouton re-analyser */}
             <div className="text-center">
