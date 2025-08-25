@@ -43,7 +43,7 @@ function App() {
               <Route path={paths.legal} component={Legal} />
               <Route path={paths.dashboard} component={Dashboard} />
               <Route path={paths.aiDashboard} component={AIDashboard} />
-              
+
               {/* Redirections compatibilité anciennes URLs */}
               <Route path="/mes-missions">
                 {() => <Redirect to={paths.missions} />}
@@ -60,7 +60,7 @@ function App() {
               <Route path="/project/:id">
                 {(params) => <Redirect to={paths.missionDetail(params.id)} />}
               </Route>
-              
+
               {/* 404 */}
               <Route path={paths.notFound} component={NotFound} />
               <Route component={NotFound} />

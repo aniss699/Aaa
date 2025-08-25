@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ClipboardList, Hand, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { MissionDetailModal } from '@/components/missions/mission-detail-modal';
+import paths from '@/lib/paths';
 
 export default function Missions() {
   const { user } = useAuth();
@@ -49,8 +50,8 @@ export default function Missions() {
             Gérez vos projets et consultez les offres reçues
           </p>
         </div>
-        <Button 
-          onClick={() => setLocation('/create-mission')} 
+        <Button
+          onClick={() => setLocation('/create-mission')}
           size="lg"
           className="w-full sm:w-auto"
         >
@@ -113,8 +114,8 @@ export default function Missions() {
                     <span>Lieu: {mission.location || 'Non spécifié'}</span>
                   </div>
                   <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => setSelectedMissionId(mission.id)}
                     >
@@ -132,7 +133,7 @@ export default function Missions() {
               <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 text-lg mb-4">Vous n'avez pas encore publié de missions</p>
               <Button
-                onClick={() => setLocation('/create-mission')}
+                onClick={() => setLocation(paths.createMission)}
                 className="bg-primary hover:bg-primary-dark text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />

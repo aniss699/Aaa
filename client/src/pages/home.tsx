@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ArrowRight, Star, Users, CheckCircle, Zap, Globe, Shield, TrendingUp, Search, PlusCircle, Brain, Wand2, MessageSquare, Clock } from 'lucide-react';
+import { paths } from '../routes/paths';
 
 export default function Home() {
   const { user } = useAuth();
@@ -237,12 +238,12 @@ export default function Home() {
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg">
-                    <Link href="/missions">
+                    <Link href={paths.missions}>
                       Découvrir les missions
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="lg">
-                    <Link href="/create-mission">
+                    <Link href={paths.createMission}>
                       Poster une mission
                     </Link>
                   </Button>
@@ -447,7 +448,7 @@ export default function Home() {
 
                 <div className="text-center">
                   <Button 
-                    onClick={() => setLocation('/available-providers')}
+                    onClick={() => setLocation(paths.availableProviders)}
                     className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 sm:px-8 rounded-xl shadow-lg transform transition hover:scale-105 text-sm sm:text-base"
                   >
                     <Search className="w-5 h-5 mr-2" />
@@ -479,7 +480,7 @@ export default function Home() {
         {missions.length > 6 && (
           <div className="text-center mt-6 sm:mt-8">
             <Button
-              onClick={() => setLocation('/marketplace')}
+              onClick={() => setLocation(paths.marketplace)}
               className="bg-primary hover:bg-primary-dark text-white px-6 sm:px-8 py-3 rounded-xl font-semibold text-sm sm:text-base"
             >
               Voir toutes les missions
@@ -654,10 +655,10 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Navigation</h3>
               <ul className="space-y-2">
-                <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Accueil</Link></li>
-                <li><Link href="/marketplace" className="text-gray-400 hover:text-white transition-colors">Marketplace</Link></li>
-                <li><Link href="/dashboard" className="text-gray-400 hover:text-white transition-colors">Tableau de bord</Link></li>
-                <li><Link href="/missions" className="text-gray-400 hover:text-white transition-colors">Mes missions</Link></li>
+                <li><Link href={paths.home} className="text-gray-400 hover:text-white transition-colors">Accueil</Link></li>
+                <li><Link href={paths.marketplace} className="text-gray-400 hover:text-white transition-colors">Marketplace</Link></li>
+                <li><Link href={paths.dashboard} className="text-gray-400 hover:text-white transition-colors">Tableau de bord</Link></li>
+                <li><Link href={paths.missions} className="text-gray-400 hover:text-white transition-colors">Mes missions</Link></li>
               </ul>
             </div>
 
@@ -665,9 +666,9 @@ export default function Home() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Informations légales</h3>
               <ul className="space-y-2">
-                <li><Link href="/cgv" className="text-gray-400 hover:text-white transition-colors">CGV</Link></li>
-                <li><Link href="/mentions-legales" className="text-gray-400 hover:text-white transition-colors">Mentions légales</Link></li>
-                <li><Link href="/legal" className="text-gray-400 hover:text-white transition-colors">Politique de confidentialité</Link></li>
+                <li><Link href={paths.cgv} className="text-gray-400 hover:text-white transition-colors">CGV</Link></li>
+                <li><Link href={paths.mentionsLegales} className="text-gray-400 hover:text-white transition-colors">Mentions légales</Link></li>
+                <li><Link href={paths.privacyPolicy} className="text-gray-400 hover:text-white transition-colors">Politique de confidentialité</Link></li>
               </ul>
             </div>
           </div>
