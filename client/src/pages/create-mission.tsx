@@ -10,10 +10,11 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Separator } from '../components/ui/separator';
-import { Brain, Wand2, CheckCircle, AlertCircle, Loader2, Euro, Calendar } from 'lucide-react';
+import { Brain, Wand2, CheckCircle, AlertCircle, Loader2, Euro, Calendar, Target } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { paths } from '../routes/paths';
 import { BriefEnhancer } from "@/components/ai/brief-enhancer";
+import { TextCompletionAssistant } from '@/components/ai/text-completion-assistant';
 
 interface MissionFormData {
   title: string;
@@ -333,7 +334,7 @@ export default function CreateMission() {
                     {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <Label htmlFor="description">Description détaillée *</Label>
                     <Textarea
                       id="description"
@@ -342,6 +343,15 @@ export default function CreateMission() {
                       placeholder="Décrivez votre projet en détail..."
                       rows={6}
                       className={errors.description ? 'border-red-500' : ''}
+                    />
+                    <TextCompletionAssistant
+                      inputValue={formData.description}
+                      onSuggestionApply={(text) => setFormData(prev => ({ ...prev, description: text }))}
+                      context={{
+                        field: 'project_description',
+                        category: 'project',
+                        placeholder: 'Description de mission'
+                      }}
                     />
                     {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
                   </div>
@@ -670,7 +680,7 @@ export default function CreateMission() {
           {/* Analyse IA - Lazy loaded */}
           {(formData.title && formData.description && formData.description.length > 20) && (
             <React.Suspense fallback={<div>Chargement...</div>}>
-              <BriefEnhancer 
+              <BriefEnhancer
                 briefData={{
                   title: formData.title,
                   description: formData.description,

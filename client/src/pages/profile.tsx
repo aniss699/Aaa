@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AvailabilityCalendar } from '@/components/calendar/availability-calendar';
+import { ProfileCompletenessAnalyzer } from '@/components/ai/profile-completeness-analyzer';
+import { TextCompletionAssistant } from '@/components/ai/text-completion-assistant';
 
 export default function Profile() {
   const { user, login } = useAuth();
@@ -63,6 +65,25 @@ export default function Profile() {
   const [newSkill, setNewSkill] = useState('');
   const [newPortfolioItem, setNewPortfolioItem] = useState({title: '', description: ''});
   const [newAvailabilitySlot, setNewAvailabilitySlot] = useState<{ start: Date, end: Date } | undefined>(undefined); // State for new availability
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+
+  const handleAISuggestionApply = (field: string, value: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    toast({
+      title: 'Suggestion appliquée',
+      description: `Le champ "${field}" a été mis à jour avec la suggestion IA.`,
+    });
+  };
+
+  const handleTextCompletion = (field: string) => (text: string) => {
+    setProfileData(prev => ({
+      ...prev,
+      [field]: text
+    }));
+  };
 
   const handleSave = () => {
     // Sauvegarder le changement de type d'utilisateur
@@ -330,10 +351,14 @@ export default function Profile() {
 
         {/* Profile Content */}
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="general" className="flex items-center">
               <User className="w-4 h-4 mr-2" />
               Informations
+            </TabsTrigger>
+            <TabsTrigger value="ai-analysis" className="flex items-center">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Assistant IA
             </TabsTrigger>
             <TabsTrigger value="skills" className="flex items-center">
               <Briefcase className="w-4 h-4 mr-2" />
@@ -352,6 +377,14 @@ export default function Profile() {
               Préférences
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="ai-analysis">
+            <ProfileCompletenessAnalyzer
+              userProfile={profileData}
+              userType={activeProfile}
+              onApplySuggestion={handleAISuggestionApply}
+            />
+          </TabsContent>
 
           <TabsContent value="general">
             <div className="grid md:grid-cols-2 gap-6">
@@ -409,7 +442,7 @@ export default function Profile() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
+                  <div className="relative">
                     <Label htmlFor="bio">Description</Label>
                     <Textarea
                       id="bio"
@@ -422,6 +455,17 @@ export default function Profile() {
                       }
                       rows={4}
                     />
+                    {isEditing && (
+                      <TextCompletionAssistant
+                        inputValue={profileData.bio}
+                        onSuggestionApply={handleTextCompletion('bio')}
+                        context={{
+                          field: 'bio',
+                          category: 'profile',
+                          userType: activeProfile
+                        }}
+                      />
+                    )}
                   </div>
 
                   {activeProfile === 'client' ? (
