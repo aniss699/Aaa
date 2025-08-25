@@ -1,0 +1,264 @@
+🛠️ PROMPT REPLIT (Ghostwriter) — Fix “404 Page Not Found — Did you forget to add the page to the router?”
+
+Tu es un assistant IA full‑stack dans ce repo.
+Diagnostique et corrige toutes les causes du 404 Router côté front (React Router/Wouter), plus fallback serveur. Applique exactement ces actions et affiche un rapport final.
+
+⸻
+
+0) Détection stack & prérequis
+	1.	Détecte : react-router-dom (v6+) ou wouter.
+	2.	Si aucun routeur trouvé, installe react-router-dom v6:
+
+npm i react-router-dom
+
+
+	3.	Vérifie que react et react-dom sont installés.
+
+⸻
+
+1) Source de vérité des chemins (création/écrasement)
+
+Crée src/routes/paths.ts :
+
+export const paths = {
+  home: '/',
+  missions: '/missions',
+  missionNew: '/missions/new',
+  missionDetail: (id = ':id') => `/missions/${id}`,
+  projects: '/projects',
+  projectNew: '/projects/new',
+  projectDetail: (id = ':id') => `/projects/${id}`,
+  notFound: '/404',
+}
+
+
+⸻
+
+2) Point d’entrée Router (BrowserRouter + Routes)
+	•	Ouvre src/main.tsx (ou src/main.jsx/tsx) et impose :
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App'
+import './index.css'
+
+const root = document.getElementById('root')
+if (!root) throw new Error('#root introuvable')
+
+ReactDOM.createRoot(root).render(
+  <React.StrictMode>
+    <BrowserRouter basename={import.meta.env.BASE_URL || '/'}>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+)
+
+Si l’app utilise createBrowserRouter, garde cette API mais assure que toutes les pages sont déclarées dans le route tree.
+
+⸻
+
+3) Définition explicite des routes
+	•	Ouvre/écrase src/App.tsx :
+
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { paths } from './routes/paths'
+import Home from './pages/Home'
+import Missions from './pages/missions/Missions'
+import MissionNew from './pages/missions/MissionNew'
+import MissionDetail from './pages/missions/MissionDetail'
+import Projects from './pages/projects/Projects'
+import ProjectNew from './pages/projects/ProjectNew'
+import ProjectDetail from './pages/projects/ProjectDetail'
+import NotFound from './pages/NotFound'
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path={paths.home} element={<Home />} />
+
+      <Route path={paths.missions} element={<Missions />} />
+      <Route path={paths.missionNew} element={<MissionNew />} />
+      <Route path={paths.missionDetail()} element={<MissionDetail />} />
+
+      <Route path={paths.projects} element={<Projects />} />
+      <Route path={paths.projectNew} element={<ProjectNew />} />
+      <Route path={paths.projectDetail()} element={<ProjectDetail />} />
+
+      {/* Compat anciennes URLs */}
+      <Route path="/mes-missions" element={<Navigate to={paths.missions} replace />} />
+      <Route path="/mission/new" element={<Navigate to={paths.missionNew} replace />} />
+      <Route path="/project/new" element={<Navigate to={paths.projectNew} replace />} />
+      <Route path="/mission/:id" element={<Navigate to="/missions/:id" replace />} />
+      <Route path="/project/:id" element={<Navigate to="/projects/:id" replace />} />
+
+      {/* 404 */}
+      <Route path={paths.notFound} element={<NotFound />} />
+      <Route path="*" element={<Navigate to={paths.notFound} replace />} />
+    </Routes>
+  )
+}
+
+	•	Crée src/pages/NotFound.tsx :
+
+export default function NotFound() {
+  return (
+    <div style={{padding:20,fontFamily:'system-ui'}}>
+      <h2>Page introuvable</h2>
+      <p>Vérifiez l’URL ou revenez à l’accueil.</p>
+      <a href="/">Retour</a>
+    </div>
+  )
+}
+
+Vérifie que chaque page importée (Home, Missions, MissionNew, MissionDetail, Projects, ProjectNew, ProjectDetail) existe et exporte par défaut un composant React.
+
+⸻
+
+4) Auto‑fix des pages non montées (codemod)
+
+Crée scripts/router-audit.mjs et exécute‑le :
+
+import fs from 'node:fs'
+import path from 'node:path'
+
+const PAGES = [
+  'pages/Home.tsx','pages/Home.jsx',
+  'pages/missions/Missions.tsx','pages/missions/Missions.jsx',
+  'pages/missions/MissionNew.tsx','pages/missions/MissionNew.jsx',
+  'pages/missions/MissionDetail.tsx','pages/missions/MissionDetail.jsx',
+  'pages/projects/Projects.tsx','pages/projects/Projects.jsx',
+  'pages/projects/ProjectNew.tsx','pages/projects/ProjectNew.jsx',
+  'pages/projects/ProjectDetail.tsx','pages/projects/ProjectDetail.jsx',
+  'pages/NotFound.tsx','pages/NotFound.jsx'
+].map(p => path.join('src', p))
+
+const ensure = (fp, name) => {
+  if (!fs.existsSync(path.dirname(fp))) fs.mkdirSync(path.dirname(fp), { recursive: true })
+  if (!fs.existsSync(fp)) {
+    fs.writeFileSync(fp, `export default function ${name}(){return <div style={{padding:20}}>${name}</div>}\n`)
+    console.log('Created', fp)
+  } else {
+    const src = fs.readFileSync(fp,'utf8')
+    if (!/export\s+default\s+function|export\s+default\s+\w+/.test(src)) {
+      fs.writeFileSync(fp, src + `\nexport default function ${name}(){return <div style={{padding:20}}>${name}</div>}\n`)
+      console.log('Patched export default in', fp)
+    }
+  }
+}
+
+for (const fp of PAGES) {
+  const name = path.basename(fp).replace(/\.(t|j)sx?$/,'')
+  ensure(fp, name)
+}
+console.log('Router audit done.')
+
+Exécute :
+
+node scripts/router-audit.mjs
+
+
+⸻
+
+5) Remplacer <a href> internes par <Link to>
+
+Crée scripts/fix-links.mjs :
+
+import fs from 'node:fs'; import path from 'node:path'
+const ROOT='src', files=[]
+function walk(d){for(const n of fs.readdirSync(d)){const p=path.join(d,n);const s=fs.statSync(p);if(s.isDirectory())walk(p);else if(/\.(tsx?|jsx?)$/.test(n))files.push(p)}}
+walk(ROOT)
+let changed=0
+for(const f of files){
+  let src=fs.readFileSync(f,'utf8')
+  if(/\<a\s+href="\/(missions|projects|404|$)"/.test(src)){
+    if(!/from\s+'react-router-dom'/.test(src)) src = `import { Link } from 'react-router-dom'\n`+src
+    src = src.replace(/\<a\s+href="(\/[^"]+)"\s*\>/g, '<Link to="$1">').replace(/\<\/a\>/g,'</Link>')
+    fs.writeFileSync(f,src,'utf8'); changed++; console.log('Updated links in', f)
+  }
+}
+console.log('Done. files changed:',changed)
+
+Exécute :
+
+node scripts/fix-links.mjs
+
+
+⸻
+
+6) Vite config & fallback SPA serveur
+	•	vite.config.ts (ou .js) :
+
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+export default defineConfig({
+  plugins:[react()],
+  server:{ host:true, strictPort:true, port:Number(process.env.PORT)||5173 },
+  preview:{ host:true, strictPort:true, port:Number(process.env.PORT)||5173 },
+  base:'/'
+})
+
+	•	Si backend Express sert la prod, assure :
+
+import path from 'node:path'
+import express from 'express'
+const app = express()
+const dist = path.resolve('dist')
+app.use(express.static(dist))
+app.get('*', (_req,res) => res.sendFile(path.join(dist,'index.html')))
+
+Ce catch‑all empêche le 404 serveur sur des routes front (SPA).
+
+⸻
+
+7) Redirections après création (sécurisées)
+
+Dans src/pages/missions/MissionNew.tsx et src/pages/projects/ProjectNew.tsx, redirige via useNavigate vers l’ID retourné (si l’API répond 201 + {id}) :
+
+import { useNavigate } from 'react-router-dom'
+import { paths } from '../../routes/paths'
+const nav = useNavigate()
+/* après POST */
+nav(paths.missionDetail(data.id), { replace:true }) // ou projectDetail
+
+
+⸻
+
+8) Tests e2e (sanity routing)
+
+Installe si besoin :
+
+npm i -D @playwright/test && npx playwright install --with-deps
+
+Crée e2e/routing.spec.ts :
+
+import { test, expect } from '@playwright/test'
+test('routes clés existent', async ({ page }) => {
+  for (const url of ['/', '/missions', '/missions/new', '/projects', '/projects/new']) {
+    await page.goto(url)
+    await expect(page).toHaveURL(new RegExp(url.replace(/\//g,'\\/')+'$'))
+  }
+})
+
+package.json → "test:e2e":"playwright test"
+
+⸻
+
+9) Lancement & validation
+
+rm -rf node_modules
+npm install
+npm run dev
+
+Critères d’acceptation :
+	•	Les pages /missions, /missions/new, /projects, /projects/new s’affichent (plus de 404).
+	•	Les pages Detail existent si l’ID est correct.
+	•	Aucune navigation interne via <a href="/…"> ne provoque 404 (toutes converties en <Link>).
+	•	En prod/preview, le catch‑all renvoie bien index.html.
+
+⸻
+
+10) Rapport final à afficher
+	•	Liste des fichiers créés/modifiés : paths.ts, App.tsx, NotFound.tsx, scripts router-audit.mjs, fix-links.mjs, vite.config.*, pages auto‑créées/patched.
+	•	Détection du routeur, version, et éventuelles pages manquantes corrigées.
+	•	Résultat npm run dev (URL) et, si configuré, résultat des tests e2e.
